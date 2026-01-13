@@ -1,0 +1,209 @@
+/* 新闻头条网站 - 专业新闻行业设计系统 */
+
+:root {
+  /* === 主色调 - 专业新闻蓝 === */
+  --primary-color: #1a365d;        /* 深海军蓝 - 权威可信 */
+  --primary-hover: #2c5282;       /* 海军蓝悬停 */
+  --primary-light: #3182ce;       /* 中海军蓝 */
+  --primary-dark: #1a202c;        /* 极深蓝 */
+  --primary-accent: #2b6cb0;      /* 亮海军蓝 */
+  
+  /* === 辅助色 - 新闻行业标准 === */
+  --secondary-color: #4a5568;      /* 中性灰 - 专业沉稳 */
+  --accent-color: #d69e2e;        /* 琥珀色 - 强调突出 */
+  --success-color: #38a169;       /* 深绿色 - 成功确认 */
+  --warning-color: #d69e2e;       /* 琥珀色 - 警告提醒 */
+  --danger-color: #e53e3e;        /* 深红色 - 重要警示 */
+  --info-color: #3182ce;          /* 信息蓝 - 中性信息 */
+  
+  /* === 中性色 - 优化灰度层次 === */
+  --gray-50: #f8fafc;           /* 极浅灰 */
+  --gray-100: #f1f5f9;          /* 浅灰 */
+  --gray-200: #e2e8f0;          /* 中浅灰 */
+  --gray-300: #cbd5e1;          /* 中灰 */
+  --gray-400: #94a3b8;          /* 中深灰 */
+  --gray-500: #64748b;          /* 深灰 */
+  --gray-600: #475569;          /* 较深灰 */
+  --gray-700: #334155;          /* 很深灰 */
+  --gray-800: #1e293b;          /* 极深灰 */
+  --gray-900: #0f172a;          /* 最深灰 */
+  
+  /* === 背景色 - 新闻阅读优化 === */
+  --bg-primary: #ffffff;           /* 纯白背景 - 最佳阅读体验 */
+  --bg-secondary: #f8fafc;         /* 浅灰背景 - 次要区域 */
+  --bg-tertiary: #f1f5f9;          /* 中灰背景 - 卡片容器 */
+  --bg-quaternary: #e2e8f0;        /* 深灰背景 - 侧边栏 */
+  --bg-overlay: rgba(15, 23, 42, 0.8); /* 遮罩层 - 更深遮罩 */
+  
+  /* === 文字色 - 新闻阅读优化 === */
+  --text-primary: #1a202c;         /* 深色文字 - 高对比度 */
+  --text-secondary: #2d3748;       /* 次要文字 - 舒适阅读 */
+  --text-tertiary: #4a5568;        /* 三级文字 - 层次分明 */
+  --text-muted: #718096;          /* 弱化文字 - 优雅退让 */
+  --text-inverse: #ffffff;         /* 反色文字 - 清晰可辨 */
+  --text-subtle: #a0aec0;         /* 微妙文字 - 精致细节 */
+  
+  /* === 边框色 - 专业层次 === */
+  --border-primary: #e2e8f0;      /* 主要边框 - 轻柔分隔 */
+  --border-secondary: #cbd5e1;     /* 次要边框 - 中等分隔 */
+  --border-tertiary: #a0aec0;     /* 三级边框 - 明显分隔 */
+  --border-focus: #3182ce;        /* 焦点边框 - 清晰提示 */
+  --border-accent: #d69e2e;       /* 强调边框 - 突出显示 */
+  
+  /* === 阴影 - 新闻专业层次 === */
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04); /* 卡片专用阴影 */
+  
+  /* === 圆角 === */
+  --radius-sm: 0.25rem;             /* 小圆角 */
+  --radius-md: 0.375rem;            /* 中圆角 */
+  --radius-lg: 0.5rem;              /* 大圆角 */
+  --radius-xl: 0.75rem;             /* 超大圆角 */
+  --radius-full: 9999px;           /* 完全圆角 */
+  
+  /* === 间距 === */
+  --spacing-xs: 0.25rem;           /* 极小间距 */
+  --spacing-sm: 0.5rem;            /* 小间距 */
+  --spacing-md: 1rem;              /* 中间距 */
+  --spacing-lg: 1.5rem;            /* 大间距 */
+  --spacing-xl: 2rem;              /* 超大间距 */
+  --spacing-2xl: 3rem;             /* 2倍超大间距 */
+  
+  /* === 字体 - 新闻行业标准 === */
+  --font-family-serif: 'Georgia', 'Times New Roman', 'Times', serif; /* 衬线字体 - 标题专用 */
+  --font-family-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; /* 无衬线字体 - 正文专用 */
+  --font-family-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', 'Monaco', 'Consolas', monospace; /* 等宽字体 - 代码专用 */
+  --font-family-heading: var(--font-family-serif); /* 标题字体 */
+  --font-family-body: var(--font-family-sans); /* 正文字体 */
+  --font-family-ui: var(--font-family-sans); /* 界面字体 */
+  
+  /* === 字体大小 - 新闻阅读优化 === */
+  --text-xs: 0.75rem;               /* 12px - 辅助信息 */
+  --text-sm: 0.875rem;              /* 14px - 次要文字 */
+  --text-base: 1rem;                /* 16px - 正文基础 */
+  --text-lg: 1.125rem;              /* 18px - 重要文字 */
+  --text-xl: 1.25rem;               /* 20px - 小标题 */
+  --text-2xl: 1.5rem;               /* 24px - 中标题 */
+  --text-3xl: 1.875rem;             /* 30px - 大标题 */
+  --text-4xl: 2.25rem;              /* 36px - 主标题 */
+  --text-5xl: 3rem;                 /* 48px - 特大标题 */
+  --text-6xl: 3.75rem;              /* 60px - 超大标题 */
+
+/* === 新闻专用字体大小 === */
+  --headline-size-xs: 1.125rem;       /* 18px - 小新闻标题 */
+  --headline-size-sm: 1.25rem;        /* 20px - 标准新闻标题 */
+  --headline-size-md: 1.5rem;         /* 24px - 中等新闻标题 */
+  --headline-size-lg: 1.875rem;       /* 30px - 大新闻标题 */
+  --headline-size-xl: 2.25rem;        /* 36px - 特大新闻标题 */
+  --body-size-sm: 0.875rem;         /* 14px - 小正文 */
+  --body-size-md: 1rem;             /* 16px - 标准正文 */
+  --body-size-lg: 1.125rem;         /* 18px - 大正文 */
+  
+  /* === 行高 - 新闻阅读优化 === */
+  --leading-tight: 1.25;           /* 紧凑行高 - 标题 */
+  --leading-normal: 1.5;          /* 标准行高 - 正文 */
+  --leading-relaxed: 1.625;        /* 放松行高 - 长文阅读 */
+  --leading-headline: 1.3;         /* 标题专用行高 */
+  --leading-body: 1.6;            /* 正文专用行高 */
+  --leading-ui: 1.4;              /* 界面元素行高 */
+  
+  /* === 过渡动画 === */
+  --transition-fast: 150ms ease-in-out;
+  --transition-normal: 250ms ease-in-out;
+  --transition-slow: 350ms ease-in-out;
+  
+  /* === 断点 === */
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+  
+  /* === 容器最大宽度 === */
+  --container-sm: 640px;
+  --container-md: 768px;
+  --container-lg: 1024px;
+  --container-xl: 1280px;
+  --container-2xl: 1536px;
+}
+
+/* === 暗色模式 === */
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* === 背景色 === */
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --bg-tertiary: #334155;
+    --bg-overlay: rgba(0, 0, 0, 0.7);
+    
+    /* === 文字色 === */
+    --text-primary: #f8fafc;
+    --text-secondary: #e2e8f0;
+    --text-tertiary: #cbd5e1;
+    --text-muted: #94a3b8;
+    --text-inverse: #0f172a;
+    
+    /* === 边框色 === */
+    --border-primary: #334155;
+    --border-secondary: #475569;
+    --border-focus: #3b82f6;
+  }
+}
+
+/* === 语义化颜色类 === */
+.text-primary { color: var(--text-primary); }
+.text-secondary { color: var(--text-secondary); }
+.text-tertiary { color: var(--text-tertiary); }
+.text-muted { color: var(--text-muted); }
+.text-inverse { color: var(--text-inverse); }
+
+.bg-primary { background-color: var(--bg-primary); }
+.bg-secondary { background-color: var(--bg-secondary); }
+.bg-tertiary { background-color: var(--bg-tertiary); }
+
+.border-primary { border-color: var(--border-primary); }
+.border-secondary { border-color: var(--border-secondary); }
+
+/* === 工具类 === */
+.shadow-sm { box-shadow: var(--shadow-sm); }
+.shadow-md { box-shadow: var(--shadow-md); }
+.shadow-lg { box-shadow: var(--shadow-lg); }
+.shadow-xl { box-shadow: var(--shadow-xl); }
+.shadow-card { box-shadow: var(--shadow-card); }
+
+.rounded-sm { border-radius: var(--radius-sm); }
+.rounded-md { border-radius: var(--radius-md); }
+.rounded-lg { border-radius: var(--radius-lg); }
+.rounded-xl { border-radius: var(--radius-xl); }
+.rounded-full { border-radius: var(--radius-full); }
+
+.transition-fast { transition: all var(--transition-fast); }
+.transition-normal { transition: all var(--transition-normal); }
+.transition-slow { transition: all var(--transition-slow); }
+
+/* === 字体工具类 === */
+.font-serif { font-family: var(--font-family-serif); }
+.font-sans { font-family: var(--font-family-sans); }
+.font-mono { font-family: var(--font-family-mono); }
+.font-heading { font-family: var(--font-family-heading); }
+.font-body { font-family: var(--font-family-body); }
+.font-ui { font-family: var(--font-family-ui); }
+
+/* === 字体大小工具类 === */
+.text-headline-xs { font-size: var(--headline-size-xs); line-height: var(--leading-headline); }
+.text-headline-sm { font-size: var(--headline-size-sm); line-height: var(--leading-headline); }
+.text-headline-md { font-size: var(--headline-size-md); line-height: var(--leading-headline); }
+.text-headline-lg { font-size: var(--headline-size-lg); line-height: var(--leading-headline); }
+.text-headline-xl { font-size: var(--headline-size-xl); line-height: var(--leading-headline); }
+
+.text-body-sm { font-size: var(--body-size-sm); line-height: var(--leading-body); }
+.text-body-md { font-size: var(--body-size-md); line-height: var(--leading-body); }
+.text-body-lg { font-size: var(--body-size-lg); line-height: var(--leading-body); }
+
+/* === 行高工具类 === */
+.leading-headline { line-height: var(--leading-headline); }
+.leading-body { line-height: var(--leading-body); }
+.leading-ui { line-height: var(--leading-ui); }

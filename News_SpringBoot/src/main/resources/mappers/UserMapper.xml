@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.zhouyi.mapper.UserMapper">
+
+    <!-- 根据手机号和密码查询用户 -->
+    <select id="selectUserByPhoneAndPassword" resultType="com.zhouyi.entity.User">
+        SELECT id, phone, password, username, email, avatar_url, status, 
+               last_login_time, created_time, updated_time
+        FROM users
+        WHERE phone = #{phone} AND password = #{password}
+    </select>
+
+    <!-- 根据手机号查询用户 -->
+    <select id="selectUserByPhone" resultType="com.zhouyi.entity.User">
+        SELECT id, phone, password, username, email, avatar_url, status,
+               last_login_time, created_time, updated_time
+        FROM users
+        WHERE phone = #{phone}
+    </select>
+
+    <!-- 根据ID查询用户 -->
+    <select id="selectUserById" resultType="com.zhouyi.entity.User">
+        SELECT id, phone, password, username, email, avatar_url, status,
+               last_login_time, created_time, updated_time
+        FROM users
+        WHERE id = #{id}
+    </select>
+
+    <!-- 查询所有用户 -->
+    <select id="selectAllUsers" resultType="com.zhouyi.entity.User">
+        SELECT id, phone, password, username, email, avatar_url, status,
+               last_login_time, created_time, updated_time
+        FROM users
+    </select>
+
+    <!-- 插入用户 -->
+    <insert id="insertUser" parameterType="com.zhouyi.entity.User" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO users (phone, password, username, email, avatar_url, status)
+        VALUES (#{phone}, #{password}, #{username}, #{email}, #{avatarUrl}, #{status})
+    </insert>
+
+    <!-- 更新用户 -->
+    <update id="updateUserById" parameterType="com.zhouyi.entity.User">
+        UPDATE users
+        SET phone = #{phone}, password = #{password}, username = #{username},
+            email = #{email}, avatar_url = #{avatarUrl}, status = #{status}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 更新用户头像 -->
+    <update id="updateUserAvatar">
+        UPDATE users
+        SET avatar_url = #{avatarUrl}
+        WHERE id = #{userId}
+    </update>
+
+    <!-- 更新用户密码 -->
+    <update id="updateUserPassword">
+        UPDATE users
+        SET password = #{password}
+        WHERE id = #{userId}
+    </update>
+
+    <!-- 删除用户 -->
+    <delete id="deleteUserById">
+        DELETE FROM users WHERE id = #{id}
+    </delete>
+
+    <!-- 根据邮箱查询用户 -->
+    <select id="selectUserByEmail" resultType="com.zhouyi.entity.User">
+        SELECT id, phone, password, username, email, avatar_url, status,
+               last_login_time, created_time, updated_time
+        FROM users
+        WHERE email = #{email}
+    </select>
+
+    <!-- 更新用户个人资料 -->
+    <update id="updateUserProfile">
+        UPDATE users
+        <set>
+            <if test="username != null and username != ''">
+                username = #{username},
+            </if>
+            <if test="avatarUrl != null">
+                avatar_url = #{avatarUrl},
+            </if>
+            updated_time = CURRENT_TIMESTAMP
+        </set>
+        WHERE id = #{userId}
+    </update>
+
+    <!-- 更新用户属性（管理员操作） -->
+    <update id="updateUserAttributes">
+        UPDATE users
+        <set>
+            <if test="status != null">
+                status = #{status},
+            </if>
+            updated_time = CURRENT_TIMESTAMP
+        </set>
+        WHERE id = #{userId}
+    </update>
+
+    <!-- 更新用户邮箱 -->
+    <update id="updateUserEmail">
+        UPDATE users
+        SET email = #{email},
+            updated_time = CURRENT_TIMESTAMP
+        WHERE id = #{userId}
+    </update>
+
+    <!-- 更新用户手机号 -->
+    <update id="updateUserPhone">
+        UPDATE users
+        SET phone = #{phone},
+            updated_time = CURRENT_TIMESTAMP
+        WHERE id = #{userId}
+    </update>
+
+</mapper>
+

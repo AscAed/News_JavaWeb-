@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.zhouyi.mapper.VerificationTokenMapper">
+
+    <!-- Insert a new verification token -->
+    <insert id="insertToken" parameterType="com.zhouyi.entity.VerificationToken" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO verification_tokens (user_id, token_type, new_value, token, expires_at)
+        VALUES (#{userId}, #{tokenType}, #{newValue}, #{token}, #{expiresAt})
+    </insert>
+
+    <!-- Find token by user ID and token type -->
+    <select id="selectTokenByUserIdAndType" resultType="com.zhouyi.entity.VerificationToken">
+        SELECT id, user_id, token_type, new_value, token, expires_at, created_at
+        FROM verification_tokens
+        WHERE user_id = #{userId} AND token_type = #{tokenType}
+    </select>
+
+    <!-- Find token by user ID, token type and token value -->
+    <select id="selectTokenByUserIdTypeAndToken" resultType="com.zhouyi.entity.VerificationToken">
+        SELECT id, user_id, token_type, new_value, token, expires_at, created_at
+        FROM verification_tokens
+        WHERE user_id = #{userId} AND token_type = #{tokenType} AND token = #{token}
+    </select>
+
+    <!-- Delete token by user ID and token type -->
+    <delete id="deleteTokenByUserIdAndType">
+        DELETE FROM verification_tokens
+        WHERE user_id = #{userId} AND token_type = #{tokenType}
+    </delete>
+
+    <!-- Delete expired tokens -->
+    <delete id="deleteExpiredTokens">
+        DELETE FROM verification_tokens
+        WHERE expires_at &lt; NOW()
+    </delete>
+
+    <!-- Update token for existing user and type -->
+    <update id="updateToken" parameterType="com.zhouyi.entity.VerificationToken">
+        UPDATE verification_tokens
+        SET new_value = #{newValue},
+            token = #{token},
+            expires_at = #{expiresAt}
+        WHERE user_id = #{userId} AND token_type = #{tokenType}
+    </update>
+
+</mapper>
