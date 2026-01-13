@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.zhouyi.mapper.UserRoleMapper">
+
+    <resultMap id="RoleResultMap" type="com.zhouyi.entity.Role">
+        <id property="id" column="id" />
+        <result property="roleName" column="role_name" />
+        <result property="description" column="description" />
+        <result property="status" column="status" />
+    </resultMap>
+
+    <resultMap id="UserRoleResultMap" type="com.zhouyi.entity.UserRole">
+        <id property="id" column="id" />
+        <result property="userId" column="user_id" />
+        <result property="roleId" column="role_id" />
+        <result property="createdTime" column="created_time" />
+    </resultMap>
+
+    <!-- 根据用户ID查询其拥有的角色详情 -->
+    <select id="selectRolesByUserId" resultMap="RoleResultMap">
+        SELECT r.id, r.role_name, r.description, r.status
+        FROM roles r
+        JOIN user_roles ur ON r.id = ur.role_id
+        WHERE ur.user_id = #{userId}
+    </select>
+
+    <!-- 根据用户ID查询用户角色关联 -->
+    <select id="selectUserRolesByUserId" resultMap="UserRoleResultMap">
+        SELECT id, user_id, role_id
+        FROM user_roles
+        WHERE user_id = #{userId}
+    </select>
+
+    <!-- 根据角色ID查询用户角色关联 -->
+    <select id="selectUserRolesByRoleId" resultType="com.zhouyi.entity.UserRole">
+        SELECT id, user_id, role_id
+        FROM user_roles
+        WHERE role_id = #{roleId}
+    </select>
+
+    <!-- 查询所有用户角色关联 -->
+    <select id="selectAllUserRoles" resultType="com.zhouyi.entity.UserRole">
+        SELECT id, user_id, role_id
+        FROM user_roles
+    </select>
+
+    <!-- 插入用户角色关联 -->
+    <insert id="insertUserRole" parameterType="com.zhouyi.entity.UserRole">
+        INSERT INTO user_roles (user_id, role_id)
+        VALUES (#{userId}, #{roleId})
+    </insert>
+
+    <!-- 删除用户角色关联 -->
+    <delete id="deleteUserRoleById">
+        DELETE FROM user_roles WHERE id = #{id}
+    </delete>
+
+    <!-- 根据用户ID和角色ID删除关联 -->
+    <delete id="deleteUserRoleByUserIdAndRoleId">
+        DELETE FROM user_roles WHERE user_id = #{userId} AND role_id = #{roleId}
+    </delete>
+
+</mapper>

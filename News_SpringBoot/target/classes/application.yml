@@ -1,0 +1,79 @@
+# 应用服务 WEB 访问端口
+server:
+  port: 8080
+
+# JVM 启动参数配置 (在 IDE 中设置)
+# JVM Options: --enable-native-access=ALL-UNNAMED
+
+# 数据库连接配置
+spring:
+  # 允许Bean定义覆盖
+  main:
+    allow-bean-definition-overriding: true
+  
+  datasource:
+    url: jdbc:mysql://localhost:3306/news_db?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  # MongoDB配置
+  data:
+    mongodb:
+      # MongoDB连接URI
+      uri: mongodb://localhost:27017
+      # 数据库名称
+      database: News_MongoDB
+      # 是否启用MongoDB
+      enabled: true
+
+  # Servlet配置
+  servlet:
+    # HTTP编码配置
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+    # 文件上传配置
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
+      enabled: true
+
+# MyBatis配置
+mybatis:
+  # 指定MyBatis的Mapper文件位置
+  mapper-locations: classpath:mappers/*xml
+  # 开启驼峰命名转换（数据库字段下划线转驼峰，如user_id -> userId）
+  configuration:
+    map-underscore-to-camel-case: true
+
+# 自定义配置
+custom:
+  # 文件上传配置
+  file:
+    upload:
+      # 文件存储路径（相对于项目根目录）
+      path: uploads
+      # 文件访问URL前缀
+      access-url: http://localhost:8080/files
+  # MinIO配置
+  minio:
+    # MinIO服务地址
+    endpoint: http://localhost:9000
+    # Access Key
+    access-key: minioadmin
+    # Secret Key
+    secret-key: minioadmin
+    # 默认存储桶名称
+    bucket-name: news-storage
+    # 文件访问URL前缀
+    access-url: http://localhost:9000
+  # JWT配置
+  jwt:
+    # JWT密钥，使用512位安全密钥（Base64编码）
+    secret: "bXlfc2VjdXJlX2p3dF9zZWNyZXRfa2V5XzIwMjVfZm9yX25ld3Nfc3ByaW5nYm9vdF9hcHBsaWNhdGlvbl9tdXN0X2JlX2F0X2xlYXN0XzY0X2J5dGVzX2xvbmdfZW5vdWdoX2Zvcl9obWFjX3NoYV81MTI="
+    # JWT过期时间，单位毫秒（24小时）
+    expiration: 86400000
+    # JWT刷新令牌过期时间，单位毫秒（7天）
+    refresh-expiration: 604800000

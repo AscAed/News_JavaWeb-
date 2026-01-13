@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhouyi.mapper.RssFeedItemMapper">
+
+    <insert id="insert" parameterType="com.zhouyi.entity.RssFeedItem" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO rss_feed_items (subscription_id, title, link, description, pub_date, guid, author)
+        VALUES (#{subscriptionId}, #{title}, #{link}, #{description}, #{pubDate}, #{guid}, #{author})
+    </insert>
+
+    <select id="countByLinkOrGuid" resultType="int">
+        SELECT COUNT(1)
+        FROM rss_feed_items
+        WHERE link = #{link}
+           OR guid = #{guid}
+    </select>
+
+    <select id="findBySubscriptionIdAndLimit" resultType="com.zhouyi.entity.RssFeedItem">
+        SELECT *
+        FROM rss_feed_items
+        WHERE subscription_id = #{subscriptionId}
+        ORDER BY pub_date DESC
+        LIMIT #{limit}
+    </select>
+
+</mapper>

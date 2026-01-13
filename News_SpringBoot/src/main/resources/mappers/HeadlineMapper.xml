@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.zhouyi.mapper.HeadlineMapper">
+
+    <!-- 分页查询头条列表 -->
+    <select id="selectHeadlinesByPage" resultType="com.zhouyi.entity.Headline">
+        SELECT h.hid, h.title, h.type, t.tname as typeName, h.page_views as pageViews,
+               h.like_count as likeCount, h.comment_count as commentCount,
+               TIMESTAMPDIFF(HOUR, h.published_time, NOW()) as pastHours,
+               h.publisher, u.username as author, h.status, h.is_top as isTop,
+               h.cover_image_url as coverImage,
+               h.created_time as createdTime, h.updated_time as updatedTime, h.published_time as publishedTime
+        FROM headlines h
+        LEFT JOIN news_types t ON h.type = t.tid
+        LEFT JOIN users u ON h.publisher = u.id
+        WHERE h.status = 1
+        <if test="type != null">
+            AND h.type = #{type}
+        </if>
+        <if test="keyWords != null and keyWords != ''">
+            AND (h.title LIKE CONCAT('%', #{keyWords}, '%') OR h.summary LIKE CONCAT('%', #{keyWords}, '%'))
+        </if>
+        <if test="publisher != null">
+            AND h.publisher = #{publisher}
+        </if>
+        ORDER BY h.is_top DESC, h.published_time DESC
+        LIMIT #{pageSize} OFFSET #{pageNum}
+    </select>
+
+    <!-- 统计头条总数 -->
+    <select id="countHeadlines" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM headlines h
+        WHERE h.status = 1
+        <if test="type != null">
+            AND h.type = #{type}
+        </if>
+        <if test="keyWords != null and keyWords != ''">
+            AND (h.title LIKE CONCAT('%', #{keyWords}, '%') OR h.summary LIKE CONCAT('%', #{keyWords}, '%'))
+        </if>
+        <if test="publisher != null">
+            AND h.publisher = #{publisher}
+        </if>
+    </select>
+
+    <!-- 根据ID查询头条详情 -->
+    <select id="selectHeadlineById" resultType="com.zhouyi.entity.Headline">
+        SELECT h.hid, h.title, h.type, t.tname as typeName, h.page_views as pageViews,
+               h.like_count as likeCount, h.comment_count as commentCount,
+               TIMESTAMPDIFF(HOUR, h.published_time, NOW()) as pastHours,
+               h.publisher, u.username as author, h.status, h.is_top as isTop,
+               h.cover_image_url as coverImage,
+               h.created_time as createdTime, h.updated_time as updatedTime, h.published_time as publishedTime
+        FROM headlines h
+        LEFT JOIN news_types t ON h.type = t.tid
+        LEFT JOIN users u ON h.publisher = u.id
+        WHERE h.hid = #{hid}
+    </select>
+
+    <!-- 插入头条 -->
+    <insert id="insertHeadline" parameterType="com.zhouyi.entity.Headline" useGeneratedKeys="true" keyProperty="hid">
+        INSERT INTO headlines (title, type, summary, cover_image_url, tags, page_views, publisher, 
+                               author, status, is_top, created_time, updated_time, published_time, like_count, comment_count)
+        VALUES (#{title}, #{type}, #{summary}, #{coverImage}, #{tags}, 0, #{publisher}, 
+                #{author}, #{status}, #{isTop}, NOW(), NOW(), NOW(), 0, 0)
+    </insert>
+
+    <!-- 更新头条 -->
+    <update id="updateHeadline" parameterType="com.zhouyi.entity.Headline">
+        UPDATE headlines
+        SET title = #{title}, type = #{type}, summary = #{summary}, cover_image_url = #{coverImage},
+            tags = #{tags}, updated_time = NOW()
+        WHERE hid = #{hid}
+    </update>
+
+    <!-- 删除头条 -->
+    <delete id="deleteHeadline">
+        DELETE FROM headlines WHERE hid = #{hid}
+    </delete>
+
+    <!-- 增加浏览量 -->
+    <update id="incrementPageViews">
+        UPDATE headlines SET page_views = page_views + 1 WHERE hid = #{hid}
+    </update>
+
+    <!-- 根据类型查询类型名称 -->
+    <select id="selectTypeNameByType" resultType="java.lang.String">
+        SELECT tname FROM news_types WHERE tid = #{type}
+    </select>
+
+    <!-- 根据ID查询头条 (Standard naming) -->
+    <select id="selectById" resultType="com.zhouyi.entity.Headline">
+        SELECT h.hid, h.title, h.type, t.tname as typeName, h.page_views as pageViews,
+               h.like_count as likeCount, h.comment_count as commentCount,
+               TIMESTAMPDIFF(HOUR, h.published_time, NOW()) as pastHours,
+               h.publisher, u.username as author, h.status, h.is_top as isTop,
+               h.cover_image_url as coverImage,
+               h.created_time as createdTime, h.updated_time as updatedTime, h.published_time as publishedTime
+        FROM headlines h
+        LEFT JOIN news_types t ON h.type = t.tid
+        LEFT JOIN users u ON h.publisher = u.id
+        WHERE h.hid = #{id}
+    </select>
+
+</mapper>

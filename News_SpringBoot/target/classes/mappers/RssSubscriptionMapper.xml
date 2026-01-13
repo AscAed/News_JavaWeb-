@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhouyi.mapper.RssSubscriptionMapper">
+
+    <select id="findById" resultType="com.zhouyi.entity.RssSubscription">
+        SELECT * FROM rss_subscriptions WHERE id = #{id}
+    </select>
+
+    <select id="findAll" resultType="com.zhouyi.entity.RssSubscription">
+        SELECT * FROM rss_subscriptions
+    </select>
+
+    <update id="updateLastFetchedTime">
+        UPDATE rss_subscriptions 
+        SET last_fetched_at = #{time}
+        WHERE id = #{id}
+    </update>
+
+</mapper>
