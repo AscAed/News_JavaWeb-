@@ -6,8 +6,17 @@ export const getNewsList = (params: {
   size?: number
   type?: number
   keyword?: string
+  lang?: string
 }) => {
-  return request.get('/headlines', { params })
+  // Map frontend params to backend expected params
+  const backendParams = {
+    page: params.page,
+    pageSize: params.size,
+    typeId: params.type,
+    keywords: params.keyword,
+    lang: params.lang,
+  }
+  return request.get('/headlines', {params: backendParams})
 }
 
 // 获取新闻详情
@@ -39,17 +48,17 @@ export const deleteNews = (hid: number) => {
 
 // 获取新闻分类
 export const getNewsTypes = () => {
-  return request.get('/news-types')
+  return request.get('/categories')
 }
 
 // 上传文件
 export const uploadFile = (file: File) => {
   const formData = new FormData()
   formData.append('file', file)
-  
+
   return request.post('/common/upload', formData, {
     headers: {
-      'Content-Type': 'multipart/form-data'
-    }
+      'Content-Type': 'multipart/form-data',
+    },
   })
 }

@@ -13,10 +13,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @version 2.2
  */
 @SpringBootApplication
+@org.springframework.scheduling.annotation.EnableScheduling
 public class NewsSpringBootApplication {
 
-
-    public static void main(String[] args) {
+    static void main(String[] args) {
         SpringApplication.run(NewsSpringBootApplication.class, args);
     }
 }

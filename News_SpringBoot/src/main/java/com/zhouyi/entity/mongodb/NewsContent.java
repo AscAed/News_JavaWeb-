@@ -1,11 +1,12 @@
 package com.zhouyi.entity.mongodb;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -17,7 +18,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Document(collection = "news")
-public class NewsContent {
+public class NewsContent implements com.zhouyi.entity.UnifiedNewsContent {
 
     @Id
     private String id; // MongoDB主键
@@ -79,4 +80,40 @@ public class NewsContent {
     @Field("status")
     private Integer status; // 状态：0-草稿，1-发布，2-下线
 
+    // UnifiedNewsContent implementation fields
+    @Field("source_type")
+    private com.zhouyi.common.enums.NewsSource sourceType = com.zhouyi.common.enums.NewsSource.API;
+
+    @Field("source_id")
+    private String sourceId;
+
+    @Field("mysql_headline_id")
+    private Integer mysqlHeadlineId;
+
+    @Override
+    public com.zhouyi.common.enums.NewsSource getSourceType() {
+        return sourceType;
+    }
+
+    @Override
+    public String getSourceId() {
+        return sourceId;
+    }
+
+    @Override
+    public Integer getMysqlHeadlineId() {
+        return mysqlHeadlineId;
+    }
+
+    @Override
+    public LocalDateTime getPublishedAt() {
+        // Use createdAt or updatedAt as fallback if needed, or add a publishedAt field
+        // if missing
+        return createdAt;
+    }
+
+    @Override
+    public List<String> getTags() {
+        return tagList;
+    }
 }

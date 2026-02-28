@@ -112,4 +112,39 @@ public class Headline {
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'")
     private LocalDateTime publishedTime;
 
+    /**
+     * Hours since publication (calculated field)
+     */
+    @JsonProperty("past_hours")
+    private Long pastHours;
+
+    /**
+     * Data source type: api or rss
+     */
+    @JsonProperty("source_type")
+    private String sourceType;
+
+    /**
+     * External source ID (e.g. RSS subscription ID)
+     */
+    @JsonProperty("source_id")
+    private String sourceId;
+
+    /**
+     * MongoDB collection name: news or rss_articles
+     */
+    @JsonProperty("mongodb_collection")
+    private String mongodbCollection;
+
+    /**
+     * MongoDB document ObjectId
+     */
+    @JsonProperty("mongodb_document_id")
+    private String mongodbDocumentId;
+
+    /**
+     * Language code (zh or en)
+     */
+    private String lang;
+
 }

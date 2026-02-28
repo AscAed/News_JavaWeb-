@@ -1,10 +1,8 @@
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
-import { useRouter } from 'vue-router'
-import { useUserStore } from '@/stores/user'
-import { ElMessage } from 'element-plus'
-import { Phone, Lock } from '@element-plus/icons-vue'
-import type { LoginForm } from '@/types'
+import {reactive, ref} from 'vue'
+import {useRouter} from 'vue-router'
+import {useUserStore} from '@/stores/user'
+import type {LoginForm} from '@/types'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -12,19 +10,19 @@ const userStore = useUserStore()
 // 表单数据
 const loginForm = reactive<LoginForm>({
   phone: '',
-  password: ''
+  password: '',
 })
 
 // 表单验证规则
 const rules = {
   phone: [
     { required: true, message: '请输入手机号', trigger: 'blur' },
-    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur' }
+    {pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur'},
   ],
   password: [
     { required: true, message: '请输入密码', trigger: 'blur' },
-    { min: 6, max: 16, message: '密码长度为6-16位', trigger: 'blur' }
-  ]
+    {min: 6, max: 16, message: '密码长度为6-16位', trigger: 'blur'},
+  ],
 }
 
 // 响应式数据
@@ -34,15 +32,15 @@ const formRef = ref()
 // 方法
 const handleLogin = async () => {
   if (!formRef.value) return
-  
+
   try {
     await formRef.value.validate()
     loading.value = true
-    
+
     // 调用登录API
     const success = await userStore.login({
       phone: loginForm.phone,
-      password: loginForm.password
+      password: loginForm.password,
     })
     if (success) {
       router.push('/')
@@ -60,68 +58,189 @@ const goToRegister = () => {
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-md w-full space-y-8">
-      <div>
-        <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          登录到新闻头条
-        </h2>
-        <p class="mt-2 text-center text-sm text-gray-600">
-          或
-          <router-link to="/register" class="font-medium text-indigo-600 hover:text-indigo-500">
-            注册新账号
-          </router-link>
+  <div class="auth-container login-page">
+    <div class="auth-card">
+      <div class="back-action">
+        <el-button class="back-btn" link @click="router.push('/')">
+          <el-icon>
+            <ArrowLeft/>
+          </el-icon>
+          返回首页
+        </el-button>
+      </div>
+      <div class="auth-header">
+        <h1 class="logo-title">易闻趣事</h1>
+        <h2 class="auth-title">登录</h2>
+        <p class="auth-subtitle">
+          使用您的易闻趣事账号继续
         </p>
       </div>
-      
-      <div class="mt-8">
-        <div class="bg-white py-8 px-6 shadow rounded-lg">
-          <el-form
-            ref="formRef"
-            :model="loginForm"
-            :rules="rules"
-            class="space-y-6"
-            @submit.prevent="handleLogin"
+
+      <el-form
+        ref="formRef"
+        :model="loginForm"
+        :rules="rules"
+        class="auth-form"
+        label-position="top"
+        @submit.prevent="handleLogin"
+      >
+        <el-form-item prop="phone">
+          <el-input
+            v-model="loginForm.phone"
+            class="google-input"
+            placeholder="手机号"
+            size="large"
+          />
+        </el-form-item>
+
+        <el-form-item prop="password">
+          <el-input
+            v-model="loginForm.password"
+            class="google-input"
+            placeholder="密码"
+            show-password
+            size="large"
+            type="password"
+            @keyup.enter="handleLogin"
+          />
+        </el-form-item>
+
+        <div class="auth-actions">
+          <router-link class="auth-link" to="/register">创建账号</router-link>
+          <el-button
+            :loading="loading"
+            class="auth-submit-btn"
+            size="large"
+            type="primary"
+            @click="handleLogin"
           >
-            <div>
-              <el-form-item label="手机号" prop="phone">
-                <el-input
-                  v-model="loginForm.phone"
-                  placeholder="请输入手机号"
-                  :prefix-icon="Phone"
-                  size="large"
-                />
-              </el-form-item>
-            </div>
-
-            <div>
-              <el-form-item label="密码" prop="password">
-                <el-input
-                  v-model="loginForm.password"
-                  type="password"
-                  placeholder="请输入密码"
-                  :prefix-icon="Lock"
-                  size="large"
-                  show-password
-                  @keyup.enter="handleLogin"
-                />
-              </el-form-item>
-            </div>
-
-            <div>
-              <el-button
-                type="primary"
-                size="large"
-                :loading="loading"
-                @click="handleLogin"
-                class="w-full"
-              >
-                {{ loading ? '登录中...' : '登录' }}
-              </el-button>
-            </div>
-          </el-form>
+            {{ loading ? '请稍候...' : '下一步' }}
+          </el-button>
         </div>
-      </div>
+      </el-form>
     </div>
   </div>
 </template>
+
+<style scoped>
+.auth-container {
+  min-height: calc(100vh - 72px - 140px); /* Adjust based on header/footer height */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-secondary);
+  padding: var(--spacing-xl) var(--spacing-md);
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 448px;
+  background-color: var(--bg-primary);
+  border-radius: 8px;
+  border: 1px solid var(--border-primary);
+  padding: 48px 40px 36px;
+  box-sizing: border-box;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+@media (max-width: 600px) {
+  .auth-card {
+    border: none;
+    box-shadow: none;
+    background-color: transparent;
+    padding: 24px 20px;
+  }
+}
+
+.back-action {
+  margin-bottom: 16px;
+  margin-top: -16px;
+  margin-left: -16px;
+}
+
+.back-btn {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.auth-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.logo-title {
+  color: var(--primary-color);
+  font-family: var(--font-family-heading);
+  font-size: 24px;
+  font-weight: 500;
+  margin-bottom: 16px;
+}
+
+.auth-title {
+  font-family: var(--font-family-sans);
+  font-size: 24px;
+  font-weight: 400;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.auth-subtitle {
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.auth-form {
+  margin-top: var(--spacing-md);
+}
+
+:deep(.google-input .el-input__wrapper) {
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 1px var(--border-secondary) !important;
+  padding: 8px 15px;
+  background-color: transparent;
+}
+
+:deep(.google-input .el-input__wrapper.is-focus) {
+  box-shadow: inset 0 0 0 2px var(--primary-color) !important;
+}
+
+:deep(.google-input .el-input__inner) {
+  height: 38px;
+  font-size: 16px;
+  color: var(--text-primary);
+}
+
+.auth-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 40px;
+}
+
+.auth-submit-btn {
+  height: 36px;
+  padding: 0 24px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 4px;
+  background-color: var(--primary-accent);
+}
+
+.auth-link {
+  color: var(--primary-accent);
+  font-weight: 500;
+  text-decoration: none;
+  font-size: 14px;
+  padding: 8px;
+  margin-left: -8px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.auth-link:hover {
+  background-color: var(--bg-tertiary);
+}
+</style>

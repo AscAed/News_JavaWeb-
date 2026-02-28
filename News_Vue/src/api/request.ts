@@ -1,6 +1,6 @@
 import axios from 'axios'
-import { ElMessage } from 'element-plus'
-import { API_BASE_URL, REQUEST_CONFIG } from './config'
+import {ElMessage} from 'element-plus'
+import {API_BASE_URL, REQUEST_CONFIG} from './config'
 
 // 创建axios实例
 const request = axios.create({
@@ -20,19 +20,19 @@ request.interceptors.request.use(
   },
   (error) => {
     return Promise.reject(error)
-  }
+  },
 )
 
 // 响应拦截器
 request.interceptors.response.use(
   (response) => {
     const { code, message, data } = response.data
-    
+
     // 请求成功
     if (code === 200) {
       return response.data
     }
-    
+
     // 请求失败
     ElMessage.error(message || '请求失败')
     return Promise.reject(new Error(message || '请求失败'))
@@ -41,12 +41,27 @@ request.interceptors.response.use(
     // 处理HTTP错误状态
     if (error.response) {
       const { status, data } = error.response
-      
+
       switch (status) {
         case 401:
           ElMessage.error('登录已过期，请重新登录')
           localStorage.removeItem('token')
-          window.location.href = '/login'
+          localStorage.removeItem('userInfo')
+
+          import('@/stores/user').then(({useUserStore}) => {
+            const userStore = useUserStore()
+            userStore.token = ''
+            userStore.userInfo = null
+          })
+
+          import('@/router').then(({default: router}) => {
+            if (
+              router.currentRoute.value.meta?.requiresAuth ||
+              router.currentRoute.value.meta?.requiresAdmin
+            ) {
+              router.push('/login')
+            }
+          })
           break
         case 403:
           ElMessage.error('没有权限访问该资源')
@@ -65,9 +80,9 @@ request.interceptors.response.use(
     } else {
       ElMessage.error('请求配置错误')
     }
-    
+
     return Promise.reject(error)
-  }
+  },
 )
 
 export default request

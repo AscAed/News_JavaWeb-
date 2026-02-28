@@ -1,9 +1,9 @@
----
-description: Document major failure points in this project and they were solved.  To be filled by AI.
-globs: 
-alwaysApply: false
----
----
-description: Document major failure points in this project and they were solved.  To be filled by AI. 
-globs: 
----
+# Error Documentation
+
+## RSS Hybrid Storage Implementation Issues
+
+### 1. Compilation Error: Elasticsearch package does not exist
+- **Issue**: After adding `ElasticsearchConfig` and `RssArticleSearchDocument`, the project failed to compile because the `spring-boot-starter-data-elasticsearch` dependency was missing in `pom.xml`.
+- **Context**: Occurred during Phase 10 (Elasticsearch Preparation).
+- **Resolution**: Added the `org.springframework.boot:spring-boot-starter-data-elasticsearch` dependency to `pom.xml`.
+- **Lesson**: Always verify and add required Maven dependencies before introducing new classes that depend on external libraries.

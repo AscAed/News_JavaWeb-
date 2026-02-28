@@ -2,25 +2,12 @@
   <div class="app-layout">
     <!-- 顶部导航栏 -->
     <AppHeader />
-    
+
     <!-- 主要内容区域 -->
     <main class="main-content" :class="{ 'with-sidebar': showSidebar }">
-      <!-- 面包屑导航 -->
-      <div v-if="showBreadcrumb" class="breadcrumb-section">
-        <div class="container">
-          <el-breadcrumb separator="/">
-            <el-breadcrumb-item 
-              v-for="item in breadcrumbItems" 
-              :key="item.path"
-              :to="item.path"
-            >
-              {{ item.title }}
-            </el-breadcrumb-item>
-          </el-breadcrumb>
-        </div>
-      </div>
 
-      <!-- 页面标题区域 -->
+
+    <!-- 页面标题区域 -->
       <div v-if="pageTitle" class="page-header">
         <div class="container">
           <div class="page-header-content">
@@ -43,7 +30,7 @@
             <div class="main-content-area" :class="mainContentClass">
               <slot></slot>
             </div>
-            
+
             <!-- 侧边栏 -->
             <aside v-if="showSidebar" class="sidebar" :class="sidebarClass">
               <div class="sidebar-content">
@@ -61,8 +48,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useRoute } from 'vue-router'
+import {computed} from 'vue'
+import {useRoute} from 'vue-router'
 import AppHeader from './AppHeader.vue'
 import AppFooter from './AppFooter.vue'
 
@@ -93,10 +80,10 @@ const breadcrumbItems = computed(() => {
   const items = [
     { title: '首页', path: '/' }
   ]
-  
+
   const pathSegments = route.path.split('/').filter(Boolean)
   let currentPath = ''
-  
+
   pathSegments.forEach((segment, index) => {
     currentPath += `/${segment}`
     const title = getBreadcrumbTitle(segment, currentPath)
@@ -106,7 +93,7 @@ const breadcrumbItems = computed(() => {
       items.push({ title, path: currentPath })
     }
   })
-  
+
   return items
 })
 
@@ -124,30 +111,30 @@ const getBreadcrumbTitle = (segment: string, path: string): string => {
     'trending': '热点',
     'live': '直播'
   }
-  
+
   return titleMap[segment] || segment
 }
 
 // 内容区域样式类
 const contentWrapperClass = computed(() => {
   const classes = []
-  
+
   if (props.showSidebar) {
     classes.push('has-sidebar')
     classes.push(`sidebar-${props.sidebarPosition}`)
     classes.push(`sidebar-${props.sidebarWidth}`)
   }
-  
+
   return classes.join(' ')
 })
 
 const mainContentClass = computed(() => {
   const classes = []
-  
+
   if (props.showSidebar) {
     classes.push('with-sidebar-content')
   }
-  
+
   switch (props.contentLayout) {
     case 'wide':
       classes.push('content-wide')
@@ -161,16 +148,16 @@ const mainContentClass = computed(() => {
     default:
       classes.push('content-default')
   }
-  
+
   return classes.join(' ')
 })
 
 const sidebarClass = computed(() => {
   const classes = ['sidebar-panel']
-  
+
   classes.push(`sidebar-${props.sidebarPosition}`)
   classes.push(`sidebar-${props.sidebarWidth}`)
-  
+
   return classes.join(' ')
 })
 </script>
@@ -185,34 +172,7 @@ const sidebarClass = computed(() => {
   background: var(--bg-secondary);
 }
 
-/* 面包屑导航 */
-.breadcrumb-section {
-  background: var(--bg-primary);
-  border-bottom: 1px solid var(--border-primary);
-  padding: var(--spacing-md) 0;
-}
 
-.breadcrumb-section :deep(.el-breadcrumb) {
-  font-size: var(--text-sm);
-}
-
-.breadcrumb-section :deep(.el-breadcrumb__item) {
-  color: var(--text-muted);
-}
-
-.breadcrumb-section :deep(.el-breadcrumb__item.is-link) {
-  color: var(--text-secondary);
-  transition: var(--transition-normal);
-}
-
-.breadcrumb-section :deep(.el-breadcrumb__item.is-link:hover) {
-  color: var(--primary-color);
-}
-
-.breadcrumb-section :deep(.el-breadcrumb__item:last-child) {
-  color: var(--text-primary);
-  font-weight: 500;
-}
 
 /* 页面标题 */
 .page-header {
@@ -363,19 +323,19 @@ const sidebarClass = computed(() => {
     grid-template-columns: 1fr;
     gap: var(--spacing-lg);
   }
-  
+
   .sidebar {
     position: static;
     max-height: none;
     order: -1;
   }
-  
+
   .page-header-content {
     flex-direction: column;
     align-items: flex-start;
     gap: var(--spacing-lg);
   }
-  
+
   .page-actions {
     width: 100%;
     justify-content: flex-start;
@@ -386,19 +346,19 @@ const sidebarClass = computed(() => {
   .container {
     padding: 0 var(--spacing-md);
   }
-  
+
   .page-title {
     font-size: var(--text-2xl);
   }
-  
+
   .page-subtitle {
     font-size: var(--text-base);
   }
-  
+
   .content-container {
     padding: var(--spacing-lg) 0;
   }
-  
+
   .sidebar-content {
     padding: var(--spacing-md);
   }

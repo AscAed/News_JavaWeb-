@@ -17,6 +17,12 @@ import java.util.Optional;
 @Repository
 public interface RssArticleRepository extends MongoRepository<RssArticle, String> {
 
+    // Find article by its linked MySQL headline ID
+    RssArticle findByMysqlHeadlineId(Integer mysqlHeadlineId);
+
+    // Find articles that haven't been synced to MySQL yet
+    List<RssArticle> findByMysqlHeadlineIdIsNull();
+
     /**
      * 根据链接查找文章
      */
@@ -128,4 +134,98 @@ public interface RssArticleRepository extends MongoRepository<RssArticle, String
      * 根据发布时间查找之前的文章
      */
     List<RssArticle> findByPubDateBefore(LocalDateTime date);
+
+    // ========== Hybrid Storage Enhancement Methods ==========
+
+    /**
+     * 根据内容哈希查找文章（用于去重）
+     */
+    Optional<RssArticle> findByContentHash(String contentHash);
+
+    /**
+     * 根据订阅源ID和内容哈希查找文章
+     */
+    Optional<RssArticle> findBySubscriptionIdAndContentHash(String subscriptionId, String contentHash);
+
+    /**
+     * 查找包含特定搜索关键词的文章
+     */
+    @Query("{ 'searchKeywords': { '$in': ?0 } }")
+    List<RssArticle> findBySearchKeywordsIn(List<String> keywords);
+
+    /**
+     * 全文搜索（使用searchText字段）
+     */
+    @Query("{ '$text': { '$search': ?0 } }")
+    List<RssArticle> searchByText(String searchText);
+
+    /**
+     * 全文搜索（分页）
+     */
+    @Query("{ '$text': { '$search': ?0 } }")
+    Page<RssArticle> searchByText(String searchText, Pageable pageable);
+
+    /**
+     * 查找未同步到Elasticsearch的文章
+     */
+    @Query("{ '$or': [ { 'esIndexed': false }, { 'esIndexed': null } ] }")
+    List<RssArticle> findNotIndexedToElasticsearch();
+
+    /**
+     * 查找未同步到Elasticsearch的文章（分页）
+     */
+    @Query("{ '$or': [ { 'esIndexed': false }, { 'esIndexed': null } ] }")
+    Page<RssArticle> findNotIndexedToElasticsearch(Pageable pageable);
+
+    /**
+     * 更新文章的Elasticsearch同步状态
+     */
+    @Query(value = "{ '_id': ?0 }", fields = "{ 'esIndexed': 1, 'esIndexedAt': 1 }")
+    void updateElasticsearchSyncStatus(String id, boolean esIndexed, LocalDateTime esIndexedAt);
+
+    /**
+     * 根据版本号查找文章
+     */
+    List<RssArticle> findByVersion(Integer version);
+
+    /**
+     * 查找最新版本的文章（版本号大于指定值）
+     */
+    @Query("{ 'version': { '$gt': ?0 } }")
+    List<RssArticle> findByVersionGreaterThan(Integer version);
+
+    /**
+     * 统计特定订阅源的文章总字数
+     */
+    @Query(value = "{ 'subscriptionId': ?0 }", fields = "{ 'wordCount': 1 }")
+    List<RssArticle> findWordCountsBySubscriptionId(String subscriptionId);
+
+    /**
+     * 查找高重要度文章（分页）
+     */
+    @Query("{ 'importanceScore': { '$gte': ?0 } }")
+    Page<RssArticle> findHighImportanceArticles(Double minScore, Pageable pageable);
+
+    /**
+     * 根据分类查找文章（分页）
+     */
+    Page<RssArticle> findByCategories(String category, Pageable pageable);
+
+    /**
+     * 查找最近浏览的文章
+     */
+    @Query("{ 'lastViewedAt': { '$ne': null } }")
+    List<RssArticle> findRecentlyViewed(Pageable pageable);
+
+    /**
+     * 增加文章浏览次数
+     */
+    @Query(value = "{ '_id': ?0 }", fields = "{ 'viewCount': 1 }")
+    void incrementViewCount(String id);
+
+    /**
+     * 增加文章分享次数
+     */
+    @Query(value = "{ '_id': ?0 }", fields = "{ 'shareCount': 1 }")
+    void incrementShareCount(String id);
 }

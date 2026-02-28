@@ -10,11 +10,12 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * RSS文章MongoDB实体
+ * RSS文章MongoDB实体 - MongoDB存储
+ * 用于存储RSS文章的完整内容和元数据
  */
 @Data
 @Document(collection = "rss_articles")
-public class RssArticle {
+public class RssArticle implements com.zhouyi.entity.UnifiedNewsContent {
 
     @Id
     private String id;
@@ -149,6 +150,105 @@ public class RssArticle {
     private Boolean isFavorite = false;
 
     /**
+     * 搜索文本 (组合标题和内容用于搜索优化)
+     */
+    @Field("search_text")
+    private String searchText;
+
+    /**
+     * 搜索关键词
+     */
+    @Field("search_keywords")
+    private List<String> searchKeywords;
+
+    /**
+     * 内容版本号
+     */
+    @Field("version")
+    private Integer version = 1;
+
+    /**
+     * 内容哈希值 (用于去重)
+     */
+    @Field("content_hash")
+    private String contentHash;
+
+    /**
+     * 浏览次数
+     */
+    @Field("view_count")
+    private Integer viewCount = 0;
+
+    /**
+     * 分享次数
+     */
+    @Field("share_count")
+    private Integer shareCount = 0;
+
+    /**
+     * 最后浏览时间
+     */
+    @Field("last_viewed_at")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'")
+    private LocalDateTime lastViewedAt;
+
+    /**
+     * 是否已同步到Elasticsearch
+     */
+    @Field("es_indexed")
+    private Boolean esIndexed = false;
+
+    /**
+     * Elasticsearch索引时间
+     */
+    @Field("es_indexed_at")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'")
+    private LocalDateTime esIndexedAt;
+
+    /**
+     * MySQL头条ID (关联字段)
+     */
+    @Field("mysql_headline_id")
+    private Integer mysqlHeadlineId;
+
+    // Interface implementation methods
+
+    @Override
+    public String getContent() {
+        return contentText;
+    }
+
+    @Override
+    public String getCoverImage() {
+        return null; // Could try to extract from description
+    }
+
+    @Override
+    public List<String> getTags() {
+        return categories;
+    }
+
+    @Override
+    public LocalDateTime getPublishedAt() {
+        return pubDate;
+    }
+
+    @Override
+    public com.zhouyi.common.enums.NewsSource getSourceType() {
+        return com.zhouyi.common.enums.NewsSource.RSS;
+    }
+
+    @Override
+    public String getSourceId() {
+        return subscriptionId;
+    }
+
+    @Override
+    public Integer getMysqlHeadlineId() {
+        return mysqlHeadlineId;
+    }
+
+    /**
      * 情感分析结果内部类
      */
     @Data
@@ -161,7 +261,6 @@ public class RssArticle {
 
         @Field("confidence")
         private Double confidence;
-
     }
 
 }

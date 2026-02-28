@@ -12,39 +12,43 @@ import java.util.List;
  */
 @Repository
 public interface NewsContentRepository extends MongoRepository<NewsContent, String> {
-    
+
+    NewsContent findByHid(Integer hid);
+
+    NewsContent findByMysqlHeadlineId(Integer mysqlHeadlineId);
+
     /**
      * 根据新闻ID查找内容
      */
     NewsContent findByNewsId(Integer newsId);
-    
+
     /**
      * 根据标题模糊搜索
      */
     List<NewsContent> findByTitleContainingIgnoreCase(String title);
-    
+
     /**
      * 根据内容模糊搜索
      */
     List<NewsContent> findByContentContainingIgnoreCase(String content);
-    
+
     /**
      * 根据关键词搜索
      */
     @Query("{'keywords': {$regex: ?0, $options: 'i'}}")
     List<NewsContent> findByKeywords(String keyword);
-    
+
     /**
      * 根据状态查找
      */
     List<NewsContent> findByStatus(Integer status);
-    
+
     /**
      * 全文搜索（标题和内容）
      */
     @Query("{$or: [{'title': {$regex: ?0, $options: 'i'}}, {'content': {$regex: ?0, $options: 'i'}}]}")
     List<NewsContent> fullTextSearch(String keyword);
-    
+
     /**
      * 统计新闻数量
      */

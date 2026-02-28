@@ -1,88 +1,58 @@
 <template>
   <div class="news-card" :class="[cardSize, { 'featured': isFeatured }]">
-    <!-- 封面图片 -->
-    <div class="card-image-container" @click="goToDetail">
-      <img
-        v-if="news.coverImageUrl"
-        :src="news.coverImageUrl"
-        :alt="news.title"
-        class="card-image"
-        @error="handleImageError"
-        loading="lazy"
-      />
-      <div v-else class="card-image-placeholder">
-        <el-icon class="placeholder-icon"><Picture /></el-icon>
-      </div>
-      
-      <!-- 图片覆盖层 -->
-      <div class="card-image-overlay">
-        <div class="overlay-content">
-          <div class="category-badge" v-if="news.typeName">
-            {{ news.typeName }}
-          </div>
-          <div class="reading-time" v-if="(news as any).readingTime">
-            <el-icon><Clock /></el-icon>
-            {{ (news as any).readingTime }}分钟阅读
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 卡片内容 -->
+    <!-- 卡片内容 (左侧) -->
     <div class="card-content">
       <!-- 标题 -->
       <h3 class="card-title" @click="goToDetail">
         {{ news.title }}
       </h3>
-      
+
       <!-- 摘要 -->
       <p v-if="news.summary" class="card-summary" @click="goToDetail">
         {{ news.summary }}
       </p>
-      
-      <!-- 标签 -->
-      <div v-if="news.tags" class="card-tags">
-        <el-tag
-          v-for="tag in getTagList(news.tags)"
-          :key="tag"
-          size="small"
-          :type="getTagType(tag)"
-          effect="plain"
-          class="news-tag"
-        >
-          {{ tag }}
+
+      <!-- 标签 & 分类 (合并显示在摘要下方) -->
+      <div class="news-tags-group">
+        <el-tag v-if="news.typeName" class="news-tag type-tag" effect="plain" size="small"
+                type="info">
+          {{ news.typeName }}
         </el-tag>
+        <template v-if="news.tags">
+          <el-tag
+            v-for="tag in getTagList(news.tags)"
+            :key="tag"
+            :type="getTagType(tag)"
+            class="news-tag"
+            effect="plain"
+            size="small"
+          >
+            {{ tag }}
+          </el-tag>
+        </template>
       </div>
-      
+
       <!-- 元信息 -->
       <div class="card-meta">
         <div class="meta-left">
-          <div class="author-info" v-if="news.author">
-            <el-avatar :size="24">
-              {{ news.author.charAt(0) }}
-            </el-avatar>
-            <span class="author-name">{{ news.author }}</span>
-          </div>
+          <span v-if="news.author" class="author-name">{{ news.author }}</span>
           <span class="publish-time">{{ formatTime(news.publishedTime) }}</span>
-        </div>
-        
-        <div class="meta-right">
-          <div class="stats">
-            <span class="stat-item">
-              <el-icon><View /></el-icon>
-              {{ formatNumber(news.pageViews) }}
-            </span>
-            <span class="stat-item">
-              <el-icon><Star /></el-icon>
-              {{ formatNumber(news.likeCount) }}
-            </span>
-            <span class="stat-item" v-if="news.commentCount">
-              <el-icon><ChatDotRound /></el-icon>
-              {{ news.commentCount }}
-            </span>
-          </div>
+          <span v-if="(news as any).readingTime" class="reading-time">
+            · {{ (news as any).readingTime }}分钟阅读
+          </span>
         </div>
       </div>
+    </div>
+
+    <!-- 封面图片 (右侧) -->
+    <div v-if="news.coverImageUrl" class="card-image-container" @click="goToDetail">
+      <img
+        :alt="news.title"
+        :src="news.coverImageUrl"
+        class="card-image"
+        loading="lazy"
+        @error="handleImageError"
+      />
     </div>
 
     <!-- 特色标记 -->
@@ -90,7 +60,7 @@
       <el-icon><Trophy /></el-icon>
       精选
     </div>
-    
+
     <!-- 热门标记 -->
     <div v-if="news.isHot" class="hot-badge">
       <el-icon><LocalFire /></el-icon>
@@ -100,12 +70,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useRouter } from 'vue-router'
-import type { News } from '@/types'
-import {
-  Picture, Clock, View, Star, ChatDotRound, Trophy, TrendCharts
-} from '@element-plus/icons-vue'
+import {computed} from 'vue'
+import {useRouter} from 'vue-router'
+import type {News} from '@/types'
+import {Trophy} from '@element-plus/icons-vue'
 
 interface Props {
   news: News
@@ -165,13 +133,13 @@ const formatNumber = (num: number): string => {
 
 const formatTime = (time: string | undefined): string => {
   if (!time) return '未知时间'
-  
+
   const date = new Date(time)
   const now = new Date()
   const diff = now.getTime() - date.getTime()
   const hours = Math.floor(diff / (1000 * 60 * 60))
   const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-  
+
   if (hours < 1) {
     return '刚刚'
   } else if (hours < 24) {
@@ -189,36 +157,25 @@ const formatTime = (time: string | undefined): string => {
 
 .news-card {
   background: var(--bg-primary);
-  border: 1px solid var(--border-primary);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
+  border-bottom: 1px solid var(--border-primary);
+  padding-bottom: var(--spacing-xl);
   transition: var(--transition-normal);
   cursor: pointer;
   position: relative;
   display: flex;
-  flex-direction: column;
-  height: 100%;
-  box-shadow: var(--shadow-card);
+  flex-direction: row;
+  justify-content: space-between;
+  gap: var(--spacing-xl);
+  align-items: flex-start;
 }
 
 .news-card:hover {
-  transform: translateY(-8px);
-  box-shadow: var(--shadow-xl);
-  border-color: var(--primary-color);
-  box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.12), 0 8px 12px -6px rgba(0, 0, 0, 0.08);
+  opacity: 0.8;
 }
 
-/* 卡片尺寸 */
-.card-small {
-  max-width: 320px;
-}
-
-.card-medium {
-  max-width: 400px;
-}
-
-.card-large {
-  max-width: 480px;
+/* 覆盖组件的默认最大宽度以适应流式布局 */
+.card-small, .card-medium, .card-large {
+  max-width: 100%;
 }
 
 /* 特色卡片 */
@@ -231,23 +188,19 @@ const formatTime = (time: string | undefined): string => {
 /* 图片容器 */
 .card-image-container {
   position: relative;
-  width: 100%;
-  padding-top: 56.25%; /* 16:9 比例 */
+  flex-shrink: 0;
+  width: 160px;
+  height: 108px;
   overflow: hidden;
+  border-radius: var(--radius-md);
+  margin-top: var(--spacing-sm);
 }
 
 .card-image {
-  position: absolute;
-  top: 0;
-  left: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
   transition: var(--transition-normal);
-}
-
-.news-card:hover .card-image {
-  transform: scale(1.05);
 }
 
 .card-image-placeholder {
@@ -321,28 +274,25 @@ const formatTime = (time: string | undefined): string => {
 
 /* 卡片内容 */
 .card-content {
-  padding: var(--spacing-xl);
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-lg);
+  gap: var(--spacing-xs);
   flex: 1;
 }
 
 .card-title {
   font-family: var(--font-family-heading);
-  font-size: var(--headline-size-sm);
-  font-weight: 700;
+  font-size: 1.1rem;
+  font-weight: 500;
   color: var(--text-primary);
-  line-height: var(--leading-headline);
+  line-height: 1.4;
   margin: 0;
   cursor: pointer;
-  transition: var(--transition-normal);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  letter-spacing: -0.02em;
 }
 
 .card-title:hover {
@@ -361,27 +311,20 @@ const formatTime = (time: string | undefined): string => {
   font-family: var(--font-family-body);
   font-size: var(--body-size-sm);
   color: var(--text-secondary);
-  line-height: var(--leading-body);
-  margin: 0;
-  cursor: pointer;
-  transition: var(--transition-normal);
+  line-height: 1.4;
+  margin: 4px 0 0 0;
   display: -webkit-box;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  letter-spacing: 0.01em;
 }
 
-.card-summary:hover {
-  color: var(--text-primary);
-}
-
-/* 标签 */
-.card-tags {
+.news-tags-group {
   display: flex;
   flex-wrap: wrap;
   gap: var(--spacing-xs);
+  margin-top: var(--spacing-xs);
 }
 
 .news-tag {
@@ -389,52 +332,27 @@ const formatTime = (time: string | undefined): string => {
   border-radius: var(--radius-full);
 }
 
-/* 元信息 */
 .card-meta {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding-top: var(--spacing-sm);
-  border-top: 1px solid var(--border-primary);
+  margin-top: var(--spacing-sm);
 }
 
 .meta-left {
   display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);
-  flex: 1;
-}
-
-.author-info {
-  display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-xs);
+  font-size: 0.75rem;
+  color: var(--text-muted);
 }
 
 .author-name {
-  font-family: var(--font-family-body);
-  font-size: var(--body-size-sm);
-  color: var(--text-secondary);
-  font-weight: 600;
-  letter-spacing: 0.01em;
-}
-
-.publish-time {
-  font-family: var(--font-family-ui);
-  font-size: var(--text-xs);
-  color: var(--text-muted);
   font-weight: 500;
-  letter-spacing: 0.02em;
+  color: var(--text-secondary);
 }
 
-.meta-right {
-  display: flex;
-  align-items: center;
-}
-
-.stats {
-  display: flex;
-  gap: var(--spacing-md);
+.reading-time {
+  color: var(--text-muted);
 }
 
 .stat-item {
@@ -490,33 +408,21 @@ const formatTime = (time: string | undefined): string => {
 
 /* 响应式设计 */
 @media (max-width: 768px) {
-  .card-content {
-    padding: var(--spacing-md);
-  }
-  
-  .card-title {
-    font-size: var(--text-base);
-  }
-  
-  .card-summary {
-    font-size: var(--text-xs);
-  }
-  
-  .card-meta {
+  .news-card {
     flex-direction: column;
-    align-items: flex-start;
-    gap: var(--spacing-sm);
+    gap: var(--spacing-md);
   }
-  
-  .stats {
+
+  .card-image-container {
     width: 100%;
-    justify-content: space-between;
+    height: auto;
+    padding-top: 56.25%; /* 16:9 on mobile */
   }
-  
-  .overlay-content {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--spacing-sm);
+
+  .card-image {
+    position: absolute;
+    top: 0;
+    left: 0;
   }
 }
 
@@ -526,11 +432,11 @@ const formatTime = (time: string | undefined): string => {
   .card-large {
     max-width: 100%;
   }
-  
+
   .card-content {
     padding: var(--spacing-sm);
   }
-  
+
   .featured-badge,
   .hot-badge {
     top: var(--spacing-xs);
@@ -570,15 +476,15 @@ const formatTime = (time: string | undefined): string => {
     background: var(--bg-primary);
     border-color: var(--border-primary);
   }
-  
+
   .card-image-placeholder {
     background: var(--bg-tertiary);
   }
-  
+
   .category-badge {
     background: var(--primary-color);
   }
-  
+
   .reading-time {
     background: rgba(255, 255, 255, 0.1);
   }

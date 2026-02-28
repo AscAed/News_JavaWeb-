@@ -1,10 +1,19 @@
----
-description: captures important patterns, preferences, and project intelligence, living document that grows smarter as progress happens
-globs: 
-alwaysApply: false
----
----
-description: Stores important patterns, preferences, and project intelligence, living document that grows smarter as progress happens
-globs: 
-alwaysApply: true
----
+# Lessons Learned
+
+## Hybrid Storage Architecture (MySQL + MongoDB)
+
+### 1. Unified Service Layer Benefits
+- **Pattern**: Creating a `HybridRssService` that coordinates between MySQL (for metadata and small-scale relations) and MongoDB (for high-volume content) provides a clean API for the rest of the application.
+- **Benefit**: Consumers don't need to know where the data is stored; the service layer handles the cross-database logic.
+
+### 2. Content Deduplication with Hashing
+- **Pattern**: Using SHA-256 content hashes (`contentHash`) in MongoDB is an effective way to prevent duplicate articles from different RSS feeds or repeated fetch cycles.
+- **Benefit**: Significantly reduces storage waste and improves search relevance.
+
+### 3. Progressive Data Migration
+- **Pattern**: Implementing a `MigrationService` with "Preview", "Execute", and "Rollback" capabilities allows for safe production transitions.
+- **Benefit**: Reduces downtime and provides a safety net during architectural upgrades.
+
+### 4. Search Decoupling
+- **Pattern**: Abstracting search into a `SearchService` interface while providing a MongoDB implementation and an Elasticsearch template.
+- **Benefit**: Allows the system to scale from MongoDB text search to advanced Elasticsearch features without breaking clients.

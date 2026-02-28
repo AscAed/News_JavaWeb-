@@ -1,102 +1,114 @@
 <template>
-  <div class="register-container">
-    <el-card class="register-card">
-      <template #header>
-        <h2>用户注册</h2>
-      </template>
-      
+  <div class="auth-container register-page">
+    <div class="auth-card">
+      <div class="back-action">
+        <el-button class="back-btn" link @click="router.push('/')">
+          <el-icon>
+            <ArrowLeft/>
+          </el-icon>
+          返回首页
+        </el-button>
+      </div>
+      <div class="auth-header">
+        <h1 class="logo-title">易闻趣事</h1>
+        <h2 class="auth-title">创建账号</h2>
+        <p class="auth-subtitle">
+          欢迎加入易闻趣事
+        </p>
+      </div>
+
       <el-form
         ref="registerFormRef"
         :model="registerForm"
         :rules="registerRules"
-        label-width="80px"
+        class="auth-form"
+        label-position="top"
         @submit.prevent="handleRegister"
       >
-        <el-form-item label="用户名" prop="username">
+        <el-form-item prop="username">
           <el-input
             v-model="registerForm.username"
-            placeholder="请输入用户名"
-            :prefix-icon="User"
+            class="google-input"
             maxlength="20"
+            placeholder="用户名"
+            size="large"
           />
         </el-form-item>
-        
-        <el-form-item label="手机号" prop="phone">
+
+        <el-form-item prop="phone">
           <el-input
             v-model="registerForm.phone"
-            placeholder="请输入手机号"
-            :prefix-icon="Phone"
+            class="google-input"
             maxlength="11"
+            placeholder="手机号"
+            size="large"
           />
         </el-form-item>
-        
-        <el-form-item label="邮箱" prop="email">
+
+        <el-form-item prop="email">
           <el-input
             v-model="registerForm.email"
-            placeholder="请输入邮箱"
-            :prefix-icon="Message"
+            class="google-input"
+            placeholder="邮箱"
+            size="large"
           />
         </el-form-item>
-        
-        <el-form-item label="密码" prop="password">
+
+        <el-form-item prop="password">
           <el-input
             v-model="registerForm.password"
             type="password"
-            placeholder="请输入密码"
-            :prefix-icon="Lock"
+            class="google-input"
             show-password
+            placeholder="密码"
+            size="large"
           />
         </el-form-item>
-        
-        <el-form-item label="确认密码" prop="confirmPassword">
+
+        <el-form-item prop="confirmPassword">
           <el-input
             v-model="registerForm.confirmPassword"
             type="password"
-            placeholder="请再次输入密码"
-            :prefix-icon="Lock"
+            class="google-input"
             show-password
+            placeholder="确认密码"
+            size="large"
             @keyup.enter="handleRegister"
           />
         </el-form-item>
-        
-        <el-form-item>
+
+        <el-form-item class="terms-item">
           <el-checkbox v-model="agreeTerms">
             我已阅读并同意
-            <a href="#" @click.prevent="showTerms" class="link">用户协议</a>
+            <a class="auth-link-inline" href="#" @click.prevent="showTerms">用户协议</a>
             和
-            <a href="#" @click.prevent="showPrivacy" class="link">隐私政策</a>
+            <a class="auth-link-inline" href="#" @click.prevent="showPrivacy">隐私政策</a>
           </el-checkbox>
         </el-form-item>
-        
-        <el-form-item>
+
+        <div class="auth-actions">
+          <router-link class="auth-link" to="/login">登录现有账号</router-link>
           <el-button
             type="primary"
             :loading="loading"
             :disabled="!agreeTerms"
             @click="handleRegister"
-            style="width: 100%"
+            class="auth-submit-btn"
+            size="large"
           >
-            注册
+            下一步
           </el-button>
-        </el-form-item>
+        </div>
       </el-form>
-      
-      <div class="register-footer">
-        <p>
-          已有账号？
-          <router-link to="/login" class="link">立即登录</router-link>
-        </p>
-      </div>
-    </el-card>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
-import { useRouter } from 'vue-router'
-import { User, Phone, Message, Lock } from '@element-plus/icons-vue'
-import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
-import { useUserStore } from '@/stores/user'
+import {reactive, ref} from 'vue'
+import {useRouter} from 'vue-router'
+import {ElMessage, ElMessageBox, type FormInstance, type FormRules} from 'element-plus'
+import {useUserStore} from '@/stores/user'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -111,7 +123,7 @@ const registerForm = reactive({
   phone: '',
   email: '',
   password: '',
-  confirmPassword: ''
+  confirmPassword: '',
 })
 
 const validateConfirmPassword = (rule: any, value: string, callback: any) => {
@@ -126,54 +138,61 @@ const registerRules: FormRules = {
   username: [
     { required: true, message: '请输入用户名', trigger: 'blur' },
     { min: 2, max: 20, message: '用户名长度应为2-20位', trigger: 'blur' },
-    { pattern: /^[a-zA-Z0-9_\u4e00-\u9fa5]+$/, message: '用户名只能包含字母、数字、下划线和中文', trigger: 'blur' }
+    {
+      pattern: /^[a-zA-Z0-9_\u4e00-\u9fa5]+$/,
+      message: '用户名只能包含字母、数字、下划线和中文',
+      trigger: 'blur',
+    },
   ],
   phone: [
     { required: true, message: '请输入手机号', trigger: 'blur' },
-    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur' }
+    {pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur'},
   ],
   email: [
     { required: true, message: '请输入邮箱', trigger: 'blur' },
-    { type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' }
+    {type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur'},
   ],
   password: [
     { required: true, message: '请输入密码', trigger: 'blur' },
     { min: 6, max: 16, message: '密码长度应为6-16位', trigger: 'blur' },
-    { pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{6,16}$/, message: '密码必须包含大小写字母和数字', trigger: 'blur' }
+    {
+      pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{6,16}$/,
+      message: '密码必须包含大小写字母和数字',
+      trigger: 'blur',
+    },
   ],
   confirmPassword: [
     { required: true, message: '请确认密码', trigger: 'blur' },
-    { validator: validateConfirmPassword, trigger: 'blur' }
-  ]
+    {validator: validateConfirmPassword, trigger: 'blur'},
+  ],
 }
 
 // 方法
 const handleRegister = async () => {
   if (!registerFormRef.value) return
-  
+
   try {
     await registerFormRef.value.validate()
-    
+
     if (!agreeTerms.value) {
       ElMessage.warning('请先同意用户协议和隐私政策')
       return
     }
-    
+
     loading.value = true
-    
+
     // 调用注册API
     await userStore.register({
       username: registerForm.username,
       phone: registerForm.phone,
       email: registerForm.email,
-      password: registerForm.password
+      password: registerForm.password,
     })
-    
+
     ElMessage.success('注册成功，请登录')
-    
+
     // 跳转到登录页
     router.push('/login')
-    
   } catch (error: any) {
     console.error('注册失败:', error)
     ElMessage.error(error.message || '注册失败')
@@ -183,95 +202,158 @@ const handleRegister = async () => {
 }
 
 const showTerms = () => {
-  ElMessageBox.alert(
-    '这里是用户协议的内容...',
-    '用户协议',
-    {
-      confirmButtonText: '确定',
-      type: 'info'
-    }
-  )
+  ElMessageBox.alert('这里是用户协议的内容...', '用户协议', {
+    confirmButtonText: '确定',
+    type: 'info',
+  })
 }
 
 const showPrivacy = () => {
-  ElMessageBox.alert(
-    '这里是隐私政策的内容...',
-    '隐私政策',
-    {
-      confirmButtonText: '确定',
-      type: 'info'
-    }
-  )
+  ElMessageBox.alert('这里是隐私政策的内容...', '隐私政策', {
+    confirmButtonText: '确定',
+    type: 'info',
+  })
 }
 </script>
 
 <style scoped>
-.register-container {
-  min-height: 100vh;
+.auth-container {
+  min-height: calc(100vh - 72px - 140px);
   display: flex;
-  justify-content: center;
   align-items: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 20px;
+  justify-content: center;
+  background-color: var(--bg-secondary);
+  padding: var(--spacing-xl) var(--spacing-md);
 }
 
-.register-card {
+.auth-card {
   width: 100%;
-  max-width: 450px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  border-radius: 12px;
-  overflow: hidden;
+  max-width: 448px;
+  background-color: var(--bg-primary);
+  border-radius: 8px;
+  border: 1px solid var(--border-primary);
+  padding: 48px 40px 36px;
+  box-sizing: border-box;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
-.register-card :deep(.el-card__header) {
-  background: #fff;
-  text-align: center;
-  padding: 30px 20px 20px;
+@media (max-width: 600px) {
+  .auth-card {
+    border: none;
+    box-shadow: none;
+    background-color: transparent;
+    padding: 24px 20px;
+  }
 }
 
-.register-card h2 {
-  margin: 0;
-  color: #333;
-  font-weight: 600;
+.back-action {
+  margin-bottom: 16px;
+  margin-top: -16px;
+  margin-left: -16px;
 }
 
-.register-card :deep(.el-card__body) {
-  padding: 30px;
-}
-
-.register-footer {
-  text-align: center;
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 1px solid #eee;
-}
-
-.register-footer p {
-  margin: 0;
-  color: #666;
+.back-btn {
+  color: var(--text-secondary);
   font-size: 14px;
 }
 
-.link {
-  color: #409eff;
+.auth-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.logo-title {
+  color: var(--primary-color);
+  font-family: var(--font-family-heading);
+  font-size: 24px;
+  font-weight: 500;
+  margin-bottom: 16px;
+}
+
+.auth-title {
+  font-family: var(--font-family-sans);
+  font-size: 24px;
+  font-weight: 400;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.auth-subtitle {
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.auth-form {
+  margin-top: var(--spacing-md);
+}
+
+:deep(.google-input .el-input__wrapper) {
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 1px var(--border-secondary) !important;
+  padding: 8px 15px;
+  background-color: transparent;
+}
+
+:deep(.google-input .el-input__wrapper.is-focus) {
+  box-shadow: inset 0 0 0 2px var(--primary-color) !important;
+}
+
+:deep(.google-input .el-input__inner) {
+  height: 38px;
+  font-size: 16px;
+  color: var(--text-primary);
+}
+
+.terms-item {
+  margin-bottom: 16px;
+}
+
+:deep(.el-checkbox__label) {
+  font-size: 14px;
+  color: var(--text-secondary);
+  white-space: normal;
+}
+
+.auth-link-inline {
+  color: var(--primary-accent);
   text-decoration: none;
 }
 
-.link:hover {
+.auth-link-inline:hover {
   text-decoration: underline;
 }
 
-:deep(.el-input__wrapper) {
-  border-radius: 8px;
+.auth-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 40px;
 }
 
-:deep(.el-button) {
-  border-radius: 8px;
-  height: 44px;
-  font-size: 16px;
+.auth-submit-btn {
+  height: 36px;
+  padding: 0 24px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 4px;
+  background-color: var(--primary-accent);
 }
 
-:deep(.el-checkbox) {
-  margin-bottom: 10px;
+.auth-link {
+  color: var(--primary-accent);
+  font-weight: 500;
+  text-decoration: none;
+  font-size: 14px;
+  padding: 8px;
+  margin-left: -8px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.auth-link:hover {
+  background-color: var(--bg-tertiary);
 }
 </style>

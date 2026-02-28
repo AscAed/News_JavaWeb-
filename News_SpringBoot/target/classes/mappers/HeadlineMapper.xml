@@ -10,7 +10,9 @@
                TIMESTAMPDIFF(HOUR, h.published_time, NOW()) as pastHours,
                h.publisher, u.username as author, h.status, h.is_top as isTop,
                h.cover_image_url as coverImage,
-               h.created_time as createdTime, h.updated_time as updatedTime, h.published_time as publishedTime
+               h.created_time as createdTime, h.updated_time as updatedTime, h.published_time as publishedTime,
+               h.source_type as sourceType, h.source_id as sourceId, h.lang,
+               h.mongodb_collection as mongodbCollection, h.mongodb_document_id as mongodbDocumentId
         FROM headlines h
         LEFT JOIN news_types t ON h.type = t.tid
         LEFT JOIN users u ON h.publisher = u.id
@@ -19,10 +21,13 @@
             AND h.type = #{type}
         </if>
         <if test="keyWords != null and keyWords != ''">
-            AND (h.title LIKE CONCAT('%', #{keyWords}, '%') OR h.summary LIKE CONCAT('%', #{keyWords}, '%'))
+            AND h.title LIKE CONCAT('%', #{keyWords}, '%')
         </if>
         <if test="publisher != null">
             AND h.publisher = #{publisher}
+        </if>
+        <if test="lang != null and lang != ''">
+            AND h.lang = #{lang}
         </if>
         ORDER BY h.is_top DESC, h.published_time DESC
         LIMIT #{pageSize} OFFSET #{pageNum}
@@ -37,10 +42,13 @@
             AND h.type = #{type}
         </if>
         <if test="keyWords != null and keyWords != ''">
-            AND (h.title LIKE CONCAT('%', #{keyWords}, '%') OR h.summary LIKE CONCAT('%', #{keyWords}, '%'))
+            AND h.title LIKE CONCAT('%', #{keyWords}, '%')
         </if>
         <if test="publisher != null">
             AND h.publisher = #{publisher}
+        </if>
+        <if test="lang != null and lang != ''">
+            AND h.lang = #{lang}
         </if>
     </select>
 
@@ -51,7 +59,9 @@
                TIMESTAMPDIFF(HOUR, h.published_time, NOW()) as pastHours,
                h.publisher, u.username as author, h.status, h.is_top as isTop,
                h.cover_image_url as coverImage,
-               h.created_time as createdTime, h.updated_time as updatedTime, h.published_time as publishedTime
+               h.created_time as createdTime, h.updated_time as updatedTime, h.published_time as publishedTime,
+               h.source_type as sourceType, h.source_id as sourceId, h.lang,
+               h.mongodb_collection as mongodbCollection, h.mongodb_document_id as mongodbDocumentId
         FROM headlines h
         LEFT JOIN news_types t ON h.type = t.tid
         LEFT JOIN users u ON h.publisher = u.id
@@ -60,17 +70,22 @@
 
     <!-- 插入头条 -->
     <insert id="insertHeadline" parameterType="com.zhouyi.entity.Headline" useGeneratedKeys="true" keyProperty="hid">
-        INSERT INTO headlines (title, type, summary, cover_image_url, tags, page_views, publisher, 
-                               author, status, is_top, created_time, updated_time, published_time, like_count, comment_count)
-        VALUES (#{title}, #{type}, #{summary}, #{coverImage}, #{tags}, 0, #{publisher}, 
-                #{author}, #{status}, #{isTop}, NOW(), NOW(), NOW(), 0, 0)
+        INSERT INTO headlines (title, summary, type, cover_image_url, tags, page_views, publisher, 
+                               author, status, is_top, created_time, updated_time, published_time, like_count, comment_count,
+                               source_type, source_id, mongodb_collection, mongodb_document_id, lang)
+        VALUES (#{title}, #{summary}, #{type}, #{coverImage}, #{tags}, 0, #{publisher}, 
+                #{author}, #{status}, #{isTop}, NOW(), NOW(), NOW(), 0, 0,
+                #{sourceType}, #{sourceId}, #{mongodbCollection}, #{mongodbDocumentId}, #{lang})
     </insert>
 
     <!-- 更新头条 -->
     <update id="updateHeadline" parameterType="com.zhouyi.entity.Headline">
         UPDATE headlines
-        SET title = #{title}, type = #{type}, summary = #{summary}, cover_image_url = #{coverImage},
-            tags = #{tags}, updated_time = NOW()
+        SET title = #{title}, summary = #{summary}, type = #{type}, cover_image_url = #{coverImage},
+            tags = #{tags}, author = #{author}, updated_time = NOW(),
+            source_type = #{sourceType}, source_id = #{sourceId},
+            mongodb_collection = #{mongodbCollection}, mongodb_document_id = #{mongodbDocumentId},
+            lang = #{lang}
         WHERE hid = #{hid}
     </update>
 
@@ -96,7 +111,9 @@
                TIMESTAMPDIFF(HOUR, h.published_time, NOW()) as pastHours,
                h.publisher, u.username as author, h.status, h.is_top as isTop,
                h.cover_image_url as coverImage,
-               h.created_time as createdTime, h.updated_time as updatedTime, h.published_time as publishedTime
+               h.created_time as createdTime, h.updated_time as updatedTime, h.published_time as publishedTime,
+               h.source_type as sourceType, h.source_id as sourceId, h.lang,
+               h.mongodb_collection as mongodbCollection, h.mongodb_document_id as mongodbDocumentId
         FROM headlines h
         LEFT JOIN news_types t ON h.type = t.tid
         LEFT JOIN users u ON h.publisher = u.id

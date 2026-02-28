@@ -8,12 +8,15 @@
     </insert>
 
     <select id="countByLinkOrGuid" resultType="int">
-        SELECT COUNT(1) FROM rss_feed_items 
-        WHERE link = #{link} OR guid = #{guid}
+        SELECT COUNT(1)
+        FROM rss_feed_items
+        WHERE link = #{link}
+           OR guid = #{guid}
     </select>
 
     <select id="findBySubscriptionIdAndLimit" resultType="com.zhouyi.entity.RssFeedItem">
-        SELECT * FROM rss_feed_items 
+        SELECT *
+        FROM rss_feed_items
         WHERE subscription_id = #{subscriptionId}
         ORDER BY pub_date DESC
         LIMIT #{limit}

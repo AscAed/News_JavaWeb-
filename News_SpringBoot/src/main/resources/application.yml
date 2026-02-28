@@ -10,7 +10,7 @@ spring:
   # 允许Bean定义覆盖
   main:
     allow-bean-definition-overriding: true
-  
+
   datasource:
     url: jdbc:mysql://localhost:3306/news_db?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
     username: root
@@ -26,6 +26,9 @@ spring:
       database: News_MongoDB
       # 是否启用MongoDB
       enabled: true
+    # Elasticsearch配置
+    elasticsearch:
+      enabled: false
 
   # Servlet配置
   servlet:
@@ -77,3 +80,27 @@ custom:
     expiration: 86400000
     # JWT刷新令牌过期时间，单位毫秒（7天）
     refresh-expiration: 604800000
+
+# RSS 模块配置
+rss:
+  # 混合存储配置
+  hybrid-storage:
+    enabled: true
+
+  # 抓取配置
+  fetch:
+    default-interval: 60 # 分钟
+    max-retry-attempts: 3
+    timeout: 30000 # 毫秒
+    user-agent: "Mozilla/5.0 (compatible; RSS-Reader/1.0; +https://example.com/rss)"
+
+  # 内容处理配置
+  content:
+    max-summary-length: 200
+    enable-sentiment-analysis: false
+    enable-keyword-extraction: true
+
+  # 搜索配置
+  search:
+    provider: mongodb # mongodb, elasticsearch
+    enable-full-text: true

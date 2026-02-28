@@ -2,14 +2,14 @@ package com.zhouyi.service.impl;
 
 import com.zhouyi.common.result.Result;
 import com.zhouyi.dto.HeadlineDetailDTO;
+import com.zhouyi.dto.HeadlinePublishDTO;
+import com.zhouyi.dto.HeadlineQueryDTO;
+import com.zhouyi.dto.HeadlineUpdateDTO;
 import com.zhouyi.entity.Headline;
 import com.zhouyi.entity.mongodb.NewsContent;
 import com.zhouyi.mapper.HeadlineMapper;
 import com.zhouyi.service.HeadlineService;
 import com.zhouyi.service.UserService;
-import com.zhouyi.dto.HeadlineQueryDTO;
-import com.zhouyi.dto.HeadlinePublishDTO;
-import com.zhouyi.dto.HeadlineUpdateDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
@@ -45,11 +45,11 @@ public class HeadlineServiceImpl implements HeadlineService {
             // 查询头条列表
             List<Headline> headlines = headlineMapper.selectHeadlinesByPage(
                     offset, queryDTO.getPageSize(), queryDTO.getType(),
-                    queryDTO.getKeywords(), queryDTO.getPublisher());
+                    queryDTO.getKeywords(), queryDTO.getPublisher(), queryDTO.getLang());
 
             // 查询总数
             Long total = headlineMapper.countHeadlines(
-                    queryDTO.getType(), queryDTO.getKeywords(), queryDTO.getPublisher());
+                    queryDTO.getType(), queryDTO.getKeywords(), queryDTO.getPublisher(), queryDTO.getLang());
 
             // 计算总页数
             int totalPages = (int) Math.ceil((double) total / queryDTO.getPageSize());
@@ -187,6 +187,15 @@ public class HeadlineServiceImpl implements HeadlineService {
             String typeName = headlineMapper.selectTypeNameByType(publishDTO.getType());
             headline.setTypeName(typeName != null ? typeName : "未知类型");
 
+            // Set new source tracking fields - defaults for manual API creation
+            headline.setSourceType(com.zhouyi.common.enums.NewsSource.API.getCode());
+            headline.setMongodbCollection("news");
+
+            // Language detection
+            String lang = headline.getTitle() != null && headline.getTitle().matches(".*[\\u4e00-\\u9fa5].*") ? "zh"
+                    : "en";
+            headline.setLang(lang);
+
             // 插入头条
             int rows = headlineMapper.insertHeadline(headline);
             if (rows <= 0) {
@@ -202,6 +211,10 @@ public class HeadlineServiceImpl implements HeadlineService {
             newsContent.setCoverImage(publishDTO.getCoverImage());
             newsContent.setAuthor(userResult.getData().getUsername());
 
+            // Set source fields in MongoDB
+            newsContent.setSourceType(com.zhouyi.common.enums.NewsSource.API);
+            newsContent.setMysqlHeadlineId(headline.getHid());
+
             // 处理标签：将字符串转换为列表
             if (publishDTO.getTags() != null && !publishDTO.getTags().isEmpty()) {
                 List<String> tagList = Arrays.asList(publishDTO.getTags().split(","));
@@ -211,7 +224,11 @@ public class HeadlineServiceImpl implements HeadlineService {
             newsContent.setCreatedTime(LocalDateTime.now());
             newsContent.setUpdatedTime(LocalDateTime.now());
 
-            mongoTemplate.save(newsContent);
+            NewsContent savedContent = mongoTemplate.save(newsContent);
+
+            // Update Headline with MongoDB Document ID
+            headline.setMongodbDocumentId(savedContent.getId());
+            headlineMapper.updateHeadline(headline);
 
             return Result.success("发布成功");
 
@@ -222,13 +239,18 @@ public class HeadlineServiceImpl implements HeadlineService {
 
     @Override
     @Transactional
-    public Result<String> updateHeadline(HeadlineUpdateDTO updateDTO) {
+    public Result<String> updateHeadline(HeadlineUpdateDTO updateDTO, Integer userId) {
         try {
             // 检查头条是否存在
             Headline existingHeadline = headlineMapper
                     .selectHeadlineById(updateDTO.getId() != null ? updateDTO.getId() : updateDTO.getHid());
             if (existingHeadline == null) {
                 return Result.error("头条不存在");
+            }
+
+            // 验证权限: 只有原作者才能修改
+            if (!existingHeadline.getPublisher().equals(userId)) {
+                return Result.error("无权修改该新闻,只有作者才能修改自己的作品");
             }
 
             // 更新头条基本信息
@@ -258,7 +280,7 @@ public class HeadlineServiceImpl implements HeadlineService {
                 newsContent.setSummary(updateDTO.getSummary());
                 newsContent.setCoverImage(updateDTO.getCoverImage());
 
-                // 处理标签：将字符串转换为列表
+                // 处理标签:将字符串转换为列表
                 if (updateDTO.getTags() != null && !updateDTO.getTags().isEmpty()) {
                     List<String> tagList = Arrays.asList(updateDTO.getTags().split(","));
                     newsContent.setTagList(tagList);
@@ -277,12 +299,17 @@ public class HeadlineServiceImpl implements HeadlineService {
 
     @Override
     @Transactional
-    public Result<String> deleteHeadline(Integer hid) {
+    public Result<String> deleteHeadline(Integer hid, Integer userId) {
         try {
             // 检查头条是否存在
             Headline headline = headlineMapper.selectHeadlineById(hid);
             if (headline == null) {
                 return Result.error("头条不存在");
+            }
+
+            // 验证权限: 只有原作者才能删除
+            if (!headline.getPublisher().equals(userId)) {
+                return Result.error("无权删除该新闻,只有作者才能删除自己的作品");
             }
 
             // 删除MySQL中的头条

@@ -1,8 +1,8 @@
-import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
-import { ElMessage } from 'element-plus'
-import { login, logout, getUserInfo, register as registerApi } from '@/api/modules/auth'
-import type { User, LoginForm, RegisterForm } from '@/types'
+import {defineStore} from 'pinia'
+import {computed, ref} from 'vue'
+import {ElMessage} from 'element-plus'
+import {getUserInfo, login, logout, register as registerApi} from '@/api/modules/auth'
+import type {LoginForm, RegisterForm, User} from '@/types'
 
 export const useUserStore = defineStore('user', () => {
   // 状态
@@ -27,14 +27,14 @@ export const useUserStore = defineStore('user', () => {
     try {
       const response = await login(loginForm)
       const { data: { token: newToken, user } } = response
-      
+
       // 保存token和用户信息
       token.value = newToken
       userInfo.value = user
-      
+
       localStorage.setItem('token', newToken)
       localStorage.setItem('userInfo', JSON.stringify(user))
-      
+
       ElMessage.success('登录成功')
       return true
     } catch (error) {
@@ -55,7 +55,7 @@ export const useUserStore = defineStore('user', () => {
       userInfo.value = null
       localStorage.removeItem('token')
       localStorage.removeItem('userInfo')
-      
+
       ElMessage.success('已退出登录')
     }
   }
@@ -68,6 +68,10 @@ export const useUserStore = defineStore('user', () => {
       localStorage.setItem('userInfo', JSON.stringify(response.data))
     } catch (error) {
       console.error('获取用户信息失败:', error)
+      token.value = ''
+      userInfo.value = null
+      localStorage.removeItem('token')
+      localStorage.removeItem('userInfo')
     }
   }
 
@@ -97,7 +101,7 @@ export const useUserStore = defineStore('user', () => {
     token,
     userInfo,
     isLoggedIn,
-    
+
     // 方法
     register: userRegister,
     login: userLogin,

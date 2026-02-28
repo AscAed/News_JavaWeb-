@@ -2,18 +2,121 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.zhouyi.mapper.RssSubscriptionMapper">
 
-    <select id="findById" resultType="com.zhouyi.entity.RssSubscription">
-        SELECT * FROM rss_subscriptions WHERE id = #{id}
+    <resultMap id="BaseResultMap" type="com.zhouyi.entity.RssSubscription">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="name" property="name" jdbcType="VARCHAR"/>
+        <result column="url" property="url" jdbcType="VARCHAR"/>
+        <result column="description" property="description" jdbcType="VARCHAR"/>
+        <result column="category" property="category" jdbcType="VARCHAR"/>
+        <result column="language" property="language" jdbcType="VARCHAR"/>
+        <result column="is_active" property="isActive" jdbcType="BOOLEAN"/>
+        <result column="fetch_interval" property="fetchInterval" jdbcType="INTEGER"/>
+        <result column="last_fetched_at" property="lastFetchedAt" jdbcType="TIMESTAMP"/>
+        <result column="fetch_status" property="fetchStatus" jdbcType="VARCHAR"/>
+        <result column="error_message" property="errorMessage" jdbcType="VARCHAR"/>
+        <result column="total_articles" property="totalArticles" jdbcType="INTEGER"/>
+        <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
+        <result column="updated_at" property="updatedAt" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="findById" resultMap="BaseResultMap">
+        SELECT *
+        FROM rss_subscriptions
+        WHERE id = #{id}
     </select>
 
-    <select id="findAll" resultType="com.zhouyi.entity.RssSubscription">
-        SELECT * FROM rss_subscriptions
+    <select id="findAll" resultMap="BaseResultMap">
+        SELECT *
+        FROM rss_subscriptions
+        ORDER BY created_at DESC
     </select>
+
+    <select id="findAllActive" resultMap="BaseResultMap">
+        SELECT *
+        FROM rss_subscriptions
+        WHERE is_active = TRUE
+        ORDER BY created_at DESC
+    </select>
+
+    <select id="findByCategory" resultMap="BaseResultMap">
+        SELECT *
+        FROM rss_subscriptions
+        WHERE category = #{category}
+        ORDER BY created_at DESC
+    </select>
+
+    <insert id="insert" parameterType="com.zhouyi.entity.RssSubscription" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO rss_subscriptions (
+            name,
+            url,
+            description,
+            category,
+            language,
+            is_active,
+            fetch_interval,
+            fetch_status,
+            total_articles
+        ) VALUES (
+            #{name},
+            #{url},
+            #{description},
+            #{category},
+            #{language},
+            #{isActive},
+            #{fetchInterval},
+            #{fetchStatus},
+            #{totalArticles}
+        )
+    </insert>
+
+    <update id="update" parameterType="com.zhouyi.entity.RssSubscription">
+        UPDATE rss_subscriptions
+        SET name = #{name},
+            url = #{url},
+            description = #{description},
+            category = #{category},
+            language = #{language},
+            is_active = #{isActive},
+            fetch_interval = #{fetchInterval},
+            fetch_status = #{fetchStatus},
+            error_message = #{errorMessage},
+            total_articles = #{totalArticles}
+        WHERE id = #{id}
+    </update>
 
     <update id="updateLastFetchedTime">
-        UPDATE rss_subscriptions 
+        UPDATE rss_subscriptions
         SET last_fetched_at = #{time}
         WHERE id = #{id}
     </update>
+
+    <update id="updateFetchStatus">
+        UPDATE rss_subscriptions
+        SET fetch_status = #{status},
+            error_message = #{errorMessage}
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateTotalArticles">
+        UPDATE rss_subscriptions
+        SET total_articles = #{totalArticles}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM rss_subscriptions
+        WHERE id = #{id}
+    </delete>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*)
+        FROM rss_subscriptions
+    </select>
+
+    <select id="countActive" resultType="long">
+        SELECT COUNT(*)
+        FROM rss_subscriptions
+        WHERE is_active = TRUE
+    </select>
 
 </mapper>

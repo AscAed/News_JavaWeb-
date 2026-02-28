@@ -25,14 +25,23 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { RouterView, useRoute } from 'vue-router'
+import {computed, onMounted} from 'vue'
+import {RouterView, useRoute} from 'vue-router'
 import AppLayout from '@/components/AppLayout.vue'
 import AppHeader from '@/components/AppHeader.vue'
 import AppFooter from '@/components/AppFooter.vue'
 import SidebarNavigation from '@/components/SidebarNavigation.vue'
+import {useUserStore} from '@/stores/user'
 
 const route = useRoute()
+const userStore = useUserStore()
+
+onMounted(() => {
+  userStore.initUserInfo()
+  if (userStore.token) {
+    userStore.fetchUserInfo()
+  }
+})
 
 // 根据路由 meta 动态选择布局组件
 // 如果 route.meta.layout === 'empty'，则直接渲染 RouterView (通过一个简单的 wrapper)

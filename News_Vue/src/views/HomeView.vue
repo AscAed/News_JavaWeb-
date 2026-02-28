@@ -59,48 +59,55 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { useNewsStore } from '@/stores/news'
-import { ElMessage } from 'element-plus'
-import { DocumentRemove, WarningFilled, Refresh } from '@element-plus/icons-vue'
+import {computed, onMounted, ref} from 'vue'
+import {useRoute, useRouter} from 'vue-router'
+import {useNewsStore} from '@/stores/news'
+import {ElMessage} from 'element-plus'
+import {DocumentRemove, Refresh, WarningFilled} from '@element-plus/icons-vue'
 import NewsCard from '@/components/NewsCard.vue'
-import type { News } from '@/types'
+import type {News} from '@/types'
 
 const router = useRouter()
+const route = useRoute()
 const newsStore = useNewsStore()
 
 // 响应式数据
 const keyword = ref('')
-const selectedType = ref<number | null>(null)
+const selectedType = ref<number | string | null>(null)
 const error = ref<string | null>(null)
 const retrying = ref(false)
 
-// 计算属性
+// 计算属性 (Remove local filtering)
 const filteredNewsList = computed(() => {
-  let list = newsStore.newsList
-  
-  if (selectedType.value) {
-    list = list.filter(news => news.type === selectedType.value)
-  }
-  
-  if (keyword.value) {
-    list = list.filter(news => 
-      news.title.toLowerCase().includes(keyword.value.toLowerCase()) ||
-      news.summary?.toLowerCase().includes(keyword.value.toLowerCase())
-    )
-  }
-  
-  return list
+  return newsStore.newsList
 })
 
-// 方法
-const handleSearch = (searchKeyword: string) => {
-  keyword.value = searchKeyword
+// 统一的请求方法
+const fetchListFromBackend = async (page = 1) => {
+  newsStore.currentPage = page
+  let params: any = {page, size: newsStore.pageSize}
+  if (selectedType.value === 'domestic') {
+    params.lang = 'zh'
+  } else if (selectedType.value === 'international') {
+    params.lang = 'en'
+  } else if (selectedType.value !== null) {
+    params.type = selectedType.value
+  }
+  if (keyword.value) {
+    params.keyword = keyword.value
+  }
+  await newsStore.fetchNewsList(params)
 }
 
-const handleTypeChange = (typeId: number | null) => {
+// 方法
+const handleSearch = async (searchKeyword: string) => {
+  keyword.value = searchKeyword
+  await fetchListFromBackend(1)
+}
+
+const handleTypeChange = async (typeId: number | string | null) => {
   selectedType.value = typeId
+  await fetchListFromBackend(1)
 }
 
 const viewNewsDetail = (news: News) => {
@@ -109,10 +116,7 @@ const viewNewsDetail = (news: News) => {
 
 const loadMore = async () => {
   try {
-    await newsStore.fetchNewsList({
-      page: newsStore.currentPage + 1,
-      size: newsStore.pageSize
-    })
+    await fetchListFromBackend(newsStore.currentPage + 1)
   } catch (err) {
     ElMessage.error('加载更多新闻失败')
   }
@@ -121,12 +125,9 @@ const loadMore = async () => {
 const retryLoad = async () => {
   retrying.value = true
   error.value = null
-  
+
   try {
-    await newsStore.fetchNewsList({
-      page: 1,
-      size: newsStore.pageSize
-    })
+    await fetchListFromBackend(1)
     ElMessage.success('重新加载成功')
   } catch (err) {
     error.value = '重新加载失败，请稍后再试'
@@ -138,7 +139,29 @@ const retryLoad = async () => {
 
 // 生命周期
 onMounted(async () => {
-  // 监听来自AppHeader的搜索事件
+  // 初始加载数据
+  try {
+    // 先获取分类数据
+    await newsStore.fetchNewsTypes()
+
+    // 设置默认分类 (优先从URL参数获取)
+    if (route.query.t) {
+      selectedType.value = isNaN(Number(route.query.t)) ? route.query.t as string : Number(route.query.t)
+    } else if (newsStore.defaultCategoryId) {
+      selectedType.value = newsStore.defaultCategoryId
+    }
+
+    if (route.query.k) {
+      keyword.value = route.query.k as string
+    }
+
+    // 获取新闻列表
+    await fetchListFromBackend(1)
+  } catch (error) {
+    ElMessage.error('加载数据失败')
+  }
+
+  // 监听来自AppHeader的搜索事件 (为了在同页面时避免刷新)
   window.addEventListener('search', (event: any) => {
     keyword.value = event.detail.keyword
     handleSearch(keyword.value)
@@ -149,16 +172,6 @@ onMounted(async () => {
     selectedType.value = event.detail.type
     handleTypeChange(event.detail.type)
   })
-
-  // 初始加载数据
-  try {
-    await Promise.all([
-      newsStore.fetchNewsList(),
-      newsStore.fetchNewsTypes()
-    ])
-  } catch (error) {
-    ElMessage.error('加载数据失败')
-  }
 })
 
 // 暴露方法给父组件使用
@@ -171,15 +184,15 @@ defineExpose({
 <style scoped>
 .home-page {
   padding: var(--spacing-lg);
-  max-width: var(--container-xl);
+  max-width: 840px; /* narrowed to simulate article stream */
   margin: 0 auto;
 }
 
 .news-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: var(--spacing-xl);
-  margin-bottom: var(--spacing-xl);
+  margin-bottom: var(--spacing-2xl);
 }
 
 .load-more-section {
@@ -254,8 +267,8 @@ defineExpose({
 
 /* 骨架屏样式 */
 .loading-skeleton {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: var(--spacing-xl);
   margin-top: var(--spacing-xl);
 }
@@ -360,17 +373,15 @@ defineExpose({
 /* 响应式设计 - 移动优先 */
 @media (max-width: 1200px) {
   .news-grid {
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: var(--spacing-lg);
   }
 }
 
 @media (max-width: 1024px) {
   .news-grid {
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: var(--spacing-md);
   }
-  
+
   .home-page {
     padding: var(--spacing-md);
   }
@@ -378,14 +389,13 @@ defineExpose({
 
 @media (max-width: 768px) {
   .news-grid {
-    grid-template-columns: 1fr;
     gap: var(--spacing-md);
   }
-  
+
   .home-page {
     padding: var(--spacing-sm);
   }
-  
+
   .load-more-section {
     padding: var(--spacing-md);
     margin: var(--spacing-lg) 0;
@@ -394,14 +404,13 @@ defineExpose({
 
 @media (max-width: 480px) {
   .news-grid {
-    grid-template-columns: 1fr;
     gap: var(--spacing-sm);
   }
-  
+
   .home-page {
     padding: var(--spacing-xs);
   }
-  
+
   .load-more-section {
     padding: var(--spacing-sm);
     margin: var(--spacing-md) 0;

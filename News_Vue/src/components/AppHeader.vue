@@ -4,7 +4,7 @@
       <!-- Logo区域 -->
       <div class="logo-section">
         <router-link to="/" class="logo">
-          <h1>新闻头条</h1>
+          <h1>易闻趣事</h1>
         </router-link>
       </div>
 
@@ -23,11 +23,11 @@
             </template>
           </el-input>
         </div>
-        
+
         <!-- 搜索建议下拉框 -->
         <div v-if="showSuggestions && searchSuggestions.length > 0" class="search-suggestions">
-          <div 
-            v-for="(suggestion, index) in searchSuggestions" 
+          <div
+            v-for="(suggestion, index) in searchSuggestions"
             :key="index"
             class="suggestion-item"
             @click="selectSuggestion(suggestion)"
@@ -38,25 +38,7 @@
         </div>
       </div>
 
-      <!-- 分类筛选区域 -->
-      <div class="category-section">
-        <el-select
-          v-model="selectedCategory"
-          placeholder="选择分类"
-          class="category-select"
-          @change="handleCategoryChange"
-          clearable
-        >
-          <el-option
-            v-for="category in categories"
-            :key="category.tid"
-            :label="category.tname"
-            :value="category.tid"
-          />
-        </el-select>
-      </div>
-
-      <!-- 用户操作区域 -->
+      <!-- 用户操作区域 (重新加回) -->
       <div class="user-section">
         <template v-if="isLoggedIn">
           <el-dropdown @command="handleUserCommand">
@@ -90,128 +72,60 @@
           </el-dropdown>
         </template>
         <template v-else>
-          <el-button @click="showLoginDialog = true" type="primary">登录</el-button>
-          <el-button @click="showRegisterDialog = true">注册</el-button>
+          <el-button type="primary" @click="router.push('/login')">登录</el-button>
         </template>
       </div>
+
     </div>
 
-    <!-- 登录对话框 -->
-    <el-dialog
-      v-model="showLoginDialog"
-      title="用户登录"
-      width="400px"
-      :before-close="handleLoginDialogClose"
-    >
-      <el-form
-        ref="loginFormRef"
-        :model="loginForm"
-        :rules="loginRules"
-        label-width="80px"
-      >
-        <el-form-item label="手机号" prop="phone">
-          <el-input
-            v-model="loginForm.phone"
-            placeholder="请输入手机号"
-            :prefix-icon="Phone"
-          />
-        </el-form-item>
-        <el-form-item label="密码" prop="password">
-          <el-input
-            v-model="loginForm.password"
-            type="password"
-            placeholder="请输入密码"
-            :prefix-icon="Lock"
-            show-password
-          />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="showLoginDialog = false">取消</el-button>
-          <el-button type="primary" @click="handleLogin" :loading="loginLoading">
-            登录
-          </el-button>
-        </span>
-      </template>
-    </el-dialog>
-
-    <!-- 注册对话框 -->
-    <el-dialog
-      v-model="showRegisterDialog"
-      title="用户注册"
-      width="400px"
-      :before-close="handleRegisterDialogClose"
-    >
-      <el-form
-        ref="registerFormRef"
-        :model="registerForm"
-        :rules="registerRules"
-        label-width="80px"
-      >
-        <el-form-item label="用户名" prop="username">
-          <el-input
-            v-model="registerForm.username"
-            placeholder="请输入用户名"
-            :prefix-icon="User"
-          />
-        </el-form-item>
-        <el-form-item label="手机号" prop="phone">
-          <el-input
-            v-model="registerForm.phone"
-            placeholder="请输入手机号"
-            :prefix-icon="Phone"
-          />
-        </el-form-item>
-        <el-form-item label="密码" prop="password">
-          <el-input
-            v-model="registerForm.password"
-            type="password"
-            placeholder="请输入密码"
-            :prefix-icon="Lock"
-            show-password
-          />
-        </el-form-item>
-        <el-form-item label="确认密码" prop="confirmPassword">
-          <el-input
-            v-model="registerForm.confirmPassword"
-            type="password"
-            placeholder="请再次输入密码"
-            :prefix-icon="Lock"
-            show-password
-          />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="showRegisterDialog = false">取消</el-button>
-          <el-button type="primary" @click="handleRegister" :loading="registerLoading">
-            注册
-          </el-button>
-        </span>
-      </template>
-    </el-dialog>
+    <!-- 纯文本水平导航区 -->
+    <div class="nav-section">
+      <div class="nav-container">
+        <button
+          :class="{ active: selectedCategory === null }"
+          class="nav-item"
+          @click="handleCategoryChange(null)"
+        >
+          全部分类
+        </button>
+        <button
+          :class="{ active: selectedCategory === 'domestic' }"
+          class="nav-item"
+          @click="handleCategoryChange('domestic')"
+        >
+          国内新闻
+        </button>
+        <button
+          :class="{ active: selectedCategory === 'international' }"
+          class="nav-item"
+          @click="handleCategoryChange('international')"
+        >
+          国际新闻
+        </button>
+        <button
+          v-for="category in categories"
+          :key="category.tid"
+          :class="{ active: selectedCategory === category.tid }"
+          class="nav-item"
+          @click="handleCategoryChange(category.tid)"
+        >
+          {{ category.tname }}
+        </button>
+      </div>
+    </div>
   </header>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
-import { useRouter } from 'vue-router'
-import { useUserStore } from '@/stores/user'
-import { useNewsStore } from '@/stores/news'
-import { ElMessage, ElMessageBox, type FormInstance } from 'element-plus'
-import {
-  Search,
-  User,
-  Phone,
-  Lock,
-  ArrowDown,
-  Star,
-  Setting,
-  SwitchButton
-} from '@element-plus/icons-vue'
+import {computed, onMounted, onUnmounted, ref, watch} from 'vue'
+import {useRoute, useRouter} from 'vue-router'
+import {useUserStore} from '@/stores/user'
+import {useNewsStore} from '@/stores/news'
+import {ElMessage, ElMessageBox} from 'element-plus'
+import {ArrowDown, Search, Setting, Star, SwitchButton, User,} from '@element-plus/icons-vue'
 
 const router = useRouter()
+const route = useRoute()
 const userStore = useUserStore()
 const newsStore = useNewsStore()
 
@@ -221,71 +135,10 @@ const showSuggestions = ref(false)
 const searchSuggestions = ref<string[]>([])
 
 // 分类相关状态
-const selectedCategory = ref<number | null>(null)
+const selectedCategory = ref<number | string | null>(null)
 
 // 用户相关状态
-const showLoginDialog = ref(false)
-const showRegisterDialog = ref(false)
-const loginLoading = ref(false)
-const registerLoading = ref(false)
-
-// 表单引用
-const loginFormRef = ref<FormInstance>()
-const registerFormRef = ref<FormInstance>()
-
-// 登录表单
-const loginForm = ref({
-  phone: '',
-  password: ''
-})
-
-// 注册表单
-const registerForm = ref({
-  username: '',
-  phone: '',
-  password: '',
-  confirmPassword: ''
-})
-
-// 表单验证规则
-const loginRules = {
-  phone: [
-    { required: true, message: '请输入手机号', trigger: 'blur' },
-    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur' }
-  ],
-  password: [
-    { required: true, message: '请输入密码', trigger: 'blur' },
-    { min: 6, message: '密码长度不能少于6位', trigger: 'blur' }
-  ]
-}
-
-const registerRules = {
-  username: [
-    { required: true, message: '请输入用户名', trigger: 'blur' },
-    { min: 2, max: 20, message: '用户名长度在2到20个字符', trigger: 'blur' }
-  ],
-  phone: [
-    { required: true, message: '请输入手机号', trigger: 'blur' },
-    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur' }
-  ],
-  password: [
-    { required: true, message: '请输入密码', trigger: 'blur' },
-    { min: 6, message: '密码长度不能少于6位', trigger: 'blur' }
-  ],
-  confirmPassword: [
-    { required: true, message: '请确认密码', trigger: 'blur' },
-    {
-      validator: (rule: any, value: string, callback: Function) => {
-        if (value !== registerForm.value.password) {
-          callback(new Error('两次输入的密码不一致'))
-        } else {
-          callback()
-        }
-      },
-      trigger: 'blur'
-    }
-  ]
-}
+// 移除对话框相关状态，现在使用专门的登录/注册页面
 
 // 计算属性
 const isLoggedIn = computed(() => userStore.isLoggedIn)
@@ -295,10 +148,18 @@ const categories = computed(() => newsStore.newsTypes)
 // 搜索功能
 const handleSearch = () => {
   if (searchKeyword.value.trim()) {
-    // 触发搜索事件，通知HomeView组件
-    window.dispatchEvent(new CustomEvent('search', {
-      detail: { keyword: searchKeyword.value.trim() }
-    }))
+    if (route.path !== '/') {
+      const targetQuery: Record<string, any> = {...route.query, k: searchKeyword.value.trim()}
+      if (selectedCategory.value) targetQuery.t = selectedCategory.value as any
+      router.push({path: '/', query: targetQuery})
+    } else {
+      // 触发搜索事件，通知HomeView组件
+      window.dispatchEvent(
+        new CustomEvent('search', {
+          detail: {keyword: searchKeyword.value.trim()},
+        }),
+      )
+    }
     showSuggestions.value = false
   }
 }
@@ -310,11 +171,24 @@ const selectSuggestion = (suggestion: string) => {
 }
 
 // 分类切换
-const handleCategoryChange = (categoryId: number | null) => {
-  // 触发分类切换事件，通知HomeView组件
-  window.dispatchEvent(new CustomEvent('typeChange', {
-    detail: { type: categoryId }
-  }))
+const handleCategoryChange = (categoryId: number | string | null) => {
+  selectedCategory.value = categoryId
+  if (route.path !== '/') {
+    const targetQuery: any = {...route.query}
+    if (categoryId) {
+      targetQuery.t = categoryId
+    } else {
+      delete targetQuery.t
+    }
+    router.push({path: '/', query: targetQuery})
+  } else {
+    // 触发分类切换事件，通知HomeView组件
+    window.dispatchEvent(
+      new CustomEvent('typeChange', {
+        detail: {type: categoryId},
+      }),
+    )
+  }
 }
 
 // 用户下拉菜单命令处理
@@ -335,52 +209,7 @@ const handleUserCommand = (command: string) => {
   }
 }
 
-// 登录处理
-const handleLogin = async () => {
-  if (!loginFormRef.value) return
-  
-  try {
-    await loginFormRef.value.validate()
-    loginLoading.value = true
-    
-    await userStore.login({
-      phone: loginForm.value.phone,
-      password: loginForm.value.password
-    })
-    
-    ElMessage.success('登录成功')
-    showLoginDialog.value = false
-    loginForm.value = { phone: '', password: '' }
-  } catch (error: any) {
-    ElMessage.error(error.message || '登录失败')
-  } finally {
-    loginLoading.value = false
-  }
-}
-
-// 注册处理
-const handleRegister = async () => {
-  if (!registerFormRef.value) return
-  
-  try {
-    await registerFormRef.value.validate()
-    registerLoading.value = true
-    
-    await userStore.register({
-      username: registerForm.value.username,
-      phone: registerForm.value.phone,
-      password: registerForm.value.password
-    })
-    
-    ElMessage.success('注册成功，请登录')
-    showRegisterDialog.value = false
-    registerForm.value = { username: '', phone: '', password: '', confirmPassword: '' }
-  } catch (error: any) {
-    ElMessage.error(error.message || '注册失败')
-  } finally {
-    registerLoading.value = false
-  }
-}
+// 移除 handleLogin 和 handleRegister，由跳转后的页面处理
 
 // 退出登录
 const handleLogout = async () => {
@@ -388,9 +217,9 @@ const handleLogout = async () => {
     await ElMessageBox.confirm('确定要退出登录吗？', '提示', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
-      type: 'warning'
+      type: 'warning',
     })
-    
+
     await userStore.logout()
     ElMessage.success('退出登录成功')
     router.push('/')
@@ -401,20 +230,7 @@ const handleLogout = async () => {
   }
 }
 
-// 对话框关闭处理
-const handleLoginDialogClose = () => {
-  loginForm.value = { phone: '', password: '' }
-  if (loginFormRef.value) {
-    loginFormRef.value.clearValidate()
-  }
-}
-
-const handleRegisterDialogClose = () => {
-  registerForm.value = { username: '', phone: '', password: '', confirmPassword: '' }
-  if (registerFormRef.value) {
-    registerFormRef.value.clearValidate()
-  }
-}
+// 移除对话框关闭处理
 
 // 搜索建议功能
 const fetchSearchSuggestions = async (keyword: string) => {
@@ -423,18 +239,14 @@ const fetchSearchSuggestions = async (keyword: string) => {
     showSuggestions.value = false
     return
   }
-  
+
   try {
     // 这里可以调用搜索建议API
     // const suggestions = await getSearchSuggestions(keyword)
     // searchSuggestions.value = suggestions
-    
+
     // 模拟搜索建议
-    searchSuggestions.value = [
-      `${keyword} 相关新闻`,
-      `${keyword} 最新动态`,
-      `${keyword} 深度分析`
-    ]
+    searchSuggestions.value = [`${keyword} 相关新闻`, `${keyword} 最新动态`, `${keyword} 深度分析`]
     showSuggestions.value = true
   } catch (error) {
     searchSuggestions.value = []
@@ -452,6 +264,18 @@ watch(searchKeyword, (newKeyword) => {
   }
 })
 
+// 监听路由改变同步状态
+watch(() => route.query, (query) => {
+  if (query.t) {
+    selectedCategory.value = isNaN(Number(query.t)) ? query.t as string : Number(query.t)
+  }
+  if (query.k) {
+    searchKeyword.value = query.k as string
+  } else {
+    searchKeyword.value = ''
+  }
+}, {immediate: true})
+
 // 点击外部关闭搜索建议
 const handleClickOutside = (event: MouseEvent) => {
   const target = event.target as HTMLElement
@@ -465,10 +289,22 @@ onMounted(async () => {
   // 获取分类数据
   try {
     await newsStore.fetchNewsTypes()
+
+    // 设置默认分类
+    if (newsStore.defaultCategoryId) {
+      selectedCategory.value = newsStore.defaultCategoryId
+
+      // 触发初始分类切换事件，通知HomeView组件
+      window.dispatchEvent(
+        new CustomEvent('typeChange', {
+          detail: {type: newsStore.defaultCategoryId},
+        }),
+      )
+    }
   } catch (error) {
     console.error('获取分类数据失败:', error)
   }
-  
+
   // 添加全局点击事件监听
   document.addEventListener('click', handleClickOutside)
 })
@@ -576,14 +412,66 @@ onUnmounted(() => {
   color: var(--text-primary);
 }
 
-/* 分类筛选区域 */
-.category-section {
-  flex-shrink: 0;
+/* 水平导航区 */
+.nav-section {
+  border-top: 1px solid var(--border-primary);
+  background-color: var(--bg-primary);
+  overflow-x: auto;
+  white-space: nowrap;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); /* 更轻的阴影，贴近实体线 */
+  /* 隐藏滚动条但保留滚动能力 */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
-.category-select {
-  width: 140px;
+.nav-section::-webkit-scrollbar {
+  display: none;
+}
+
+.nav-container {
+  max-width: var(--container-2xl);
+  margin: 0 auto;
+  padding: 0 var(--spacing-lg);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xl);
+  height: 48px;
+}
+
+.nav-item {
   font-family: var(--font-family-ui);
+  font-size: var(--body-size-md);
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  position: relative;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s ease;
+}
+
+.nav-item:hover,
+.nav-item.active {
+  color: var(--primary-color);
+  font-weight: 500;
+}
+
+.nav-item::before {
+  display: none;
+}
+
+.nav-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background-color: var(--primary-color);
+  border-radius: 3px 3px 0 0;
 }
 
 /* 用户操作区域 */
@@ -644,13 +532,14 @@ onUnmounted(() => {
     padding: 0 var(--spacing-lg);
     gap: var(--spacing-lg);
   }
-  
+
   .search-section {
     max-width: 500px;
   }
-  
-  .logo h1 {
-    font-size: var(--headline-size-sm);
+
+  .nav-container {
+    padding: 0 var(--spacing-lg);
+    gap: var(--spacing-lg);
   }
 }
 
@@ -659,15 +548,16 @@ onUnmounted(() => {
     padding: 0 var(--spacing-md);
     gap: var(--spacing-md);
   }
-  
+
   .search-section {
     max-width: 400px;
   }
-  
-  .category-section {
-    flex-shrink: 0;
+
+  .nav-container {
+    padding: 0 var(--spacing-md);
+    gap: var(--spacing-md);
   }
-  
+
   .logo h1 {
     font-size: var(--headline-size-xs);
   }
@@ -679,30 +569,26 @@ onUnmounted(() => {
     gap: var(--spacing-md);
     flex-wrap: wrap;
   }
-  
+
   .search-section {
     max-width: 100%;
     flex: 1;
     order: 2;
   }
-  
-  .category-section {
-    display: none;
-  }
-  
+
   .user-section {
     order: 3;
     flex-shrink: 0;
   }
-  
+
   .username {
     display: none;
   }
-  
+
   .logo h1 {
     font-size: var(--headline-size-xs);
   }
-  
+
   .logo-section {
     order: 1;
     flex-shrink: 0;
@@ -714,16 +600,16 @@ onUnmounted(() => {
     padding: 0 var(--spacing-sm);
     gap: var(--spacing-sm);
   }
-  
+
   .search-section {
     max-width: 100%;
   }
-  
+
   .user-section .el-button {
     padding: var(--spacing-xs) var(--spacing-xs);
     font-size: 11px;
   }
-  
+
   .user-section {
     margin-top: var(--spacing-sm);
   }

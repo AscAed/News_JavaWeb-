@@ -1,5 +1,5 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import { useUserStore } from '@/stores/user'
+import {createRouter, createWebHistory} from 'vue-router'
+import {useUserStore} from '@/stores/user'
 
 // 路由守卫
 const requireAuth = (to: any, from: any, next: any) => {
@@ -120,7 +120,7 @@ router.beforeEach((to, from, next) => {
 
   // 设置页面标题
   if (to.meta?.title) {
-    document.title = `${to.meta.title} - 新闻头条`
+    document.title = `${to.meta.title} - 易闻趣事`
   }
 
   // 检查是否需要登录
