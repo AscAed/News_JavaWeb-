@@ -35,8 +35,10 @@
       <!-- 元信息 -->
       <div class="card-meta">
         <div class="meta-left">
-          <span v-if="news.author" class="author-name">{{ news.author }}</span>
-          <span class="publish-time">{{ formatTime(news.publishedTime) }}</span>
+          <span v-if="(news as any).sourceName"
+                class="source-name">来自: {{ (news as any).sourceName }}</span>
+          <span v-if="news.author" class="author-name">· {{ news.author }}</span>
+          <span class="publish-time">· {{ formatTime(news.publishedTime) }}</span>
           <span v-if="(news as any).readingTime" class="reading-time">
             · {{ (news as any).readingTime }}分钟阅读
           </span>
@@ -344,6 +346,11 @@ const formatTime = (time: string | undefined): string => {
   gap: var(--spacing-xs);
   font-size: 0.75rem;
   color: var(--text-muted);
+}
+
+.source-name {
+  color: var(--primary-color);
+  font-weight: 500;
 }
 
 .author-name {

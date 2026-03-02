@@ -1,42 +1,47 @@
 <template>
   <div class="app-layout">
-    <!-- 顶部导航栏 -->
-    <AppHeader />
-
     <!-- 主要内容区域 -->
-    <main class="main-content" :class="{ 'with-sidebar': showSidebar }">
+    <main :class="{ 'has-global-sidebar': showSidebar }" class="main-wrapper">
+      <!-- 最左侧边栏 -->
+      <aside v-if="showSidebar" class="global-sidebar">
+        <div class="sidebar-inner">
+          <slot name="sidebar"></slot>
+        </div>
+      </aside>
 
+      <!-- 右侧主要内容区 -->
+      <div class="main-body">
+        <!-- 顶部导航栏 (现移动到右侧主内容区上方) -->
+        <AppHeader/>
 
-    <!-- 页面标题区域 -->
-      <div v-if="pageTitle" class="page-header">
-        <div class="container">
-          <div class="page-header-content">
-            <div class="page-title-section">
-              <h1 class="page-title">{{ pageTitle }}</h1>
-              <p v-if="pageSubtitle" class="page-subtitle">{{ pageSubtitle }}</p>
-            </div>
-            <div v-if="$slots.pageActions" class="page-actions">
-              <slot name="pageActions"></slot>
+        <!-- 吸顶辅助导航 (如分类栏) -->
+        <div class="sub-header-wrapper">
+          <slot name="sub-header"></slot>
+        </div>
+        <!-- 页面标题区域 -->
+        <div v-if="pageTitle" class="page-header">
+          <div class="container">
+            <div class="page-header-content">
+              <div class="page-title-section">
+                <h1 class="page-title">{{ pageTitle }}</h1>
+                <p v-if="pageSubtitle" class="page-subtitle">{{ pageSubtitle }}</p>
+              </div>
+              <div v-if="$slots.pageActions" class="page-actions">
+                <slot name="pageActions"></slot>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- 内容容器 -->
-      <div class="content-container">
-        <div class="container">
-          <div class="content-wrapper" :class="contentWrapperClass">
-            <!-- 主要内容 -->
-            <div class="main-content-area" :class="mainContentClass">
-              <slot></slot>
-            </div>
-
-            <!-- 侧边栏 -->
-            <aside v-if="showSidebar" class="sidebar" :class="sidebarClass">
-              <div class="sidebar-content">
-                <slot name="sidebar"></slot>
+        <!-- 内容容器 -->
+        <div class="content-container">
+          <div class="container">
+            <div class="content-wrapper">
+              <!-- 主要内容 -->
+              <div :class="mainContentClass" class="main-content-area">
+                <slot></slot>
               </div>
-            </aside>
+            </div>
           </div>
         </div>
       </div>
@@ -64,13 +69,13 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  showSidebar: false,
+  showSidebar: true,
   showBreadcrumb: true,
   pageTitle: '',
   pageSubtitle: '',
   contentLayout: 'default',
-  sidebarPosition: 'right',
-  sidebarWidth: 'medium'
+  sidebarPosition: 'left',
+  sidebarWidth: 'narrow'
 })
 
 const route = useRoute()
@@ -221,42 +226,7 @@ const sidebarClass = computed(() => {
 }
 
 .content-wrapper {
-  display: grid;
-  gap: var(--spacing-xl);
-}
-
-/* 默认布局 */
-.content-wrapper:not(.has-sidebar) {
-  grid-template-columns: 1fr;
-}
-
-/* 有侧边栏布局 */
-.content-wrapper.has-sidebar {
-  grid-template-columns: 1fr;
-}
-
-.content-wrapper.sidebar-right.sidebar-medium {
-  grid-template-columns: 1fr 320px;
-}
-
-.content-wrapper.sidebar-left.sidebar-medium {
-  grid-template-columns: 320px 1fr;
-}
-
-.content-wrapper.sidebar-right.sidebar-wide {
-  grid-template-columns: 1fr 400px;
-}
-
-.content-wrapper.sidebar-left.sidebar-wide {
-  grid-template-columns: 400px 1fr;
-}
-
-.content-wrapper.sidebar-right.sidebar-narrow {
-  grid-template-columns: 1fr 280px;
-}
-
-.content-wrapper.sidebar-left.sidebar-narrow {
-  grid-template-columns: 280px 1fr;
+  display: block;
 }
 
 /* 主内容区域 */
@@ -282,52 +252,64 @@ const sidebarClass = computed(() => {
   margin: 0 auto;
 }
 
-.main-content-area.with-sidebar-content {
-  /* 有侧边栏时的主内容样式 */
-  padding-right: var(--spacing-lg);
+/* 全局侧边栏布局 */
+.main-wrapper {
+  flex: 1;
+  display: flex;
+  width: 100%;
 }
 
-/* 侧边栏 */
-.sidebar {
-  position: sticky;
-  top: calc(72px + 56px + 20px); /* header height + nav height + padding */
-  height: fit-content;
-  max-height: calc(100vh - 72px - 56px - 40px);
-  overflow-y: auto;
-}
-
-.sidebar-content {
+.global-sidebar {
+  width: 250px;
+  flex-shrink: 0;
   background: var(--bg-primary);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
-  padding: var(--spacing-lg);
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  z-index: 10;
+  border-right: none; /* 移除全局边框，改用伪元素 */
 }
 
-/* 侧边栏位置 */
-.sidebar.sidebar-right {
-  justify-self: end;
+.global-sidebar::after {
+  content: '';
+  position: absolute;
+  top: 72px; /* 从Logo下方开始显示线 */
+  right: 0;
+  bottom: 0;
+  width: 1px;
+  background-color: var(--border-primary);
 }
 
-.sidebar.sidebar-left {
-  justify-self: start;
+.sidebar-inner {
+  padding: 0;
+}
+
+.main-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.sub-header-wrapper {
+  position: sticky;
+  top: 72px;
+  z-index: 900;
 }
 
 /* 响应式设计 */
 @media (max-width: 1024px) {
-  .content-wrapper.sidebar-right.sidebar-medium,
-  .content-wrapper.sidebar-left.sidebar-medium,
-  .content-wrapper.sidebar-right.sidebar-wide,
-  .content-wrapper.sidebar-left.sidebar-wide,
-  .content-wrapper.sidebar-right.sidebar-narrow,
-  .content-wrapper.sidebar-left.sidebar-narrow {
-    grid-template-columns: 1fr;
-    gap: var(--spacing-lg);
+  .main-wrapper.has-global-sidebar {
+    flex-direction: column;
   }
 
-  .sidebar {
+  .global-sidebar {
+    width: 100%;
     position: static;
-    max-height: none;
-    order: -1;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--border-primary);
   }
 
   .page-header-content {
@@ -365,21 +347,21 @@ const sidebarClass = computed(() => {
 }
 
 /* 滚动条样式 */
-.sidebar::-webkit-scrollbar {
+.global-sidebar::-webkit-scrollbar {
   width: 6px;
 }
 
-.sidebar::-webkit-scrollbar-track {
+.global-sidebar::-webkit-scrollbar-track {
   background: var(--bg-secondary);
   border-radius: var(--radius-full);
 }
 
-.sidebar::-webkit-scrollbar-thumb {
+.global-sidebar::-webkit-scrollbar-thumb {
   background: var(--border-secondary);
   border-radius: var(--radius-full);
 }
 
-.sidebar::-webkit-scrollbar-thumb:hover {
+.global-sidebar::-webkit-scrollbar-thumb:hover {
   background: var(--border-primary);
 }
 

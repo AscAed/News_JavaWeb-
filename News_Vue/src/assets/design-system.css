@@ -125,8 +125,6 @@
   /* === 容器最大宽度 === */
   --container-sm: 640px;
   --container-md: 768px;
-  --container-lg: 1024px;
-  --container-xl: 1280px;
   --container-2xl: 1536px;
 }
 
@@ -326,4 +324,42 @@
 
 .leading-ui {
   line-height: var(--leading-ui);
+}
+
+/* === 品牌特定样式 - Google News 风格 === */
+.brand-logo-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.brand-icon-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #4285f4 0%, #34a853 33%, #fbbc05 66%, #ea4335 100%);
+  border-radius: 8px;
+  color: white;
+  font-family: var(--font-family-sans);
+  font-weight: 800;
+  font-size: 20px;
+  line-height: 1;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+.brand-text {
+  font-family: var(--font-family-heading);
+  font-weight: 700;
+  color: var(--primary-color);
+  letter-spacing: -0.01em;
+}
+
+/* 适配深色模式 */
+@media (prefers-color-scheme: dark) {
+  .brand-icon-box {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  }
 }

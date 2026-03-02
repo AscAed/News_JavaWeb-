@@ -86,11 +86,7 @@ const filteredNewsList = computed(() => {
 const fetchListFromBackend = async (page = 1) => {
   newsStore.currentPage = page
   let params: any = {page, size: newsStore.pageSize}
-  if (selectedType.value === 'domestic') {
-    params.lang = 'zh'
-  } else if (selectedType.value === 'international') {
-    params.lang = 'en'
-  } else if (selectedType.value !== null) {
+  if (selectedType.value !== null) {
     params.type = selectedType.value
   }
   if (keyword.value) {
@@ -161,6 +157,12 @@ onMounted(async () => {
     ElMessage.error('加载数据失败')
   }
 
+  // 监听来自SourceSidebar的资源变化事件
+  window.addEventListener('sourceChange', (event: any) => {
+    selectedType.value = null // reset category when source changes
+    fetchListFromBackend(1)
+  })
+
   // 监听来自AppHeader的搜索事件 (为了在同页面时避免刷新)
   window.addEventListener('search', (event: any) => {
     keyword.value = event.detail.keyword
@@ -183,9 +185,10 @@ defineExpose({
 
 <style scoped>
 .home-page {
-  padding: var(--spacing-lg);
-  max-width: 840px; /* narrowed to simulate article stream */
+  padding: 0 var(--spacing-xl) var(--spacing-lg);
+  max-width: 1000px; /* widened to fit category nav better */
   margin: 0 auto;
+  width: 100%;
 }
 
 .news-grid {
@@ -193,6 +196,7 @@ defineExpose({
   flex-direction: column;
   gap: var(--spacing-xl);
   margin-bottom: var(--spacing-2xl);
+  margin-top: var(--spacing-lg); /* gap between nav and grid */
 }
 
 .load-more-section {

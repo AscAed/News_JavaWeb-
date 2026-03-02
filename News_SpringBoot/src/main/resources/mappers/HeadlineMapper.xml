@@ -29,6 +29,12 @@
         <if test="lang != null and lang != ''">
             AND h.lang = #{lang}
         </if>
+        <if test="sourceType != null and sourceType != ''">
+            AND h.source_type = #{sourceType}
+        </if>
+        <if test="sourceId != null and sourceId != ''">
+            AND h.source_id = #{sourceId}
+        </if>
         ORDER BY h.is_top DESC, h.published_time DESC
         LIMIT #{pageSize} OFFSET #{pageNum}
     </select>
@@ -49,6 +55,12 @@
         </if>
         <if test="lang != null and lang != ''">
             AND h.lang = #{lang}
+        </if>
+        <if test="sourceType != null and sourceType != ''">
+            AND h.source_type = #{sourceType}
+        </if>
+        <if test="sourceId != null and sourceId != ''">
+            AND h.source_id = #{sourceId}
         </if>
     </select>
 

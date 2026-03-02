@@ -11,9 +11,14 @@
         <RouterView />
       </template>
 
+      <!-- 主应用副标题/分类条 -->
+      <template #sub-header>
+        <CategoryNav v-if="route.path === '/'"/>
+      </template>
+
       <!-- 主应用侧边栏 -->
       <template #sidebar>
-        <SidebarNavigation />
+        <SourceSidebar/>
       </template>
 
       <!-- 主应用页脚 -->
@@ -30,7 +35,8 @@ import {RouterView, useRoute} from 'vue-router'
 import AppLayout from '@/components/AppLayout.vue'
 import AppHeader from '@/components/AppHeader.vue'
 import AppFooter from '@/components/AppFooter.vue'
-import SidebarNavigation from '@/components/SidebarNavigation.vue'
+import SourceSidebar from '@/components/SourceSidebar.vue'
+import CategoryNav from '@/components/CategoryNav.vue'
 import {useUserStore} from '@/stores/user'
 
 const route = useRoute()

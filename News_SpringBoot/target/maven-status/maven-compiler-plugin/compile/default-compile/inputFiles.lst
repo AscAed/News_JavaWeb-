@@ -34,6 +34,7 @@ E:\PUBLIC\Project\Java\News_JavaWeb\News_SpringBoot\src\main\java\com\zhouyi\con
 E:\PUBLIC\Project\Java\News_JavaWeb\News_SpringBoot\src\main\java\com\zhouyi\controller\NewsFetchController.java
 E:\PUBLIC\Project\Java\News_JavaWeb\News_SpringBoot\src\main\java\com\zhouyi\controller\NewsTypeController.java
 E:\PUBLIC\Project\Java\News_JavaWeb\News_SpringBoot\src\main\java\com\zhouyi\controller\RssSubscriptionController.java
+E:\PUBLIC\Project\Java\News_JavaWeb\News_SpringBoot\src\main\java\com\zhouyi\controller\SourceController.java
 E:\PUBLIC\Project\Java\News_JavaWeb\News_SpringBoot\src\main\java\com\zhouyi\controller\StatisticsController.java
 E:\PUBLIC\Project\Java\News_JavaWeb\News_SpringBoot\src\main\java\com\zhouyi\controller\UnifiedNewsController.java
 E:\PUBLIC\Project\Java\News_JavaWeb\News_SpringBoot\src\main\java\com\zhouyi\controller\UserController.java
@@ -60,6 +61,7 @@ E:\PUBLIC\Project\Java\News_JavaWeb\News_SpringBoot\src\main\java\com\zhouyi\dto
 E:\PUBLIC\Project\Java\News_JavaWeb\News_SpringBoot\src\main\java\com\zhouyi\dto\OperationLogDTO.java
 E:\PUBLIC\Project\Java\News_JavaWeb\News_SpringBoot\src\main\java\com\zhouyi\dto\PasswordUpdateDTO.java
 E:\PUBLIC\Project\Java\News_JavaWeb\News_SpringBoot\src\main\java\com\zhouyi\dto\PhoneUpdateRequestDTO.java
+E:\PUBLIC\Project\Java\News_JavaWeb\News_SpringBoot\src\main\java\com\zhouyi\dto\SourceDTO.java
 E:\PUBLIC\Project\Java\News_JavaWeb\News_SpringBoot\src\main\java\com\zhouyi\dto\SystemConfigDTO.java
 E:\PUBLIC\Project\Java\News_JavaWeb\News_SpringBoot\src\main\java\com\zhouyi\dto\SystemStatisticsDTO.java
 E:\PUBLIC\Project\Java\News_JavaWeb\News_SpringBoot\src\main\java\com\zhouyi\dto\UnifiedNewsDetailDTO.java

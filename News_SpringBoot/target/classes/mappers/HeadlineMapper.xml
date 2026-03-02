@@ -10,9 +10,9 @@
                TIMESTAMPDIFF(HOUR, h.published_time, NOW()) as pastHours,
                h.publisher, u.username as author, h.status, h.is_top as isTop,
                h.cover_image_url as coverImage,
-               h.created_time as createdTime, h.updated_time as updatedTime, h.published_time as publishedTime,
-               h.source_type as sourceType, h.source_id as sourceId, h.lang,
-               h.mongodb_collection as mongodbCollection, h.mongodb_document_id as mongodbDocumentId
+        h.created_time as createdTime, h.updated_time as updatedTime, h.published_time as publishedTime,
+        h.source_type as sourceType, h.source_id as sourceId, h.lang,
+        h.mongodb_collection as mongodbCollection, h.mongodb_document_id as mongodbDocumentId
         FROM headlines h
         LEFT JOIN news_types t ON h.type = t.tid
         LEFT JOIN users u ON h.publisher = u.id
@@ -28,6 +28,12 @@
         </if>
         <if test="lang != null and lang != ''">
             AND h.lang = #{lang}
+        </if>
+        <if test="sourceType != null and sourceType != ''">
+            AND h.source_type = #{sourceType}
+        </if>
+        <if test="sourceId != null and sourceId != ''">
+            AND h.source_id = #{sourceId}
         </if>
         ORDER BY h.is_top DESC, h.published_time DESC
         LIMIT #{pageSize} OFFSET #{pageNum}
@@ -50,6 +56,12 @@
         <if test="lang != null and lang != ''">
             AND h.lang = #{lang}
         </if>
+        <if test="sourceType != null and sourceType != ''">
+            AND h.source_type = #{sourceType}
+        </if>
+        <if test="sourceId != null and sourceId != ''">
+            AND h.source_id = #{sourceId}
+        </if>
     </select>
 
     <!-- 根据ID查询头条详情 -->
@@ -59,9 +71,14 @@
                TIMESTAMPDIFF(HOUR, h.published_time, NOW()) as pastHours,
                h.publisher, u.username as author, h.status, h.is_top as isTop,
                h.cover_image_url as coverImage,
-               h.created_time as createdTime, h.updated_time as updatedTime, h.published_time as publishedTime,
-               h.source_type as sourceType, h.source_id as sourceId, h.lang,
-               h.mongodb_collection as mongodbCollection, h.mongodb_document_id as mongodbDocumentId
+               h.created_time        as createdTime,
+               h.updated_time        as updatedTime,
+               h.published_time      as publishedTime,
+               h.source_type         as sourceType,
+               h.source_id           as sourceId,
+               h.lang,
+               h.mongodb_collection  as mongodbCollection,
+               h.mongodb_document_id as mongodbDocumentId
         FROM headlines h
         LEFT JOIN news_types t ON h.type = t.tid
         LEFT JOIN users u ON h.publisher = u.id
@@ -70,10 +87,11 @@
 
     <!-- 插入头条 -->
     <insert id="insertHeadline" parameterType="com.zhouyi.entity.Headline" useGeneratedKeys="true" keyProperty="hid">
-        INSERT INTO headlines (title, summary, type, cover_image_url, tags, page_views, publisher, 
-                               author, status, is_top, created_time, updated_time, published_time, like_count, comment_count,
+        INSERT INTO headlines (title, summary, type, cover_image_url, tags, page_views, publisher,
+                               author, status, is_top, created_time, updated_time, published_time, like_count,
+                               comment_count,
                                source_type, source_id, mongodb_collection, mongodb_document_id, lang)
-        VALUES (#{title}, #{summary}, #{type}, #{coverImage}, #{tags}, 0, #{publisher}, 
+        VALUES (#{title}, #{summary}, #{type}, #{coverImage}, #{tags}, 0, #{publisher},
                 #{author}, #{status}, #{isTop}, NOW(), NOW(), NOW(), 0, 0,
                 #{sourceType}, #{sourceId}, #{mongodbCollection}, #{mongodbDocumentId}, #{lang})
     </insert>
@@ -81,11 +99,18 @@
     <!-- 更新头条 -->
     <update id="updateHeadline" parameterType="com.zhouyi.entity.Headline">
         UPDATE headlines
-        SET title = #{title}, summary = #{summary}, type = #{type}, cover_image_url = #{coverImage},
-            tags = #{tags}, author = #{author}, updated_time = NOW(),
-            source_type = #{sourceType}, source_id = #{sourceId},
-            mongodb_collection = #{mongodbCollection}, mongodb_document_id = #{mongodbDocumentId},
-            lang = #{lang}
+        SET title               = #{title},
+            summary             = #{summary},
+            type                = #{type},
+            cover_image_url     = #{coverImage},
+            tags                = #{tags},
+            author              = #{author},
+            updated_time        = NOW(),
+            source_type         = #{sourceType},
+            source_id           = #{sourceId},
+            mongodb_collection  = #{mongodbCollection},
+            mongodb_document_id = #{mongodbDocumentId},
+            lang                = #{lang}
         WHERE hid = #{hid}
     </update>
 
@@ -111,9 +136,14 @@
                TIMESTAMPDIFF(HOUR, h.published_time, NOW()) as pastHours,
                h.publisher, u.username as author, h.status, h.is_top as isTop,
                h.cover_image_url as coverImage,
-               h.created_time as createdTime, h.updated_time as updatedTime, h.published_time as publishedTime,
-               h.source_type as sourceType, h.source_id as sourceId, h.lang,
-               h.mongodb_collection as mongodbCollection, h.mongodb_document_id as mongodbDocumentId
+               h.created_time        as createdTime,
+               h.updated_time        as updatedTime,
+               h.published_time      as publishedTime,
+               h.source_type         as sourceType,
+               h.source_id           as sourceId,
+               h.lang,
+               h.mongodb_collection  as mongodbCollection,
+               h.mongodb_document_id as mongodbDocumentId
         FROM headlines h
         LEFT JOIN news_types t ON h.type = t.tid
         LEFT JOIN users u ON h.publisher = u.id

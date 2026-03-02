@@ -64,8 +64,15 @@ public class HeadlineQueryDTO {
      */
     private String dateTo;
 
-    /**
-     * Language code filtering (zh or en), optional
-     */
     private String lang;
+
+    /**
+     * Data source type: api or rss
+     */
+    private String sourceType;
+
+    /**
+     * External source ID (e.g. RSS subscription ID)
+     */
+    private String sourceId;
 }

@@ -45,11 +45,13 @@ public class HeadlineServiceImpl implements HeadlineService {
             // 查询头条列表
             List<Headline> headlines = headlineMapper.selectHeadlinesByPage(
                     offset, queryDTO.getPageSize(), queryDTO.getType(),
-                    queryDTO.getKeywords(), queryDTO.getPublisher(), queryDTO.getLang());
+                    queryDTO.getKeywords(), queryDTO.getPublisher(), queryDTO.getLang(),
+                    queryDTO.getSourceType(), queryDTO.getSourceId());
 
             // 查询总数
             Long total = headlineMapper.countHeadlines(
-                    queryDTO.getType(), queryDTO.getKeywords(), queryDTO.getPublisher(), queryDTO.getLang());
+                    queryDTO.getType(), queryDTO.getKeywords(), queryDTO.getPublisher(), queryDTO.getLang(),
+                    queryDTO.getSourceType(), queryDTO.getSourceId());
 
             // 计算总页数
             int totalPages = (int) Math.ceil((double) total / queryDTO.getPageSize());

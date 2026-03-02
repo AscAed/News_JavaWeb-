@@ -69,7 +69,10 @@ const goToRegister = () => {
         </el-button>
       </div>
       <div class="auth-header">
-        <h1 class="logo-title">易闻趣事</h1>
+        <div class="brand-logo-container" style="justify-content: center; margin-bottom: 16px;">
+          <div class="brand-icon-box">易</div>
+          <h1 class="brand-text" style="font-size: 24px;">闻趣事</h1>
+        </div>
         <h2 class="auth-title">登录</h2>
         <p class="auth-subtitle">
           使用您的易闻趣事账号继续

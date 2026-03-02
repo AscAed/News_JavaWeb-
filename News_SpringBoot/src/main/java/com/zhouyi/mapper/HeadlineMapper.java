@@ -28,7 +28,9 @@ public interface HeadlineMapper {
                                          @Param("type") Integer type,
                                          @Param("keyWords") String keyWords,
                                          @Param("publisher") Integer publisher,
-                                         @Param("lang") String lang);
+                                         @Param("lang") String lang,
+                                         @Param("sourceType") String sourceType,
+                                         @Param("sourceId") String sourceId);
 
     /**
      * 统计头条总数
@@ -42,7 +44,9 @@ public interface HeadlineMapper {
     Long countHeadlines(@Param("type") Integer type,
                         @Param("keyWords") String keyWords,
                         @Param("publisher") Integer publisher,
-                        @Param("lang") String lang);
+                        @Param("lang") String lang,
+                        @Param("sourceType") String sourceType,
+                        @Param("sourceId") String sourceId);
 
     /**
      * 根据ID查询头条详情

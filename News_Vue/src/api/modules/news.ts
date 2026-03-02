@@ -7,6 +7,8 @@ export const getNewsList = (params: {
   type?: number
   keyword?: string
   lang?: string
+  sourceType?: string
+  sourceId?: string
 }) => {
   // Map frontend params to backend expected params
   const backendParams = {
@@ -15,6 +17,8 @@ export const getNewsList = (params: {
     typeId: params.type,
     keywords: params.keyword,
     lang: params.lang,
+    sourceType: params.sourceType,
+    sourceId: params.sourceId
   }
   return request.get('/headlines', {params: backendParams})
 }
@@ -47,8 +51,13 @@ export const deleteNews = (hid: number) => {
 }
 
 // 获取新闻分类
-export const getNewsTypes = () => {
-  return request.get('/categories')
+export const getNewsTypes = (params?: { sourceType?: string, sourceId?: string }) => {
+  return request.get('/categories', {params})
+}
+
+// 获取新闻来源
+export const getSources = () => {
+  return request.get('/sources')
 }
 
 // 上传文件

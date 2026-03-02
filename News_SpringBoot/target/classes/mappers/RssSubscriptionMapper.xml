@@ -46,40 +46,37 @@
     </select>
 
     <insert id="insert" parameterType="com.zhouyi.entity.RssSubscription" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO rss_subscriptions (
-            name,
-            url,
-            description,
-            category,
-            language,
-            is_active,
-            fetch_interval,
-            fetch_status,
-            total_articles
-        ) VALUES (
-            #{name},
-            #{url},
-            #{description},
-            #{category},
-            #{language},
-            #{isActive},
-            #{fetchInterval},
-            #{fetchStatus},
-            #{totalArticles}
-        )
+        INSERT INTO rss_subscriptions (name,
+                                       url,
+                                       description,
+                                       category,
+                                       language,
+                                       is_active,
+                                       fetch_interval,
+                                       fetch_status,
+                                       total_articles)
+        VALUES (#{name},
+                #{url},
+                #{description},
+                #{category},
+                #{language},
+                #{isActive},
+                #{fetchInterval},
+                #{fetchStatus},
+                #{totalArticles})
     </insert>
 
     <update id="update" parameterType="com.zhouyi.entity.RssSubscription">
         UPDATE rss_subscriptions
-        SET name = #{name},
-            url = #{url},
-            description = #{description},
-            category = #{category},
-            language = #{language},
-            is_active = #{isActive},
+        SET name           = #{name},
+            url            = #{url},
+            description    = #{description},
+            category       = #{category},
+            language       = #{language},
+            is_active      = #{isActive},
             fetch_interval = #{fetchInterval},
-            fetch_status = #{fetchStatus},
-            error_message = #{errorMessage},
+            fetch_status   = #{fetchStatus},
+            error_message  = #{errorMessage},
             total_articles = #{totalArticles}
         WHERE id = #{id}
     </update>
@@ -92,7 +89,7 @@
 
     <update id="updateFetchStatus">
         UPDATE rss_subscriptions
-        SET fetch_status = #{status},
+        SET fetch_status  = #{status},
             error_message = #{errorMessage}
         WHERE id = #{id}
     </update>
@@ -104,7 +101,8 @@
     </update>
 
     <delete id="deleteById">
-        DELETE FROM rss_subscriptions
+        DELETE
+        FROM rss_subscriptions
         WHERE id = #{id}
     </delete>
 

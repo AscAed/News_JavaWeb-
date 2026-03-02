@@ -1,13 +1,6 @@
 <template>
   <header class="app-header">
     <div class="header-container">
-      <!-- Logo区域 -->
-      <div class="logo-section">
-        <router-link to="/" class="logo">
-          <h1>易闻趣事</h1>
-        </router-link>
-      </div>
-
       <!-- 搜索区域 -->
       <div class="search-section">
         <div class="search-box">
@@ -77,42 +70,6 @@
       </div>
 
     </div>
-
-    <!-- 纯文本水平导航区 -->
-    <div class="nav-section">
-      <div class="nav-container">
-        <button
-          :class="{ active: selectedCategory === null }"
-          class="nav-item"
-          @click="handleCategoryChange(null)"
-        >
-          全部分类
-        </button>
-        <button
-          :class="{ active: selectedCategory === 'domestic' }"
-          class="nav-item"
-          @click="handleCategoryChange('domestic')"
-        >
-          国内新闻
-        </button>
-        <button
-          :class="{ active: selectedCategory === 'international' }"
-          class="nav-item"
-          @click="handleCategoryChange('international')"
-        >
-          国际新闻
-        </button>
-        <button
-          v-for="category in categories"
-          :key="category.tid"
-          :class="{ active: selectedCategory === category.tid }"
-          class="nav-item"
-          @click="handleCategoryChange(category.tid)"
-        >
-          {{ category.tname }}
-        </button>
-      </div>
-    </div>
   </header>
 </template>
 
@@ -120,37 +77,27 @@
 import {computed, onMounted, onUnmounted, ref, watch} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 import {useUserStore} from '@/stores/user'
-import {useNewsStore} from '@/stores/news'
 import {ElMessage, ElMessageBox} from 'element-plus'
-import {ArrowDown, Search, Setting, Star, SwitchButton, User,} from '@element-plus/icons-vue'
+import {ArrowDown, Search, Setting, Star, SwitchButton, User} from '@element-plus/icons-vue'
 
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
-const newsStore = useNewsStore()
 
 // 搜索相关状态
 const searchKeyword = ref('')
 const showSuggestions = ref(false)
 const searchSuggestions = ref<string[]>([])
 
-// 分类相关状态
-const selectedCategory = ref<number | string | null>(null)
-
-// 用户相关状态
-// 移除对话框相关状态，现在使用专门的登录/注册页面
-
 // 计算属性
 const isLoggedIn = computed(() => userStore.isLoggedIn)
 const userInfo = computed(() => userStore.userInfo)
-const categories = computed(() => newsStore.newsTypes)
 
 // 搜索功能
 const handleSearch = () => {
   if (searchKeyword.value.trim()) {
     if (route.path !== '/') {
-      const targetQuery: Record<string, any> = {...route.query, k: searchKeyword.value.trim()}
-      if (selectedCategory.value) targetQuery.t = selectedCategory.value as any
+      const targetQuery = {...route.query, k: searchKeyword.value.trim()}
       router.push({path: '/', query: targetQuery})
     } else {
       // 触发搜索事件，通知HomeView组件
@@ -168,27 +115,6 @@ const handleSearch = () => {
 const selectSuggestion = (suggestion: string) => {
   searchKeyword.value = suggestion
   handleSearch()
-}
-
-// 分类切换
-const handleCategoryChange = (categoryId: number | string | null) => {
-  selectedCategory.value = categoryId
-  if (route.path !== '/') {
-    const targetQuery: any = {...route.query}
-    if (categoryId) {
-      targetQuery.t = categoryId
-    } else {
-      delete targetQuery.t
-    }
-    router.push({path: '/', query: targetQuery})
-  } else {
-    // 触发分类切换事件，通知HomeView组件
-    window.dispatchEvent(
-      new CustomEvent('typeChange', {
-        detail: {type: categoryId},
-      }),
-    )
-  }
 }
 
 // 用户下拉菜单命令处理
@@ -209,8 +135,6 @@ const handleUserCommand = (command: string) => {
   }
 }
 
-// 移除 handleLogin 和 handleRegister，由跳转后的页面处理
-
 // 退出登录
 const handleLogout = async () => {
   try {
@@ -230,8 +154,6 @@ const handleLogout = async () => {
   }
 }
 
-// 移除对话框关闭处理
-
 // 搜索建议功能
 const fetchSearchSuggestions = async (keyword: string) => {
   if (keyword.trim().length < 2) {
@@ -241,10 +163,6 @@ const fetchSearchSuggestions = async (keyword: string) => {
   }
 
   try {
-    // 这里可以调用搜索建议API
-    // const suggestions = await getSearchSuggestions(keyword)
-    // searchSuggestions.value = suggestions
-
     // 模拟搜索建议
     searchSuggestions.value = [`${keyword} 相关新闻`, `${keyword} 最新动态`, `${keyword} 深度分析`]
     showSuggestions.value = true
@@ -266,9 +184,6 @@ watch(searchKeyword, (newKeyword) => {
 
 // 监听路由改变同步状态
 watch(() => route.query, (query) => {
-  if (query.t) {
-    selectedCategory.value = isNaN(Number(query.t)) ? query.t as string : Number(query.t)
-  }
   if (query.k) {
     searchKeyword.value = query.k as string
   } else {
@@ -285,26 +200,7 @@ const handleClickOutside = (event: MouseEvent) => {
 }
 
 // 生命周期
-onMounted(async () => {
-  // 获取分类数据
-  try {
-    await newsStore.fetchNewsTypes()
-
-    // 设置默认分类
-    if (newsStore.defaultCategoryId) {
-      selectedCategory.value = newsStore.defaultCategoryId
-
-      // 触发初始分类切换事件，通知HomeView组件
-      window.dispatchEvent(
-        new CustomEvent('typeChange', {
-          detail: {type: newsStore.defaultCategoryId},
-        }),
-      )
-    }
-  } catch (error) {
-    console.error('获取分类数据失败:', error)
-  }
-
+onMounted(() => {
   // 添加全局点击事件监听
   document.addEventListener('click', handleClickOutside)
 })
@@ -335,29 +231,6 @@ onUnmounted(() => {
   justify-content: space-between;
   height: 72px;
   gap: var(--spacing-xl);
-}
-
-/* Logo区域 */
-.logo-section {
-  flex-shrink: 0;
-}
-
-.logo {
-  text-decoration: none;
-  color: var(--primary-color);
-}
-
-.logo h1 {
-  font-family: var(--font-family-heading);
-  font-size: var(--headline-size-md);
-  font-weight: 700;
-  margin: 0;
-  transition: color 0.3s ease;
-  letter-spacing: -0.02em;
-}
-
-.logo:hover h1 {
-  color: var(--primary-hover);
 }
 
 /* 搜索区域 */
@@ -410,68 +283,6 @@ onUnmounted(() => {
 
 .suggestion-item span {
   color: var(--text-primary);
-}
-
-/* 水平导航区 */
-.nav-section {
-  border-top: 1px solid var(--border-primary);
-  background-color: var(--bg-primary);
-  overflow-x: auto;
-  white-space: nowrap;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); /* 更轻的阴影，贴近实体线 */
-  /* 隐藏滚动条但保留滚动能力 */
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-.nav-section::-webkit-scrollbar {
-  display: none;
-}
-
-.nav-container {
-  max-width: var(--container-2xl);
-  margin: 0 auto;
-  padding: 0 var(--spacing-lg);
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-xl);
-  height: 48px;
-}
-
-.nav-item {
-  font-family: var(--font-family-ui);
-  font-size: var(--body-size-md);
-  color: var(--text-secondary);
-  background: transparent;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  position: relative;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  transition: color 0.2s ease;
-}
-
-.nav-item:hover,
-.nav-item.active {
-  color: var(--primary-color);
-  font-weight: 500;
-}
-
-.nav-item::before {
-  display: none;
-}
-
-.nav-item.active::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background-color: var(--primary-color);
-  border-radius: 3px 3px 0 0;
 }
 
 /* 用户操作区域 */
@@ -552,15 +363,6 @@ onUnmounted(() => {
   .search-section {
     max-width: 400px;
   }
-
-  .nav-container {
-    padding: 0 var(--spacing-md);
-    gap: var(--spacing-md);
-  }
-
-  .logo h1 {
-    font-size: var(--headline-size-xs);
-  }
 }
 
 @media (max-width: 768px) {
@@ -583,15 +385,6 @@ onUnmounted(() => {
 
   .username {
     display: none;
-  }
-
-  .logo h1 {
-    font-size: var(--headline-size-xs);
-  }
-
-  .logo-section {
-    order: 1;
-    flex-shrink: 0;
   }
 }
 

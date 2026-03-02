@@ -101,51 +101,54 @@ ALTER TABLE news_favorites ALTER COLUMN fid RESTART WITH 100;
 -- News categories will be inserted in data.sql
 
 -- RSS RSS Hybrid Storage Tables
-CREATE TABLE IF NOT EXISTS rss_subscriptions (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    url VARCHAR(500) NOT NULL UNIQUE,
-    category VARCHAR(100),
-    language VARCHAR(20),
-    description TEXT,
-    icon_url VARCHAR(500),
-    is_active BOOLEAN DEFAULT TRUE,
-    fetch_interval INT DEFAULT 60,
-    last_fetch_time TIMESTAMP NULL,
-    fetch_status VARCHAR(50) DEFAULT 'pending',
-    error_count INT DEFAULT 0,
+CREATE TABLE IF NOT EXISTS rss_subscriptions
+(
+    id                 BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name               VARCHAR(255) NOT NULL,
+    url                VARCHAR(500) NOT NULL UNIQUE,
+    category           VARCHAR(100),
+    language           VARCHAR(20),
+    description        TEXT,
+    icon_url           VARCHAR(500),
+    is_active          BOOLEAN     DEFAULT TRUE,
+    fetch_interval     INT         DEFAULT 60,
+    last_fetch_time    TIMESTAMP    NULL,
+    fetch_status       VARCHAR(50) DEFAULT 'pending',
+    error_count        INT         DEFAULT 0,
     last_error_message TEXT,
-    total_articles INT DEFAULT 0,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    total_articles     INT         DEFAULT 0,
+    created_at         TIMESTAMP   DEFAULT CURRENT_TIMESTAMP,
+    updated_at         TIMESTAMP   DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS rss_subscription_stats (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    subscription_id BIGINT NOT NULL,
-    date DATE NOT NULL,
-    articles_fetched INT DEFAULT 0,
-    new_articles INT DEFAULT 0,
-    updated_articles INT DEFAULT 0,
-    failed_fetches INT DEFAULT 0,
+CREATE TABLE IF NOT EXISTS rss_subscription_stats
+(
+    id                   BIGINT AUTO_INCREMENT PRIMARY KEY,
+    subscription_id      BIGINT NOT NULL,
+    date                 DATE   NOT NULL,
+    articles_fetched     INT           DEFAULT 0,
+    new_articles         INT           DEFAULT 0,
+    updated_articles     INT           DEFAULT 0,
+    failed_fetches       INT           DEFAULT 0,
     avg_importance_score DECIMAL(5, 2) DEFAULT 0,
-    avg_word_count INT DEFAULT 0,
-    total_categories INT DEFAULT 0,
+    avg_word_count       INT           DEFAULT 0,
+    total_categories     INT           DEFAULT 0,
     UNIQUE (subscription_id, date),
-    FOREIGN KEY (subscription_id) REFERENCES rss_subscriptions(id)
+    FOREIGN KEY (subscription_id) REFERENCES rss_subscriptions (id)
 );
 
-CREATE TABLE IF NOT EXISTS user_rss_subscriptions (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    subscription_id BIGINT NOT NULL,
-    custom_name VARCHAR(255),
-    is_favorite BOOLEAN DEFAULT FALSE,
-    is_muted BOOLEAN DEFAULT FALSE,
-    notification_enabled BOOLEAN DEFAULT TRUE,
-    subscribed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+CREATE TABLE IF NOT EXISTS user_rss_subscriptions
+(
+    id                   BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id              INT    NOT NULL,
+    subscription_id      BIGINT NOT NULL,
+    custom_name          VARCHAR(255),
+    is_favorite          BOOLEAN   DEFAULT FALSE,
+    is_muted             BOOLEAN   DEFAULT FALSE,
+    notification_enabled BOOLEAN   DEFAULT TRUE,
+    subscribed_at        TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (user_id, subscription_id),
-    FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (subscription_id) REFERENCES rss_subscriptions(id)
+    FOREIGN KEY (user_id) REFERENCES users (id),
+    FOREIGN KEY (subscription_id) REFERENCES rss_subscriptions (id)
 );
 
