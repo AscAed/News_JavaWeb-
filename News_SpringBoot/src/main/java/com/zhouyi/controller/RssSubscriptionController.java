@@ -44,4 +44,25 @@ public class RssSubscriptionController {
             return Result.error("RSS内容采集失败: " + e.getMessage());
         }
     }
+
+    /**
+     * 创建 RSS 订阅源
+     *
+     * @param createDTO 创建参数
+     * @return 创建结果
+     */
+    @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "创建RSS订阅源", description = "添加新的RSS订阅源")
+    public Result<Map<String, Object>> createSubscription(
+            @org.springframework.validation.annotation.Validated @RequestBody com.zhouyi.dto.RssSubscriptionCreateDTO createDTO) {
+        try {
+            log.info("Request to create RSS subscription: {}", createDTO.getName());
+            Map<String, Object> result = rssService.createSubscription(createDTO);
+            return Result.success(result);
+        } catch (Exception e) {
+            log.error("Failed to create RSS subscription: {}", e.getMessage(), e);
+            return Result.error("RSS订阅源创建失败: " + e.getMessage());
+        }
+    }
 }

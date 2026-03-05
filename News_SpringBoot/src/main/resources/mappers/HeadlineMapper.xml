@@ -35,6 +35,9 @@
         <if test="sourceId != null and sourceId != ''">
             AND h.source_id = #{sourceId}
         </if>
+        <if test="section != null and section != ''">
+            AND h.tags LIKE CONCAT('%', #{section}, '%')
+        </if>
         ORDER BY h.is_top DESC, h.published_time DESC
         LIMIT #{pageSize} OFFSET #{pageNum}
     </select>
@@ -61,6 +64,9 @@
         </if>
         <if test="sourceId != null and sourceId != ''">
             AND h.source_id = #{sourceId}
+        </if>
+        <if test="section != null and section != ''">
+            AND h.tags LIKE CONCAT('%', #{section}, '%')
         </if>
     </select>
 

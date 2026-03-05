@@ -4,11 +4,12 @@ import request from '../request'
 export const getNewsList = (params: {
   page?: number
   size?: number
-  type?: number
+  type?: number | string
   keyword?: string
   lang?: string
   sourceType?: string
   sourceId?: string
+  section?: string
 }) => {
   // Map frontend params to backend expected params
   const backendParams = {
@@ -18,7 +19,8 @@ export const getNewsList = (params: {
     keywords: params.keyword,
     lang: params.lang,
     sourceType: params.sourceType,
-    sourceId: params.sourceId
+    sourceId: params.sourceId,
+    section: params.section
   }
   return request.get('/headlines', {params: backendParams})
 }
@@ -58,6 +60,11 @@ export const getNewsTypes = (params?: { sourceType?: string, sourceId?: string }
 // 获取新闻来源
 export const getSources = () => {
   return request.get('/sources')
+}
+
+// 创建新闻来源 (RSS)
+export const createRssSubscription = (data: { name: string, url: string }) => {
+  return request.post('/rss-subscriptions', data)
 }
 
 // 上传文件

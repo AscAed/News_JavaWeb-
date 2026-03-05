@@ -1,17 +1,16 @@
 package com.zhouyi.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.zhouyi.common.utils.PasswordUtil;
 import com.zhouyi.dto.UserRegistDTO;
 import com.zhouyi.entity.User;
 import com.zhouyi.mapper.UserMapper;
-import com.zhouyi.common.utils.PasswordUtil;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
@@ -19,7 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * 用户注册集成测试
@@ -46,7 +46,7 @@ class UserRegistrationIntegrationTest {
         @Autowired
         private UserMapper userMapper;
 
-    @Mock
+    @Autowired
         private ObjectMapper objectMapper;
 
         @Test

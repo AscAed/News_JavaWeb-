@@ -7,7 +7,7 @@
           返回
         </el-button>
       </el-header>
-      
+
       <el-main v-if="newsDetail">
         <article class="news-article">
           <header class="article-header">
@@ -26,17 +26,17 @@
               <span>{{ newsDetail.commentCount }} 评论</span>
             </div>
           </header>
-          
+
           <div class="article-cover" v-if="newsDetail.coverImage">
             <img :src="newsDetail.coverImage" :alt="newsDetail.title" />
           </div>
-          
+
           <div class="article-content" v-html="newsDetail.content"></div>
-          
+
           <footer class="article-footer">
             <div class="article-tags" v-if="newsDetail.tags">
-              <el-tag 
-                v-for="tag in newsDetail.tags.split(',')" 
+              <el-tag
+                v-for="tag in (Array.isArray(newsDetail.tags) ? newsDetail.tags : String(newsDetail.tags).split(','))"
                 :key="tag"
                 size="small"
                 style="margin-right: 8px"
@@ -44,7 +44,7 @@
                 {{ tag }}
               </el-tag>
             </div>
-            
+
             <div class="article-actions">
               <el-button @click="toggleLike" :type="isLiked ? 'primary' : 'default'">
                 <el-icon><Star /></el-icon>
@@ -61,11 +61,11 @@
             </div>
           </footer>
         </article>
-        
+
         <!-- 评论区 -->
         <section class="comments-section">
           <h3>评论 ({{ comments.length }})</h3>
-          
+
           <!-- 发表评论 -->
           <div class="comment-form" v-if="isLoggedIn">
             <el-input
@@ -76,8 +76,8 @@
               maxlength="500"
               show-word-limit
             />
-            <el-button 
-              type="primary" 
+            <el-button
+              type="primary"
               @click="submitComment"
               :loading="submittingComment"
               style="margin-top: 10px"
@@ -88,11 +88,11 @@
           <div v-else class="login-prompt">
             <el-button type="primary" @click="$router.push('/login')">登录后评论</el-button>
           </div>
-          
+
           <!-- 评论列表 -->
           <div class="comments-list">
-            <div 
-              v-for="comment in comments" 
+            <div
+              v-for="comment in comments"
               :key="comment.id"
               class="comment-item"
             >
@@ -108,8 +108,8 @@
                 </div>
                 <div class="comment-text">{{ comment.content }}</div>
                 <div class="comment-actions">
-                  <el-button 
-                    type="text" 
+                  <el-button
+                    type="text"
                     size="small"
                     @click="likeComment(comment.id)"
                     :disabled="!isLoggedIn"
@@ -117,8 +117,8 @@
                     <el-icon><Star /></el-icon>
                     {{ comment.likeCount }}
                   </el-button>
-                  <el-button 
-                    type="text" 
+                  <el-button
+                    type="text"
                     size="small"
                     @click="replyComment(comment)"
                     :disabled="!isLoggedIn"
@@ -136,13 +136,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { ArrowLeft, View, Star, ChatDotRound, Collection, Share } from '@element-plus/icons-vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import type { Headline, Comment } from '@/types/headline'
-import { getHeadlineById } from '@/api/headline'
-import { useUserStore } from '@/stores/user'
+import {computed, onMounted, ref} from 'vue'
+import {useRoute, useRouter} from 'vue-router'
+import {ArrowLeft, ChatDotRound, Collection, Share, Star, View} from '@element-plus/icons-vue'
+import {ElMessage} from 'element-plus'
+import type {Comment, Headline} from '@/types/headline'
+import {getHeadlineById} from '@/api/headline'
+import {useUserStore} from '@/stores/user'
 
 const route = useRoute()
 const router = useRouter()
@@ -167,7 +167,7 @@ const fetchNewsDetail = async () => {
     ElMessage.error('新闻ID无效')
     return
   }
-  
+
   loading.value = true
   try {
     const response = await getHeadlineById(hid)
@@ -198,7 +198,7 @@ const toggleLike = () => {
     ElMessage.warning('请先登录')
     return
   }
-  
+
   // TODO: 实现点赞API调用
   isLiked.value = !isLiked.value
   if (newsDetail.value && newsDetail.value.likeCount !== undefined) {
@@ -212,7 +212,7 @@ const toggleFavorite = () => {
     ElMessage.warning('请先登录')
     return
   }
-  
+
   // TODO: 实现收藏API调用
   isFavorited.value = !isFavorited.value
   ElMessage.success(isFavorited.value ? '收藏成功' : '取消收藏')
@@ -237,12 +237,12 @@ const submitComment = async () => {
     ElMessage.warning('请输入评论内容')
     return
   }
-  
+
   submittingComment.value = true
   try {
     // TODO: 实现评论API调用
     await new Promise(resolve => setTimeout(resolve, 1000)) // 模拟API调用
-    
+
     comments.value.unshift({
       id: Date.now(),
       newsId: Number(route.params.hid),
@@ -253,7 +253,7 @@ const submitComment = async () => {
       likeCount: 0,
       createdTime: new Date().toISOString()
     })
-    
+
     newComment.value = ''
     ElMessage.success('评论发表成功')
   } catch (error) {

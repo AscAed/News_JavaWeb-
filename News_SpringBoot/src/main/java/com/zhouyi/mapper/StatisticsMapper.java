@@ -115,7 +115,7 @@ public interface StatisticsMapper {
          * 
          * @return 总收藏数
          */
-        @Select("SELECT COUNT(*) FROM news_favorites")
+        @Select("SELECT COUNT(*) FROM favorites")
         Long getTotalFavorites();
 
         /**
@@ -123,7 +123,7 @@ public interface StatisticsMapper {
          * 
          * @return 今日收藏数
          */
-        @Select("SELECT COUNT(*) FROM news_favorites WHERE CAST(created_time AS DATE) = CURRENT_DATE")
+        @Select("SELECT COUNT(*) FROM favorites WHERE CAST(favorite_time AS DATE) = CURRENT_DATE")
         Long getTodayFavorites();
 
         /**

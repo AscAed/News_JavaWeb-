@@ -67,6 +67,7 @@ com\zhouyi\dto\HeadlineDetailDTO.class
 com\zhouyi\entity\mongodb\OperationLog.class
 com\zhouyi\controller\UnifiedNewsController.class
 com\zhouyi\config\AsyncConfig.class
+com\zhouyi\controller\SourceController.class
 com\zhouyi\common\exception\GlobalException.class
 com\zhouyi\test\MongoConnectionTest.class
 com\zhouyi\common\security\CustomAccessDeniedHandler.class
@@ -138,6 +139,7 @@ com\zhouyi\controller\mongo\DataMigrationController.class
 com\zhouyi\service\RssService.class
 com\zhouyi\repository\mongo\RssCategoryRepository.class
 com\zhouyi\service\FileService.class
+com\zhouyi\dto\SourceDTO.class
 com\zhouyi\dto\HealthCheckDTO.class
 com\zhouyi\test\SimpleMongoRssTest.class
 com\zhouyi\dto\PhoneUpdateRequestDTO.class

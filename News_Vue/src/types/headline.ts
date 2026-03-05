@@ -6,7 +6,7 @@ export interface Headline {
   summary: string
   content?: string
   coverImage?: string
-  tags?: string
+  tags?: string | string[]
   type: number
   typeName?: string
   pageViews: number
