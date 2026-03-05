@@ -6,9 +6,11 @@ import com.rometools.rome.io.SyndFeedInput;
 import com.rometools.rome.io.XmlReader;
 import com.zhouyi.common.enums.NewsSource;
 import com.zhouyi.entity.Headline;
+import com.zhouyi.entity.NewsType;
 import com.zhouyi.entity.RssFeedItem;
 import com.zhouyi.entity.RssSubscription;
 import com.zhouyi.mapper.HeadlineMapper;
+import com.zhouyi.mapper.NewsTypeMapper;
 import com.zhouyi.mapper.RssFeedItemMapper;
 import com.zhouyi.mapper.RssSubscriptionMapper;
 import com.zhouyi.repository.mongo.RssArticleRepository;
@@ -26,6 +28,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
@@ -44,10 +47,13 @@ public class RssServiceImpl implements RssService {
     private HeadlineMapper headlineMapper;
 
     @Autowired
+    private NewsTypeMapper newsTypeMapper;
+
+    @Autowired
     private RssArticleRepository rssArticleRepository; // Changed from NewsContentRepository
 
     @Override
-    public Map<String, Object> fetchAndSave(Long subscriptionId) {
+    public Map<String, Object> fetchAndSave(Long subscriptionId, String section) {
         RssSubscription subscription = rssSubscriptionMapper.findById(subscriptionId);
         if (subscription == null) {
             throw new RuntimeException("RSS订阅源不存在: " + subscriptionId);
@@ -57,7 +63,16 @@ public class RssServiceImpl implements RssService {
 
         try {
             // 1. Network Operation (Non-Transactional)
-            SyndFeed feed = fetchFeed(subscription.getUrl());
+            String targetUrl = subscription.getUrl();
+            if (targetUrl != null && targetUrl.contains("zaobao")) {
+                String subSection = (section != null && !section.isEmpty()) ? section : "china";
+                if (!targetUrl.endsWith("/")) {
+                    targetUrl += "/";
+                }
+                targetUrl += subSection;
+            }
+
+            SyndFeed feed = fetchFeed(targetUrl);
             if (feed == null) {
                 throw new RuntimeException("Failed to fetch RSS feed");
             }
@@ -82,7 +97,7 @@ public class RssServiceImpl implements RssService {
             // Let's implement the logic directly here but call a separate method for saving
             // list.
 
-            int newCount = saveRssData(subscription, feed);
+            int newCount = saveRssData(subscription, feed, section);
 
             result.put("subscription_id", subscriptionId);
             result.put("fetched_count", feed.getEntries().size());
@@ -100,6 +115,32 @@ public class RssServiceImpl implements RssService {
             rssSubscriptionMapper.updateFetchStatus(subscriptionId, "failed", e.getMessage());
             throw new RuntimeException("RSS process failed: " + e.getMessage());
         }
+
+        return result;
+    }
+
+    @Override
+    public Map<String, Object> createSubscription(com.zhouyi.dto.RssSubscriptionCreateDTO createDTO) {
+        RssSubscription subscription = new RssSubscription();
+        subscription.setName(createDTO.getName());
+        subscription.setUrl(createDTO.getUrl());
+        subscription.setDescription(createDTO.getDescription() != null ? createDTO.getDescription() : "");
+        subscription.setCategory(createDTO.getCategory() != null ? createDTO.getCategory() : "other");
+        subscription.setLanguage(createDTO.getLanguage() != null ? createDTO.getLanguage() : "zh");
+
+        subscription.setIsActive(true);
+        subscription.setFetchInterval(60); // Default to 60 mins
+        subscription.setFetchStatus("pending");
+        subscription.setTotalArticles(0);
+        subscription.setCreatedAt(LocalDateTime.now());
+        subscription.setUpdatedAt(LocalDateTime.now());
+
+        rssSubscriptionMapper.insert(subscription);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("id", subscription.getId());
+        result.put("name", subscription.getName());
+        result.put("message", "订阅源创建成功");
 
         return result;
     }
@@ -160,13 +201,13 @@ public class RssServiceImpl implements RssService {
      * <p>
      * However, specific item save (MySQL + Mongo) MUST be atomic.
      */
-    private int saveRssData(RssSubscription subscription, SyndFeed feed) {
+    private int saveRssData(RssSubscription subscription, SyndFeed feed, String section) {
         int newCount = 0;
         Date now = new Date();
 
         for (SyndEntry entry : feed.getEntries()) {
             try {
-                if (saveSingleArticle(subscription, entry, now)) {
+                if (saveSingleArticle(subscription, entry, now, section)) {
                     newCount++;
                 }
             } catch (Exception e) {
@@ -198,7 +239,7 @@ public class RssServiceImpl implements RssService {
     // change,
     // we will implement the logic robustly without depending on broad declarative
     // transaction for the loop.
-    protected boolean saveSingleArticle(RssSubscription subscription, SyndEntry entry, Date fetchTime) {
+    protected boolean saveSingleArticle(RssSubscription subscription, SyndEntry entry, Date fetchTime, String section) {
         String link = entry.getLink();
         String guid = entry.getUri();
 
@@ -209,42 +250,80 @@ public class RssServiceImpl implements RssService {
             return false;
         }
 
-        // 2. Build RSS Article (MongoDB)
+        // ======== 1. 提取 RSS 数据并构建 MongoDB 实体 (新闻正文) ========
         com.zhouyi.entity.mongo.RssArticle article = new com.zhouyi.entity.mongo.RssArticle();
         article.setSubscriptionId(String.valueOf(subscription.getId()));
         article.setSubscriptionName(subscription.getName());
+
+        // A. <title> 标签内容映射为“标题”
         article.setTitle(entry.getTitle());
-        article.setLink(link);
-        article.setGuid(guid);
+
+        // B. <link> 标签内容映射为“新闻源网址”
+        article.setLink(entry.getLink());
+        article.setGuid(guid != null ? guid : entry.getLink()); // Fallback for guid
         article.setAuthor(entry.getAuthor());
 
-        // Handle Description/Content
-        String description = null;
-        if (entry.getDescription() != null) {
-            description = entry.getDescription().getValue();
-        } else if (!entry.getContents().isEmpty()) {
-            description = entry.getContents().get(0).getValue();
-        }
-        article.setDescription(description);
-        article.setContentText(description); // Simple fallback
+        // C. <category> 标签内容映射为“新闻tag”
+        List<String> categories = entry.getCategories().stream()
+                .map(c -> c.getName())
+                .collect(java.util.stream.Collectors.toCollection(java.util.ArrayList::new));
 
-        // Dates
+        // 确保 section 包含在分类 tags 中以便前端能正确过滤查询
+        if (section != null && !section.isEmpty() && !categories.contains(section)) {
+            categories.add(section);
+        }
+
+        article.setCategories(categories);
+        article.setKeywords(categories);
+
+        // D. <description> 标签内容映射为“正文”（HTML 结构，保存在 MongoDB 中）
+        String contentText = null;
+        if (entry.getDescription() != null && entry.getDescription().getValue() != null
+                && !entry.getDescription().getValue().isEmpty()) {
+            contentText = entry.getDescription().getValue();
+        } else if (entry.getContents() != null && !entry.getContents().isEmpty()) {
+            contentText = entry.getContents().get(0).getValue();
+        }
+        article.setDescription(contentText); // 兼容性冗余字段
+        article.setContentText(contentText); // 主要长文内容存于 MongoDB
+
+        // 处理发布时间
         Date pubDate = entry.getPublishedDate() != null ? entry.getPublishedDate()
                 : (entry.getUpdatedDate() != null ? entry.getUpdatedDate() : fetchTime);
         article.setPubDate(pubDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime());
         article.setCreatedAt(LocalDateTime.now());
         article.setUpdatedAt(LocalDateTime.now());
 
-        // Save to MongoDB first
+        // 第一步：先保存结构化正文数据至 MongoDB
         article = rssArticleRepository.save(article);
 
-        // 3. Build Headline (MySQL)
+        // ======== 2. 构建 MySQL 实体 (新闻列表展示基本信息) ========
         Headline headline = new Headline();
         headline.setTitle(article.getTitle());
-        headline.setType(1); // Default type, maybe map from subscription.getCategory()
-        headline.setSummary(article.getDescription() != null && article.getDescription().length() > 200
-                ? article.getDescription().substring(0, 200)
-                : article.getDescription());
+
+        // 将之前收集的 <category> 列表转换为逗号拼接的字符串作为 MySQL 数据库中的新闻 tags
+        String tags = String.join(",", categories);
+        // 兜底逻辑：如果 RSS 中没有 <category> 标签，则使用请求时的分类 section 作为 tag
+        if (tags.isEmpty() && section != null && !section.isEmpty()) {
+            tags = section;
+        }
+
+        // 根据 section 确定中文栏目名，并查找/创建对应的 news_types 记录
+        String chineseCategoryName;
+        if (subscription.getUrl() != null && subscription.getUrl().contains("zaobao")) {
+            chineseCategoryName = "singapore".equals(section) ? "新加坡"
+                    : "world".equals(section) ? "国际" : "中国";
+        } else {
+            chineseCategoryName = "国际";
+        }
+        headline.setTypeName(chineseCategoryName);
+        int typeId = resolveTypeId(chineseCategoryName);
+        headline.setType(typeId);
+        headline.setTags(tags);
+
+        // 从保存在 MongoDB 中的 <description> 提取去除 HTML 的纯文本，并在 MySQL 保存 200 字摘要
+        String plainText = contentText != null ? contentText.replaceAll("<[^>]*>", "").trim() : "";
+        headline.setSummary(plainText.length() > 200 ? plainText.substring(0, 200) : plainText);
         headline.setPublisher(1); // System/Admin
         headline.setAuthor(article.getAuthor() != null ? article.getAuthor() : subscription.getName());
         headline.setStatus(1); // Published
@@ -284,5 +363,26 @@ public class RssServiceImpl implements RssService {
         }
 
         return true;
+    }
+
+    /**
+     * Returns the tid for the given category name, creating the row in news_types
+     * if it does not exist.
+     */
+    private int resolveTypeId(String categoryName) {
+        NewsType existing = newsTypeMapper.findByName(categoryName);
+        if (existing != null) {
+            return existing.getId();
+        }
+        NewsType newType = new NewsType();
+        newType.setTypeName(categoryName);
+        newType.setDescription("RSS auto-created category");
+        newType.setSortOrder(newsTypeMapper.getNextSortOrder());
+        newType.setStatus(1);
+        newType.setSourceType("rss");
+        newType.setCreatedTime(LocalDateTime.now());
+        newType.setUpdatedTime(LocalDateTime.now());
+        newsTypeMapper.insert(newType);
+        return newType.getId();
     }
 }

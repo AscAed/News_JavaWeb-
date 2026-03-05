@@ -51,7 +51,8 @@ public class HeadlineController {
             @RequestParam(required = false) String dateFrom,
             @RequestParam(required = false) String dateTo,
             @RequestParam(required = false) String sourceType,
-            @RequestParam(required = false) String sourceId) {
+            @RequestParam(required = false) String sourceId,
+            @RequestParam(required = false) String section) {
         try {
             // 构建查询DTO
             HeadlineQueryDTO queryDTO = new HeadlineQueryDTO();
@@ -66,6 +67,7 @@ public class HeadlineController {
             queryDTO.setDateTo(dateTo);
             queryDTO.setSourceType(sourceType);
             queryDTO.setSourceId(sourceId);
+            queryDTO.setSection(section);
 
             return headlineService.getHeadlinesByPage(queryDTO);
         } catch (Exception e) {

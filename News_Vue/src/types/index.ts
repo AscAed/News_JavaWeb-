@@ -25,16 +25,17 @@ export interface RegisterForm {
 
 // 新闻相关类型
 export interface News {
-  hid: number
+  hid: number | string
   title: string
   summary?: string
   content?: string
   coverImageUrl?: string
-  type: number
+  type: number | string
   typeName?: string
-  publisher: number
+  publisher: number | string
   author?: string
   source?: string
+  sourceUrl?: string
   tags?: string
   pageViews: number
   likeCount: number

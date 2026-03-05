@@ -31,7 +31,7 @@ export const useNewsStore = defineStore('news', () => {
   const fetchNewsList = async (params: {
     page?: number
     size?: number
-    type?: number
+    type?: number | string
     keyword?: string
   } = {}) => {
     loading.value = true
@@ -40,6 +40,12 @@ export const useNewsStore = defineStore('news', () => {
         page: params.page || currentPage.value,
         size: params.size || pageSize.value,
         ...params
+      }
+
+      // 检查并在 type 为字符串（如 'china'）时将其转换为 section 参数
+      if (typeof mergedParams.type === 'string') {
+        mergedParams.section = mergedParams.type;
+        delete mergedParams.type;
       }
 
       // 全局搜索：如果有 keyword，则不限制 sourceType 和 sourceId
@@ -94,6 +100,15 @@ export const useNewsStore = defineStore('news', () => {
 
   const fetchNewsTypes = async () => {
     try {
+      if (currentSource.value && currentSource.value.type === 'rss' && currentSource.value.name.includes('联合早报')) {
+        newsTypes.value = [
+          {tid: 'china', tname: '中国', sortOrder: 1} as any,
+          {tid: 'singapore', tname: '新加坡', sortOrder: 2} as any,
+          {tid: 'world', tname: '国际', sortOrder: 3} as any
+        ];
+        return;
+      }
+
       const params: any = {}
       if (currentSource.value && currentSource.value.type !== 'original' && currentSource.value.id !== -1) {
         params.sourceType = currentSource.value.type

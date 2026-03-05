@@ -36,9 +36,26 @@ public class HeadlineServiceImpl implements HeadlineService {
     @Autowired
     private MongoTemplate mongoTemplate;
 
+    @Autowired
+    private com.zhouyi.service.HybridRssService hybridRssService;
+
     @Override
     public Result<Map<String, Object>> getHeadlinesByPage(HeadlineQueryDTO queryDTO) {
         try {
+            // Check if this is a request for RSS Zaobao section
+            if ("rss".equalsIgnoreCase(queryDTO.getSourceType()) && queryDTO.getSourceId() != null
+                    && queryDTO.getSection() != null) {
+                try {
+                    Long subId = Long.valueOf(queryDTO.getSourceId());
+                    // Synchronously wait for the fetch to complete with a 10s timeout
+                    hybridRssService.fetchAndSave(subId, queryDTO.getSection()).get(10,
+                            java.util.concurrent.TimeUnit.SECONDS);
+                } catch (Exception e) {
+                    // Log but don't fail the whole request if fetch times out
+                    System.err.println("Failed to fetch RSS synchronously: " + e.getMessage());
+                }
+            }
+
             // 计算偏移量
             int offset = (queryDTO.getPageNum() - 1) * queryDTO.getPageSize();
 
@@ -46,12 +63,12 @@ public class HeadlineServiceImpl implements HeadlineService {
             List<Headline> headlines = headlineMapper.selectHeadlinesByPage(
                     offset, queryDTO.getPageSize(), queryDTO.getType(),
                     queryDTO.getKeywords(), queryDTO.getPublisher(), queryDTO.getLang(),
-                    queryDTO.getSourceType(), queryDTO.getSourceId());
+                    queryDTO.getSourceType(), queryDTO.getSourceId(), queryDTO.getSection());
 
             // 查询总数
             Long total = headlineMapper.countHeadlines(
                     queryDTO.getType(), queryDTO.getKeywords(), queryDTO.getPublisher(), queryDTO.getLang(),
-                    queryDTO.getSourceType(), queryDTO.getSourceId());
+                    queryDTO.getSourceType(), queryDTO.getSourceId(), queryDTO.getSection());
 
             // 计算总页数
             int totalPages = (int) Math.ceil((double) total / queryDTO.getPageSize());
@@ -85,7 +102,7 @@ public class HeadlineServiceImpl implements HeadlineService {
             headline.setPageViews(headline.getPageViews() + 1);
 
             // 查询MongoDB中的详细内容
-            NewsContent newsContent = mongoTemplate.findById(hid, NewsContent.class);
+            String docId = headline.getMongodbDocumentId();
 
             // 构建详情DTO
             HeadlineDetailDTO detailDTO = new HeadlineDetailDTO();
@@ -104,44 +121,82 @@ public class HeadlineServiceImpl implements HeadlineService {
             detailDTO.setUpdatedTime(headline.getUpdatedTime());
             detailDTO.setPublishedTime(headline.getPublishedTime());
 
-            // 设置文章内容
-            if (newsContent != null) {
-                detailDTO.setContent(newsContent.getContent());
-                // 如果MongoDB中有更完整的摘要，使用MongoDB的
-                if (newsContent.getSummary() != null && !newsContent.getSummary().isEmpty()) {
-                    detailDTO.setSummary(newsContent.getSummary());
+            boolean isRss = "rss".equals(headline.getSourceType())
+                    || "rss_articles".equals(headline.getMongodbCollection());
+
+            if (isRss) {
+                com.zhouyi.entity.mongo.RssArticle rssArticle = null;
+                if (docId != null && !docId.isEmpty()) {
+                    rssArticle = mongoTemplate.findById(docId, com.zhouyi.entity.mongo.RssArticle.class);
+                } else {
+                    org.springframework.data.mongodb.core.query.Query q = new org.springframework.data.mongodb.core.query.Query(
+                            org.springframework.data.mongodb.core.query.Criteria.where("mysql_headline_id").is(hid));
+                    rssArticle = mongoTemplate.findOne(q, com.zhouyi.entity.mongo.RssArticle.class);
                 }
-                // 设置关键词
-                if (newsContent.getKeywords() != null) {
-                    detailDTO.setKeywords(newsContent.getKeywords());
-                }
-                // 设置字数统计
-                if (newsContent.getWordCount() != null) {
-                    detailDTO.setWordCount(newsContent.getWordCount());
-                }
-                // 设置阅读时间
-                if (newsContent.getReadingTime() != null) {
-                    detailDTO.setReadingTime(newsContent.getReadingTime());
-                }
-                // 设置SEO信息
-                if (newsContent.getSeoInfo() != null) {
-                    detailDTO.setSeoTitle(headline.getTitle()); // 使用新闻标题作为SEO标题
-                    detailDTO.setSeoDescription(newsContent.getSeoInfo().getMetaDescription());
-                    detailDTO.setSeoKeywords(newsContent.getSeoInfo().getMetaKeywords());
-                }
-                // 处理标签：将字符串转换为列表
-                if (newsContent.getTagList() != null && !newsContent.getTagList().isEmpty()) {
-                    detailDTO.setTags(newsContent.getTagList());
-                } else if (headline.getTags() != null && !headline.getTags().isEmpty()) {
-                    // 如果MongoDB中没有标签，从MySQL的字符串转换
-                    String[] tagArray = headline.getTags().split(",");
-                    detailDTO.setTags(java.util.Arrays.asList(tagArray));
+
+                if (rssArticle != null) {
+                    detailDTO.setContent(rssArticle.getContentText());
+                    if (rssArticle.getWordCount() != null) {
+                        detailDTO.setWordCount(rssArticle.getWordCount());
+                    }
+                    if (rssArticle.getCategories() != null && !rssArticle.getCategories().isEmpty()) {
+                        detailDTO.setTags(rssArticle.getCategories());
+                    } else if (headline.getTags() != null && !headline.getTags().isEmpty()) {
+                        detailDTO.setTags(java.util.Arrays.asList(headline.getTags().split(",")));
+                    }
+                } else {
+                    if (headline.getTags() != null && !headline.getTags().isEmpty()) {
+                        detailDTO.setTags(java.util.Arrays.asList(headline.getTags().split(",")));
+                    }
                 }
             } else {
-                // 如果MongoDB中没有数据，从MySQL转换标签
-                if (headline.getTags() != null && !headline.getTags().isEmpty()) {
-                    String[] tagArray = headline.getTags().split(",");
-                    detailDTO.setTags(java.util.Arrays.asList(tagArray));
+                NewsContent newsContent = null;
+                if (docId != null && !docId.isEmpty()) {
+                    newsContent = mongoTemplate.findById(docId, NewsContent.class);
+                }
+                if (newsContent == null) {
+                    newsContent = mongoTemplate.findById(hid, NewsContent.class);
+                }
+
+                // 设置文章内容
+                if (newsContent != null) {
+                    detailDTO.setContent(newsContent.getContent());
+                    // 如果MongoDB中有更完整的摘要，使用MongoDB的
+                    if (newsContent.getSummary() != null && !newsContent.getSummary().isEmpty()) {
+                        detailDTO.setSummary(newsContent.getSummary());
+                    }
+                    // 设置关键词
+                    if (newsContent.getKeywords() != null) {
+                        detailDTO.setKeywords(newsContent.getKeywords());
+                    }
+                    // 设置字数统计
+                    if (newsContent.getWordCount() != null) {
+                        detailDTO.setWordCount(newsContent.getWordCount());
+                    }
+                    // 设置阅读时间
+                    if (newsContent.getReadingTime() != null) {
+                        detailDTO.setReadingTime(newsContent.getReadingTime());
+                    }
+                    // 设置SEO信息
+                    if (newsContent.getSeoInfo() != null) {
+                        detailDTO.setSeoTitle(headline.getTitle()); // 使用新闻标题作为SEO标题
+                        detailDTO.setSeoDescription(newsContent.getSeoInfo().getMetaDescription());
+                        detailDTO.setSeoKeywords(newsContent.getSeoInfo().getMetaKeywords());
+                    }
+                    // 处理标签：将字符串转换为列表
+                    if (newsContent.getTagList() != null && !newsContent.getTagList().isEmpty()) {
+                        detailDTO.setTags(newsContent.getTagList());
+                    } else if (headline.getTags() != null && !headline.getTags().isEmpty()) {
+                        // 如果MongoDB中没有标签，从MySQL的字符串转换
+                        String[] tagArray = headline.getTags().split(",");
+                        detailDTO.setTags(java.util.Arrays.asList(tagArray));
+                    }
+                } else {
+                    // 如果MongoDB中没有数据，从MySQL转换标签
+                    if (headline.getTags() != null && !headline.getTags().isEmpty()) {
+                        String[] tagArray = headline.getTags().split(",");
+                        detailDTO.setTags(java.util.Arrays.asList(tagArray));
+                    }
                 }
             }
 

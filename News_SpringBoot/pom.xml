@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.zhouyi</groupId>
     <artifactId>News_SpringBoot</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>2.5.0</version>
     <name>News_SpringBoot</name>
     <description>News_SpringBoot</description>
     <parent>

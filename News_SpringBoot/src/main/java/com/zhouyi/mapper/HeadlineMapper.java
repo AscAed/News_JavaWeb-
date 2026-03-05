@@ -30,7 +30,8 @@ public interface HeadlineMapper {
                                          @Param("publisher") Integer publisher,
                                          @Param("lang") String lang,
                                          @Param("sourceType") String sourceType,
-                                         @Param("sourceId") String sourceId);
+                                         @Param("sourceId") String sourceId,
+                                         @Param("section") String section);
 
     /**
      * 统计头条总数
@@ -46,7 +47,8 @@ public interface HeadlineMapper {
                         @Param("publisher") Integer publisher,
                         @Param("lang") String lang,
                         @Param("sourceType") String sourceType,
-                        @Param("sourceId") String sourceId);
+                        @Param("sourceId") String sourceId,
+                        @Param("section") String section);
 
     /**
      * 根据ID查询头条详情

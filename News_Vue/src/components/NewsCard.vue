@@ -100,6 +100,10 @@ const cardSize = computed(() => `card-${props.size}`)
 
 // 方法
 const goToDetail = () => {
+  if (props.news.sourceUrl) {
+    window.open(props.news.sourceUrl, '_blank')
+    return
+  }
   router.push(`/news/${props.news.hid}`)
 }
 

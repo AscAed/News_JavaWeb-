@@ -75,4 +75,9 @@ public class HeadlineQueryDTO {
      * External source ID (e.g. RSS subscription ID)
      */
     private String sourceId;
+
+    /**
+     * Sub-section or category for RSS sources (e.g., 'china', 'singapore')
+     */
+    private String section;
 }
