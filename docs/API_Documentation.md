@@ -141,3 +141,14 @@
 | 500 | 500 | 代码抛出且未捕获的后端服务崩溃，数据库断联等。 |
 
 > **提示**：前端拦截器通过判定状态码为 200 直接解包取得 `data` 体。如非 200，它会直接捕获外层 `message` 并弹窗呈现。因此后端应该合理使用 `message` 提供有意义的报错中文解释。
+
+---
+
+## 4. 性能优化注解 (Performance / Caching)
+
+为了系统吞吐能力，以下高频读取的公开 API 已接入 Redis 热数据缓冲：
+- `GET /categories`: `@Cacheable("categories")`，所有新增/更新将自动清除此命名空间。
+- `GET /rss-subscriptions`: `@Cacheable("rssSubscriptions")`。
+- `GET /headlines`: 针对首屏默认第一页的热点数据采用了代码级 5 分钟短效期 Redis 缓存拦截。
+- `GET /headlines/{id}`: `@Cacheable(value="articleDetail", sync=true)` 具备防止缓存雪崩/击穿机制。
+请注意数据变更可能存在最高 10 分钟或 5 分钟的不一致窗口期。

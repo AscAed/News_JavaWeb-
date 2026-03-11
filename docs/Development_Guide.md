@@ -122,7 +122,19 @@ mongod --dbpath=../data/db
 
 ---
 
-## 四、 后续开发协同规约（AI 与 Dev 通用）
+## 五、 Redis 分布式快取 (Cache) 体系
+
+系统为了应对高并发读取（如新闻列表、详情详情和分类获取），全面引入了 Spring Cache 与 Redis 集成：
+
+1. **基礎設定**：`RedisConfig` 中配置了防範 ClassCastException 的 `GenericJackson2JsonRedisSerializer` 以及全域的 TTL（預設 10 分鐘）。
+2. **列表快取防擊穿設計 (手動控制 TTL)**：
+   在 `HeadlineServiceImpl` 的 `getHeadlinesByPage` 對首頁或無條件搜尋的第一頁，採取了主動的短效期（5 分鐘）快取 `redisTemplate.opsForValue().set(cacheKey, result, 5, TimeUnit.MINUTES);`，以在提供極致效能的同時保證資訊新鮮度，並防止全部失效造成的 DB 壓力。
+3. **詳情頁熱點鎖定**：
+   單篇文章取得時 (`getHeadlineById`) 利用了 `@Cacheable(value = "articleDetail", key = "#hid", sync = true)` 注解。此處 `sync = true` 是**防止快取擊穿**的關鍵配置。當高併發同時訪問一個過期的資源，只有一條線程會深入 DB 查詢，其他將被阻塞等待。
+
+---
+
+## 六、 后续开发协同规约（AI 与 Dev 通用）
 
 1. **RESTful 与产品逻辑一致性校验**: 
    - 进行前后端接口封装与对接时，务必将前方的参数格式映射入后端规定。

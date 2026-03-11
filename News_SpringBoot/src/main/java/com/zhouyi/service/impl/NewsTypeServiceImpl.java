@@ -8,6 +8,8 @@ import com.zhouyi.entity.NewsType;
 import com.zhouyi.mapper.NewsTypeMapper;
 import com.zhouyi.service.NewsTypeService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +29,7 @@ public class NewsTypeServiceImpl implements NewsTypeService {
     private NewsTypeMapper newsTypeMapper;
 
     @Override
+    @Cacheable(value = "categories", key = "#status + '_' + #sourceType + '_' + #sourceId", sync = true)
     public Result<Map<String, Object>> getCategories(Integer status, String sortBy, String sortOrder, String sourceType,
                                                      String sourceId) {
         try {
@@ -87,6 +90,7 @@ public class NewsTypeServiceImpl implements NewsTypeService {
     }
 
     @Override
+    @CacheEvict(value = "categories", allEntries = true)
     public Result<NewsType> createCategory(NewsTypeCreateDTO createDTO) {
         try {
             // 检查分类名称是否已存在
@@ -125,6 +129,7 @@ public class NewsTypeServiceImpl implements NewsTypeService {
     }
 
     @Override
+    @CacheEvict(value = "categories", allEntries = true)
     public Result<Void> updateCategory(Integer id, NewsTypeUpdateDTO updateDTO) {
         try {
             if (id == null || id <= 0) {
@@ -163,6 +168,7 @@ public class NewsTypeServiceImpl implements NewsTypeService {
     }
 
     @Override
+    @CacheEvict(value = "categories", allEntries = true)
     public Result<Void> updateCategoryStatus(Integer id, NewsTypeStatusDTO statusDTO) {
         try {
             if (id == null || id <= 0) {
@@ -187,6 +193,7 @@ public class NewsTypeServiceImpl implements NewsTypeService {
     }
 
     @Override
+    @CacheEvict(value = "categories", allEntries = true)
     public Result<Void> deleteCategory(Integer id) {
         try {
             if (id == null || id <= 0) {

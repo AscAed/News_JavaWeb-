@@ -17,8 +17,19 @@ spring:
     password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
 
-  # MongoDB配置
+  # MongoDB和Redis配置
   data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+      database: 0
+      timeout: 10s
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: -1ms
     mongodb:
       # MongoDB连接URI
       uri: mongodb://localhost:27017

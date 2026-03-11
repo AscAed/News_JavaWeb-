@@ -20,6 +20,11 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.redis.core.RedisTemplate;
 
 /**
  * 新闻头条服务实现类
@@ -38,10 +43,23 @@ public class HeadlineServiceImpl implements HeadlineService {
 
     @Autowired
     private com.zhouyi.service.HybridRssService hybridRssService;
+    
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
 
     @Override
+    @SuppressWarnings("unchecked")
     public Result<Map<String, Object>> getHeadlinesByPage(HeadlineQueryDTO queryDTO) {
         try {
+            // First Page Fast Cache (Hot News List)
+            String cacheKey = "headlines:page:1:" + queryDTO.getType() + ":" + queryDTO.getSourceType();
+            if (queryDTO.getPageNum() == 1 && (queryDTO.getKeywords() == null || queryDTO.getKeywords().isEmpty())) {
+                Object cachedResult = redisTemplate.opsForValue().get(cacheKey);
+                if (cachedResult != null) {
+                    return Result.successWithMessageAndData("查询成功 (from Cache)", (Map<String, Object>) cachedResult);
+                }
+            }
+
             // Check if this is a request for RSS Zaobao section
             if ("rss".equalsIgnoreCase(queryDTO.getSourceType()) && queryDTO.getSourceId() != null
                     && queryDTO.getSection() != null) {
@@ -81,6 +99,11 @@ public class HeadlineServiceImpl implements HeadlineService {
             result.put("total_pages", totalPages);
             result.put("items", headlines);
 
+            // Save to cache for 5 minutes if it's the first page
+            if (queryDTO.getPageNum() == 1 && (queryDTO.getKeywords() == null || queryDTO.getKeywords().isEmpty())) {
+                redisTemplate.opsForValue().set(cacheKey, result, 5, TimeUnit.MINUTES);
+            }
+
             return Result.successWithMessageAndData("查询成功", result);
 
         } catch (Exception e) {
@@ -89,6 +112,7 @@ public class HeadlineServiceImpl implements HeadlineService {
     }
 
     @Override
+    @Cacheable(value = "articleDetail", key = "#hid", sync = true)
     public Result<HeadlineDetailDTO> getHeadlineById(Integer hid) {
         try {
             // 查询MySQL中的头条基本信息
@@ -296,6 +320,7 @@ public class HeadlineServiceImpl implements HeadlineService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "articleDetail", key = "#updateDTO.id != null ? #updateDTO.id : #updateDTO.hid")
     public Result<String> updateHeadline(HeadlineUpdateDTO updateDTO, Integer userId) {
         try {
             // 检查头条是否存在
@@ -356,6 +381,7 @@ public class HeadlineServiceImpl implements HeadlineService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "articleDetail", key = "#hid")
     public Result<String> deleteHeadline(Integer hid, Integer userId) {
         try {
             // 检查头条是否存在

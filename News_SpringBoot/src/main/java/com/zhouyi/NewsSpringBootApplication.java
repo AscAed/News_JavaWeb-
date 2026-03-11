@@ -3,6 +3,8 @@ package com.zhouyi;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+import org.springframework.cache.annotation.EnableCaching;
+
 /**
  * 新闻头条项目主启动类
  * 
@@ -14,6 +16,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  */
 @SpringBootApplication
 @org.springframework.scheduling.annotation.EnableScheduling
+@EnableCaching
 public class NewsSpringBootApplication {
 
     static void main(String[] args) {

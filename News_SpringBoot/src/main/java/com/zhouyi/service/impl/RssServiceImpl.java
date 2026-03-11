@@ -18,6 +18,8 @@ import com.zhouyi.service.RssService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -120,6 +122,7 @@ public class RssServiceImpl implements RssService {
     }
 
     @Override
+    @CacheEvict(value = "rssSubscriptions", allEntries = true)
     public Map<String, Object> createSubscription(com.zhouyi.dto.RssSubscriptionCreateDTO createDTO) {
         RssSubscription subscription = new RssSubscription();
         subscription.setName(createDTO.getName());
@@ -146,6 +149,7 @@ public class RssServiceImpl implements RssService {
     }
 
     @Override
+    @Cacheable(value = "rssSubscriptions", key = "'active'", sync = true)
     public List<RssSubscription> listActiveSubscriptions() {
         return rssSubscriptionMapper.findAllActive();
     }

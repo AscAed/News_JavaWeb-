@@ -12,6 +12,7 @@ E:\PUBLIC\Project\Java\News_JavaWeb\News_SpringBoot\src\main\java\com\zhouyi\com
 E:\PUBLIC\Project\Java\News_JavaWeb\News_SpringBoot\src\main\java\com\zhouyi\config\CustomProperties.java
 E:\PUBLIC\Project\Java\News_JavaWeb\News_SpringBoot\src\main\java\com\zhouyi\config\MinioConfig.java
 E:\PUBLIC\Project\Java\News_JavaWeb\News_SpringBoot\src\main\java\com\zhouyi\config\MongoConfig.java
+E:\PUBLIC\Project\Java\News_JavaWeb\News_SpringBoot\src\main\java\com\zhouyi\config\RedisConfig.java
 E:\PUBLIC\Project\Java\News_JavaWeb\News_SpringBoot\src\main\java\com\zhouyi\config\SecurityConfig.java
 E:\PUBLIC\Project\Java\News_JavaWeb\News_SpringBoot\src\main\java\com\zhouyi\config\WebMvcConfig.java
 E:\PUBLIC\Project\Java\News_JavaWeb\News_SpringBoot\src\main\java\com\zhouyi\controller\AdminController.java

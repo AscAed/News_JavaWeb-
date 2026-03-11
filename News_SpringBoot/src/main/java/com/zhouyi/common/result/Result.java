@@ -22,6 +22,10 @@ public class Result<T> {
         this.path = path;
     }
 
+    // 默认构造函数，供无参反序列化使用
+    public Result() {
+    }
+
     // 成功响应（无数据）
     public static <T> Result<T> success() {
         return new Result<>(200, "操作成功", null, null);

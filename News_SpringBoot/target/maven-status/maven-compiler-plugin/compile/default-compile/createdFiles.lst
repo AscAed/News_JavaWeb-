@@ -60,6 +60,7 @@ com\zhouyi\entity\minio\FileMetadata.class
 com\zhouyi\service\impl\HeadlineServiceImpl.class
 com\zhouyi\dto\OperationLogDTO$UserDTO.class
 com\zhouyi\entity\mongodb\SeoInfo.class
+com\zhouyi\config\RedisConfig.class
 com\zhouyi\dto\AdminUserUpdateDTO.class
 com\zhouyi\dto\HeadlineQueryDTO.class
 com\zhouyi\entity\mongodb\Comment$DeviceInfo.class
