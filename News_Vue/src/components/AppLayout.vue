@@ -12,7 +12,7 @@
       <!-- 右侧主要内容区 -->
       <div class="main-body">
         <!-- 顶部导航栏 (现移动到右侧主内容区上方) -->
-        <AppHeader/>
+        <AppHeader />
 
         <!-- 吸顶辅助导航 (如分类栏) -->
         <div class="sub-header-wrapper">
@@ -53,8 +53,8 @@
 </template>
 
 <script setup lang="ts">
-import {computed} from 'vue'
-import {useRoute} from 'vue-router'
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 import AppHeader from './AppHeader.vue'
 import AppFooter from './AppFooter.vue'
 
@@ -75,16 +75,14 @@ const props = withDefaults(defineProps<Props>(), {
   pageSubtitle: '',
   contentLayout: 'default',
   sidebarPosition: 'left',
-  sidebarWidth: 'narrow'
+  sidebarWidth: 'narrow',
 })
 
 const route = useRoute()
 
 // 面包屑导航
 const breadcrumbItems = computed(() => {
-  const items = [
-    { title: '首页', path: '/' }
-  ]
+  const items = [{ title: '首页', path: '/' }]
 
   const pathSegments = route.path.split('/').filter(Boolean)
   let currentPath = ''
@@ -105,16 +103,16 @@ const breadcrumbItems = computed(() => {
 // 根据路径获取面包屑标题
 const getBreadcrumbTitle = (segment: string, path: string): string => {
   const titleMap: Record<string, string> = {
-    'news': '新闻',
-    'videos': '视频',
-    'favorites': '收藏',
-    'profile': '个人中心',
-    'admin': '管理后台',
-    'login': '登录',
-    'register': '注册',
-    'search': '搜索',
-    'trending': '热点',
-    'live': '直播'
+    news: '新闻',
+    videos: '视频',
+    favorites: '收藏',
+    profile: '个人中心',
+    admin: '管理后台',
+    login: '登录',
+    register: '注册',
+    search: '搜索',
+    trending: '热点',
+    live: '直播',
   }
 
   return titleMap[segment] || segment
@@ -176,8 +174,6 @@ const sidebarClass = computed(() => {
   flex-direction: column;
   background: var(--bg-secondary);
 }
-
-
 
 /* 页面标题 */
 .page-header {
@@ -260,25 +256,20 @@ const sidebarClass = computed(() => {
 }
 
 .global-sidebar {
-  width: 250px;
   flex-shrink: 0;
-  background: var(--bg-primary);
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  overflow-y: auto;
-  z-index: 10;
-  border-right: none; /* 移除全局边框，改用伪元素 */
+  position: fixed;
+  top: 50%;
+  left: var(--spacing-lg);
+  transform: translateY(-50%);
+  height: auto;
+  max-height: 80vh;
+  z-index: 1000;
+  border-right: none;
+  background: transparent;
 }
 
 .global-sidebar::after {
-  content: '';
-  position: absolute;
-  top: 72px; /* 从Logo下方开始显示线 */
-  right: 0;
-  bottom: 0;
-  width: 1px;
-  background-color: var(--border-primary);
+  display: none;
 }
 
 .sidebar-inner {

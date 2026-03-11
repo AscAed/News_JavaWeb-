@@ -1,5 +1,5 @@
 <template>
-  <div class="news-card" :class="[cardSize, { 'featured': isFeatured }]">
+  <div class="news-card" :class="[cardSize, { featured: isFeatured }]">
     <!-- 卡片内容 (左侧) -->
     <div class="card-content">
       <!-- 标题 -->
@@ -14,8 +14,13 @@
 
       <!-- 标签 & 分类 (合并显示在摘要下方) -->
       <div class="news-tags-group">
-        <el-tag v-if="news.typeName" class="news-tag type-tag" effect="plain" size="small"
-                type="info">
+        <el-tag
+          v-if="news.typeName"
+          class="news-tag type-tag"
+          effect="plain"
+          size="small"
+          type="info"
+        >
           {{ news.typeName }}
         </el-tag>
         <template v-if="news.tags">
@@ -35,8 +40,9 @@
       <!-- 元信息 -->
       <div class="card-meta">
         <div class="meta-left">
-          <span v-if="(news as any).sourceName"
-                class="source-name">来自: {{ (news as any).sourceName }}</span>
+          <span v-if="(news as any).sourceName" class="source-name"
+            >来自: {{ (news as any).sourceName }}</span
+          >
           <span v-if="news.author" class="author-name">· {{ news.author }}</span>
           <span class="publish-time">· {{ formatTime(news.publishedTime) }}</span>
           <span v-if="(news as any).readingTime" class="reading-time">
@@ -72,10 +78,10 @@
 </template>
 
 <script setup lang="ts">
-import {computed} from 'vue'
-import {useRouter} from 'vue-router'
-import type {News} from '@/types'
-import {Trophy} from '@element-plus/icons-vue'
+import { computed } from 'vue'
+import { useRouter } from 'vue-router'
+import type { News } from '@/types'
+import { Trophy } from '@element-plus/icons-vue'
 
 interface Props {
   news: News
@@ -89,7 +95,7 @@ const props = withDefaults(defineProps<Props>(), {
   size: 'medium',
   featured: false,
   showMeta: true,
-  showTags: true
+  showTags: true,
 })
 
 const router = useRouter()
@@ -114,16 +120,19 @@ const handleImageError = (event: Event) => {
 
 const getTagList = (tags: string): string[] => {
   if (!tags) return []
-  return tags.split(',').map(tag => tag.trim()).filter(Boolean)
+  return tags
+    .split(',')
+    .map((tag) => tag.trim())
+    .filter(Boolean)
 }
 
 const getTagType = (tag: string): string => {
   const tagTypes: Record<string, string> = {
-    '热点': 'danger',
-    '独家': 'warning',
-    '推荐': 'success',
-    '原创': 'primary',
-    '精选': 'info'
+    热点: 'danger',
+    独家: 'warning',
+    推荐: 'success',
+    原创: 'primary',
+    精选: 'info',
   }
   return tagTypes[tag] || ''
 }
@@ -162,10 +171,11 @@ const formatTime = (time: string | undefined): string => {
 @import '@/assets/design-system.css';
 
 .news-card {
-  background: var(--bg-primary);
-  border-bottom: 1px solid var(--border-primary);
-  padding-bottom: var(--spacing-xl);
-  transition: var(--transition-normal);
+  background: transparent;
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  border: 1px solid transparent;
+  transition: all var(--transition-normal);
   cursor: pointer;
   position: relative;
   display: flex;
@@ -176,11 +186,16 @@ const formatTime = (time: string | undefined): string => {
 }
 
 .news-card:hover {
-  opacity: 0.8;
+  background: var(--bg-primary);
+  border-color: var(--border-primary);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
 }
 
 /* 覆盖组件的默认最大宽度以适应流式布局 */
-.card-small, .card-medium, .card-large {
+.card-small,
+.card-medium,
+.card-large {
   max-width: 100%;
 }
 
@@ -288,10 +303,10 @@ const formatTime = (time: string | undefined): string => {
 
 .card-title {
   font-family: var(--font-family-heading);
-  font-size: 1.1rem;
-  font-weight: 500;
+  font-size: var(--headline-size-sm);
+  font-weight: 600;
   color: var(--text-primary);
-  line-height: 1.4;
+  line-height: var(--leading-headline);
   margin: 0;
   cursor: pointer;
   display: -webkit-box;
@@ -299,9 +314,10 @@ const formatTime = (time: string | undefined): string => {
   line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  transition: color var(--transition-fast);
 }
 
-.card-title:hover {
+.news-card:hover .card-title {
   color: var(--primary-color);
 }
 
@@ -473,31 +489,32 @@ const formatTime = (time: string | undefined): string => {
 }
 
 @keyframes pulse {
-  0%, 100% {
-    opacity: 1;
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(217, 48, 37, 0.4);
   }
   50% {
-    opacity: 0.8;
+    transform: scale(1.05);
+    box-shadow: 0 0 0 6px rgba(217, 48, 37, 0);
   }
 }
 
 /* 深色模式适配 */
-@media (prefers-color-scheme: dark) {
-  .news-card {
-    background: var(--bg-primary);
-    border-color: var(--border-primary);
-  }
+html.dark .news-card {
+  background: var(--bg-primary);
+  border-color: var(--border-primary);
+}
 
-  .card-image-placeholder {
-    background: var(--bg-tertiary);
-  }
+html.dark .card-image-placeholder {
+  background: var(--bg-tertiary);
+}
 
-  .category-badge {
-    background: var(--primary-color);
-  }
+html.dark .category-badge {
+  background: var(--primary-color);
+}
 
-  .reading-time {
-    background: rgba(255, 255, 255, 0.1);
-  }
+html.dark .reading-time {
+  background: rgba(255, 255, 255, 0.1);
 }
 </style>

@@ -58,6 +58,7 @@ public class SecurityConfig {
                                 "/api/v1/headlines/**", // Public news view
                                 "/api/v1/categories/**", // Public category view
                                 "/api/v1/sources/**", // Public sources list
+                                "/api/v1/rss-subscriptions/**", // Public RSS subscriptions list
                                 "/api/v1/rss/articles/**", // Public RSS news view
                                 "/api/v1/rss/categories/**", // Public RSS category view
                                 "/api/v1/common/upload", // Allow upload for now

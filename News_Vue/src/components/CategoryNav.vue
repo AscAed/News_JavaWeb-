@@ -1,62 +1,75 @@
 <template>
   <div class="category-nav">
     <div class="category-list">
-      <router-link
-        v-for="category in categories"
-        :key="category.id"
-        :class="{ active: selectedCategory === category.id }"
-        :to="`/news?category=${category.id}`"
+      <a
+        v-for="category in newsStore.newsTypes"
+        :key="category.tid"
+        :class="{ active: selectedCategory === category.tid }"
+        href="javascript:void(0)"
         class="category-item"
-        @click="selectCategory(category.id)"
+        @click="selectCategory(category.tid)"
       >
-        {{ category.name }}
-      </router-link>
+        {{ category.tname }}
+      </a>
     </div>
   </div>
 </template>
 
 <script lang="ts" setup>
-import {onMounted, ref} from 'vue'
-import {useRoute} from 'vue-router'
+import { onMounted, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
+import { useNewsStore } from '@/stores/news'
 
 const route = useRoute()
-const selectedCategory = ref<number | null>(null)
+const newsStore = useNewsStore()
+const selectedCategory = ref<number | string | null>(0)
 
-const categories = ref([
-  {id: 1, name: '时政要闻'},
-  {id: 2, name: '财经资讯'},
-  {id: 3, name: '科技前沿'},
-  {id: 4, name: '体育竞技'},
-  {id: 5, name: '娱乐八卦'},
-  {id: 6, name: '教育文化'},
-  {id: 7, name: '健康生活'},
-  {id: 8, name: '国际新闻'}
-])
-
-const selectCategory = (categoryId: number) => {
+const selectCategory = (categoryId: number | string) => {
   selectedCategory.value = categoryId
+  // Dispatch typeChange event for HomeView to handle the filtering
+  window.dispatchEvent(
+    new CustomEvent('typeChange', {
+      detail: { type: categoryId },
+    })
+  )
 }
+
+// Reset selection when source changes (via HomeView resetting selectedType)
+// Watch the store changes and default selection to All (0)
+watch(() => newsStore.newsTypes, () => {
+  if (newsStore.newsTypes && newsStore.newsTypes.length > 0) {
+    selectedCategory.value = newsStore.newsTypes[0]?.tid ?? 0;
+  }
+})
 
 onMounted(() => {
   if (route.query.category) {
-    selectedCategory.value = Number(route.query.category)
+    selectedCategory.value = isNaN(Number(route.query.category))
+      ? route.query.category as string
+      : Number(route.query.category)
   }
 })
 </script>
 
 <style scoped>
 .category-nav {
-  background: var(--bg-primary, #ffffff);
-  padding: 12px 24px;
-  border-bottom: 1px solid var(--border-primary, #ebeef5);
-  margin-bottom: 20px;
+  position: sticky;
+  top: 72px; /* AppHeader height */
+  z-index: 990;
+  background: var(--bg-glass);
+  backdrop-filter: var(--blur-md);
+  -webkit-backdrop-filter: var(--blur-md);
+  border-bottom: 1px solid var(--border-primary);
+  padding: 0 var(--spacing-xl);
 }
 
 .category-list {
   display: flex;
-  gap: 20px;
+  gap: var(--spacing-lg);
   overflow-x: auto;
   scrollbar-width: none; /* Firefox */
+  max-width: var(--container-max);
+  margin: 0 auto;
 }
 
 .category-list::-webkit-scrollbar {
@@ -64,18 +77,40 @@ onMounted(() => {
 }
 
 .category-item {
-  color: var(--text-primary, #303133);
+  position: relative;
+  color: var(--text-secondary);
   text-decoration: none;
-  font-size: 16px;
-  padding: 8px 16px;
-  border-radius: 20px;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  padding: var(--spacing-md) 0;
   white-space: nowrap;
-  transition: all 0.3s;
+  transition: color var(--transition-fast);
 }
 
-.category-item:hover, .category-item.active {
-  color: var(--primary-color, #409eff);
-  background: rgba(64, 158, 255, 0.1);
-  font-weight: 500;
+.category-item:hover {
+  color: var(--primary-color);
+}
+
+.category-item.active {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+/* Animated Underline */
+.category-item::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background-color: var(--primary-color);
+  border-radius: 3px 3px 0 0;
+  transform: scaleX(0);
+  transition: transform var(--transition-fast) ease-out;
+}
+
+.category-item.active::after {
+  transform: scaleX(1);
 }
 </style>

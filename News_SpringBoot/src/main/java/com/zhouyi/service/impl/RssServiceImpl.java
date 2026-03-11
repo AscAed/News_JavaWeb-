@@ -145,6 +145,11 @@ public class RssServiceImpl implements RssService {
         return result;
     }
 
+    @Override
+    public List<RssSubscription> listActiveSubscriptions() {
+        return rssSubscriptionMapper.findAllActive();
+    }
+
     /**
      * Network Fetch (No Transaction)
      */

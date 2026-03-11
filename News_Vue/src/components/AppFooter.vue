@@ -113,7 +113,7 @@
               </a>
             </p>
           </div>
-          
+
           <div class="footer-stats">
             <div class="stat-item">
               <span class="stat-number">{{ formatNumber(totalNews) }}</span>
@@ -143,9 +143,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { 
-  Document, ChatDotRound, Share, Position, Connection 
-} from '@element-plus/icons-vue'
+import { Document, ChatDotRound, Share, Position, Connection } from '@element-plus/icons-vue'
 
 // 响应式数据
 const totalNews = ref(125890)
@@ -421,18 +419,18 @@ onMounted(() => {
     grid-template-columns: 1fr 1fr 1fr;
     gap: var(--spacing-xl);
   }
-  
+
   .company-info {
     grid-column: 1 / -1;
     max-width: none;
   }
-  
+
   .footer-bottom-content {
     flex-direction: column;
     align-items: flex-start;
     gap: var(--spacing-lg);
   }
-  
+
   .footer-stats {
     order: -1;
   }
@@ -442,39 +440,39 @@ onMounted(() => {
   .container {
     padding: 0 var(--spacing-md);
   }
-  
+
   .footer-main {
     padding: var(--spacing-xl) 0;
   }
-  
+
   .footer-content {
     grid-template-columns: 1fr;
     gap: var(--spacing-lg);
   }
-  
+
   .footer-brand {
     flex-direction: column;
     text-align: center;
     gap: var(--spacing-sm);
   }
-  
+
   .brand-logo {
     width: 40px;
     height: 40px;
     font-size: 16px;
   }
-  
+
   .footer-stats {
     justify-content: space-around;
     width: 100%;
   }
-  
+
   .footer-links-bottom {
     flex-wrap: wrap;
     gap: var(--spacing-md);
     justify-content: center;
   }
-  
+
   .social-links {
     justify-content: center;
   }
@@ -484,23 +482,23 @@ onMounted(() => {
   .footer-bottom {
     padding: var(--spacing-lg) 0;
   }
-  
+
   .footer-stats {
     flex-direction: column;
     gap: var(--spacing-md);
     align-items: center;
   }
-  
+
   .stat-item {
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
   }
-  
+
   .stat-number {
     font-size: var(--text-lg);
   }
-  
+
   .footer-links-bottom {
     flex-direction: column;
     align-items: center;
@@ -513,11 +511,21 @@ onMounted(() => {
   animation: fadeInUp var(--transition-slow) ease-out;
 }
 
-.footer-section:nth-child(1) { animation-delay: 0.1s; }
-.footer-section:nth-child(2) { animation-delay: 0.2s; }
-.footer-section:nth-child(3) { animation-delay: 0.3s; }
-.footer-section:nth-child(4) { animation-delay: 0.4s; }
-.footer-section:nth-child(5) { animation-delay: 0.5s; }
+.footer-section:nth-child(1) {
+  animation-delay: 0.1s;
+}
+.footer-section:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.footer-section:nth-child(3) {
+  animation-delay: 0.3s;
+}
+.footer-section:nth-child(4) {
+  animation-delay: 0.4s;
+}
+.footer-section:nth-child(5) {
+  animation-delay: 0.5s;
+}
 
 @keyframes fadeInUp {
   from {
@@ -530,14 +538,5 @@ onMounted(() => {
   }
 }
 
-/* 深色模式适配 */
-@media (prefers-color-scheme: dark) {
-  .app-footer {
-    background: var(--bg-primary);
-  }
-  
-  .footer-main {
-    background: var(--bg-secondary);
-  }
-}
+/* 移除多余的深色模式适配，变量已自动处理 */
 </style>

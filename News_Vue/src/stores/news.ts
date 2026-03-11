@@ -27,7 +27,6 @@ export const useNewsStore = defineStore('news', () => {
     return newsTypes.value[0]?.tid || null
   })
 
-  // 获取新闻列表
   const fetchNewsList = async (params: {
     page?: number
     size?: number
@@ -42,8 +41,10 @@ export const useNewsStore = defineStore('news', () => {
         ...params
       }
 
-      // 检查并在 type 为字符串（如 'china'）时将其转换为 section 参数
-      if (typeof mergedParams.type === 'string') {
+      // 处理 '全部' 分类 (type为0) 的情况，以及字符串的情况
+      if (mergedParams.type === 0 || mergedParams.type === '0') {
+        delete mergedParams.type; // 不传type参数，查询该源下的所有新闻
+      } else if (typeof mergedParams.type === 'string') {
         mergedParams.section = mergedParams.type;
         delete mergedParams.type;
       }
@@ -73,20 +74,20 @@ export const useNewsStore = defineStore('news', () => {
         }
 
         return {
-        ...item,
+          ...item,
           sourceName: mappedSourceName,
-        hid: item.id || item.hid,
-        coverImageUrl: item.cover_image || item.coverImage || item.coverImageUrl,
-        type: item.type_id || item.type,
-        typeName: item.type_name || item.typeName,
-        pageViews: item.page_views || item.pageViews,
-        likeCount: item.like_count || item.likeCount,
-        commentCount: item.comment_count || item.commentCount,
-        publisher: item.author_id || item.publisher,
-        isTop: item.is_top === 1 || item.is_top === true || item.isTop === true,
-        publishedTime: item.published_time || item.publishedTime,
-        createdTime: item.created_time || item.createdTime,
-        updatedTime: item.updated_time || item.updatedTime
+          hid: item.id || item.hid,
+          coverImageUrl: item.cover_image || item.coverImage || item.coverImageUrl,
+          type: item.type_id || item.type,
+          typeName: item.type_name || item.typeName,
+          pageViews: item.page_views || item.pageViews,
+          likeCount: item.like_count || item.likeCount,
+          commentCount: item.comment_count || item.commentCount,
+          publisher: item.author_id || item.publisher,
+          isTop: item.is_top === 1 || item.is_top === true || item.isTop === true,
+          publishedTime: item.published_time || item.publishedTime,
+          createdTime: item.created_time || item.createdTime,
+          updatedTime: item.updated_time || item.updatedTime
         }
       })
       total.value = data.total || 0
@@ -100,15 +101,6 @@ export const useNewsStore = defineStore('news', () => {
 
   const fetchNewsTypes = async () => {
     try {
-      if (currentSource.value && currentSource.value.type === 'rss' && currentSource.value.name.includes('联合早报')) {
-        newsTypes.value = [
-          {tid: 'china', tname: '中国', sortOrder: 1} as any,
-          {tid: 'singapore', tname: '新加坡', sortOrder: 2} as any,
-          {tid: 'world', tname: '国际', sortOrder: 3} as any
-        ];
-        return;
-      }
-
       const params: any = {}
       if (currentSource.value && currentSource.value.type !== 'original' && currentSource.value.id !== -1) {
         params.sourceType = currentSource.value.type
@@ -121,7 +113,7 @@ export const useNewsStore = defineStore('news', () => {
       const backendCategories = response.data?.items || []
 
       // Map backend fields to frontend interface (id -> tid, typeName -> tname)
-      newsTypes.value = backendCategories.map((item: any) => ({
+      const mappedCategories = backendCategories.map((item: any) => ({
         tid: item.id,
         tname: item.typeName,
         description: item.description,
@@ -131,6 +123,12 @@ export const useNewsStore = defineStore('news', () => {
         createdTime: item.createdTime,
         updatedTime: item.updatedTime
       }))
+      
+      // 始终在最前面插入"全部新闻"选项
+      newsTypes.value = [
+        { tid: 0, tname: '全部', sortOrder: 0 } as any,
+        ...mappedCategories
+      ]
     } catch (error) {
       console.error('获取新闻分类失败:', error)
     }

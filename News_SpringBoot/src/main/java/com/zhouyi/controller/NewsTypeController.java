@@ -47,7 +47,7 @@ public class NewsTypeController {
      */
     @PostMapping("/categories")
     public Result<?> createCategory(@Valid @RequestBody NewsTypeCreateDTO createDTO,
-                                    HttpServletRequest request) {
+            HttpServletRequest request) {
 
         // 这里可以添加权限验证，检查用户是否有创建分类的权限
         return newsTypeService.createCategory(createDTO);
@@ -58,8 +58,8 @@ public class NewsTypeController {
      */
     @PutMapping("/categories/{id}")
     public Result<?> updateCategory(@PathVariable("id") Integer id,
-                                    @Valid @RequestBody NewsTypeUpdateDTO updateDTO,
-                                    HttpServletRequest request) {
+            @Valid @RequestBody NewsTypeUpdateDTO updateDTO,
+            HttpServletRequest request) {
 
         // 这里可以添加权限验证，检查用户是否有更新分类的权限
         return newsTypeService.updateCategory(id, updateDTO);
@@ -70,8 +70,8 @@ public class NewsTypeController {
      */
     @PatchMapping("/categories/{id}/status")
     public Result<?> updateCategoryStatus(@PathVariable("id") Integer id,
-                                          @Valid @RequestBody NewsTypeStatusDTO statusDTO,
-                                          HttpServletRequest request) {
+            @Valid @RequestBody NewsTypeStatusDTO statusDTO,
+            HttpServletRequest request) {
 
         // 这里可以添加权限验证，检查用户是否有管理分类状态的权限
         return newsTypeService.updateCategoryStatus(id, statusDTO);
@@ -82,7 +82,7 @@ public class NewsTypeController {
      */
     @DeleteMapping("/categories/{id}")
     public Result<?> deleteCategory(@PathVariable("id") Integer id,
-                                    HttpServletRequest request) {
+            HttpServletRequest request) {
 
         // 这里可以添加权限验证，检查用户是否有删除分类的权限
         return newsTypeService.deleteCategory(id);
@@ -93,9 +93,9 @@ public class NewsTypeController {
      */
     @GetMapping("/categories/{id}/statistics")
     public Result<?> getCategoryStatistics(@PathVariable("id") Integer id,
-                                           @RequestParam(required = false) String date_from,
-                                           @RequestParam(required = false) String date_to,
-                                           HttpServletRequest request) {
+            @RequestParam(required = false) String date_from,
+            @RequestParam(required = false) String date_to,
+            HttpServletRequest request) {
 
         // 这里可以添加权限验证，检查用户是否有查看统计的权限
         return newsTypeService.getCategoryStatistics(id, date_from, date_to);

@@ -152,12 +152,12 @@ const fetchNewsDetail = async () => {
     
     newsForm.value = {
       title: newsData.title,
-      type: newsData.type,
+      type: Number(newsData.type),
       summary: newsData.summary || '',
       content: newsData.content || '',
       coverImage: newsData.coverImageUrl || '',
       tags: newsData.tags || '',
-      status: newsData.status
+      status: Number(newsData.status)
     }
   } catch (error) {
     ElMessage.error('获取新闻详情失败')

@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -63,6 +64,23 @@ public class RssSubscriptionController {
         } catch (Exception e) {
             log.error("Failed to create RSS subscription: {}", e.getMessage(), e);
             return Result.error("RSS订阅源创建失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 获取所有启用的订阅源列表
+     *
+     * @return 订阅源列表
+     */
+    @GetMapping("/list")
+    @Operation(summary = "获取启用的订阅源列表", description = "供前端展示新闻源分类筛选框使用")
+    public Result<List<com.zhouyi.entity.RssSubscription>> listActiveSubscriptions() {
+        try {
+            List<com.zhouyi.entity.RssSubscription> list = rssService.listActiveSubscriptions();
+            return Result.success(list);
+        } catch (Exception e) {
+            log.error("Failed to fetch active subscriptions: {}", e.getMessage(), e);
+            return Result.error("获取订阅源列表失败: " + e.getMessage());
         }
     }
 }

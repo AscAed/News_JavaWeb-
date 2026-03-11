@@ -12,12 +12,11 @@
     </div>
 
     <!-- 加载更多 -->
-    <div class="load-more-section" v-if="!newsStore.loading && newsStore.newsList.length < newsStore.total">
-      <el-button
-        @click="loadMore"
-        :loading="newsStore.loading"
-        size="large"
-      >
+    <div
+      class="load-more-section"
+      v-if="!newsStore.loading && newsStore.newsList.length < newsStore.total"
+    >
+      <el-button @click="loadMore" :loading="newsStore.loading" size="large">
         加载更多新闻
       </el-button>
     </div>
@@ -59,13 +58,13 @@
 </template>
 
 <script setup lang="ts">
-import {computed, onMounted, ref} from 'vue'
-import {useRoute, useRouter} from 'vue-router'
-import {useNewsStore} from '@/stores/news'
-import {ElMessage} from 'element-plus'
-import {DocumentRemove, Refresh, WarningFilled} from '@element-plus/icons-vue'
+import { computed, onMounted, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useNewsStore } from '@/stores/news'
+import { ElMessage } from 'element-plus'
+import { DocumentRemove, Refresh, WarningFilled } from '@element-plus/icons-vue'
 import NewsCard from '@/components/NewsCard.vue'
-import type {News} from '@/types'
+import type { News } from '@/types'
 
 const router = useRouter()
 const route = useRoute()
@@ -85,7 +84,7 @@ const filteredNewsList = computed(() => {
 // 统一的请求方法
 const fetchListFromBackend = async (page = 1) => {
   newsStore.currentPage = page
-  let params: any = {page, size: newsStore.pageSize}
+  let params: any = { page, size: newsStore.pageSize }
   if (selectedType.value !== null) {
     params.type = selectedType.value
   }
@@ -142,7 +141,9 @@ onMounted(async () => {
 
     // 设置默认分类 (优先从URL参数获取)
     if (route.query.t) {
-      selectedType.value = isNaN(Number(route.query.t)) ? route.query.t as string : Number(route.query.t)
+      selectedType.value = isNaN(Number(route.query.t))
+        ? (route.query.t as string)
+        : Number(route.query.t)
     } else if (newsStore.defaultCategoryId) {
       selectedType.value = newsStore.defaultCategoryId
     }
@@ -158,9 +159,10 @@ onMounted(async () => {
   }
 
   // 监听来自SourceSidebar的资源变化事件
-  window.addEventListener('sourceChange', (event: any) => {
+  window.addEventListener('sourceChange', async (event: any) => {
     selectedType.value = null // reset category when source changes
-    fetchListFromBackend(1)
+    await newsStore.fetchNewsTypes() // reload top categories for new source
+    await fetchListFromBackend(1)
   })
 
   // 监听来自AppHeader的搜索事件 (为了在同页面时避免刷新)
@@ -179,7 +181,7 @@ onMounted(async () => {
 // 暴露方法给父组件使用
 defineExpose({
   handleSearch,
-  handleTypeChange
+  handleTypeChange,
 })
 </script>
 
@@ -194,7 +196,7 @@ defineExpose({
 .news-grid {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-xl);
+  gap: var(--spacing-md);
   margin-bottom: var(--spacing-2xl);
   margin-top: var(--spacing-lg); /* gap between nav and grid */
 }
@@ -202,7 +204,7 @@ defineExpose({
 .load-more-section {
   text-align: center;
   padding: var(--spacing-xl);
-  margin: var(--spacing-xl) 0;
+  margin: var(--spacing-xs) 0 var(--spacing-xl) 0;
 }
 
 .error-state {
@@ -278,25 +280,36 @@ defineExpose({
 }
 
 .skeleton-card {
-  background: var(--bg-primary);
-  border: 1px solid var(--border-primary);
+  background: transparent;
+  border: 1px solid transparent;
+  padding: var(--spacing-lg);
   border-radius: var(--radius-lg);
   overflow: hidden;
   position: relative;
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: space-between;
+  gap: var(--spacing-xl);
   animation: skeleton-fade-in var(--transition-slow) ease-out;
 }
 
 .skeleton-image {
-  width: 100%;
-  height: 200px;
-  background: linear-gradient(90deg, var(--bg-tertiary) 25%, var(--bg-secondary) 50%, var(--bg-tertiary) 75%);
+  width: 160px;
+  height: 108px;
+  flex-shrink: 0;
+  background: linear-gradient(
+    90deg,
+    var(--bg-tertiary) 25%,
+    var(--bg-secondary) 50%,
+    var(--bg-tertiary) 75%
+  );
   background-size: 200% 100%;
   animation: skeleton-shimmer var(--transition-slow) ease-in-out infinite;
   border-radius: var(--radius-md);
 }
 
 .skeleton-content {
-  padding: var(--spacing-lg);
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
@@ -304,7 +317,12 @@ defineExpose({
 
 .skeleton-title {
   height: 20px;
-  background: linear-gradient(90deg, var(--bg-tertiary) 25%, var(--bg-secondary) 50%, var(--bg-tertiary) 75%);
+  background: linear-gradient(
+    90deg,
+    var(--bg-tertiary) 25%,
+    var(--bg-secondary) 50%,
+    var(--bg-tertiary) 75%
+  );
   background-size: 200% 100%;
   animation: skeleton-shimmer var(--transition-slow) ease-in-out infinite;
   border-radius: var(--radius-sm);
@@ -313,7 +331,12 @@ defineExpose({
 
 .skeleton-summary {
   height: 16px;
-  background: linear-gradient(90deg, var(--bg-tertiary) 25%, var(--bg-secondary) 50%, var(--bg-tertiary) 75%);
+  background: linear-gradient(
+    90deg,
+    var(--bg-tertiary) 25%,
+    var(--bg-secondary) 50%,
+    var(--bg-tertiary) 75%
+  );
   background-size: 200% 100%;
   animation: skeleton-shimmer var(--transition-slow) ease-in-out infinite;
   border-radius: var(--radius-sm);
@@ -323,21 +346,36 @@ defineExpose({
 .skeleton-meta {
   height: 14px;
   width: 60%;
-  background: linear-gradient(90deg, var(--bg-tertiary) 25%, var(--bg-secondary) 50%, var(--bg-tertiary) 75%);
+  background: linear-gradient(
+    90deg,
+    var(--bg-tertiary) 25%,
+    var(--bg-secondary) 50%,
+    var(--bg-tertiary) 75%
+  );
   background-size: 200% 100%;
   animation: skeleton-shimmer var(--transition-slow) ease-in-out infinite;
   border-radius: var(--radius-sm);
 }
 
 @keyframes skeleton-loading {
-  0% { opacity: 0.7; }
-  50% { opacity: 1; }
-  100% { opacity: 0.7; }
+  0% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.7;
+  }
 }
 
 @keyframes skeleton-shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }
 
 @keyframes skeleton-fade-in {
@@ -352,7 +390,8 @@ defineExpose({
 }
 
 @keyframes error-pulse {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
     opacity: 1;
   }
@@ -363,7 +402,8 @@ defineExpose({
 }
 
 @keyframes empty-float {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0);
   }
   25% {

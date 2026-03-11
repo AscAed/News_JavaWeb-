@@ -1,6 +1,14 @@
 <template>
   <header class="app-header">
     <div class="header-container">
+      <!-- 品牌 Logo 区域 -->
+      <div class="brand-logo-container hover-lift" @click="router.push('/')">
+        <div class="brand-icon-box">
+          <span class="brand-icon-character">易</span>
+        </div>
+        <span class="brand-text">易闻趣事</span>
+      </div>
+
       <!-- 搜索区域 -->
       <div class="search-section">
         <div class="search-box">
@@ -33,6 +41,17 @@
 
       <!-- 用户操作区域 (重新加回) -->
       <div class="user-section">
+        <!-- 主题切换按钮 -->
+        <el-button
+          circle
+          class="theme-toggle-btn hover-lift"
+          @click="toggleTheme"
+          :title="isDark ? '切换到浅色模式' : '切换到深色模式'"
+        >
+          <el-icon v-if="isDark"><Sunny /></el-icon>
+          <el-icon v-else><Moon /></el-icon>
+        </el-button>
+
         <template v-if="isLoggedIn">
           <el-dropdown @command="handleUserCommand">
             <div class="user-info">
@@ -68,17 +87,25 @@
           <el-button type="primary" @click="router.push('/login')">登录</el-button>
         </template>
       </div>
-
     </div>
   </header>
 </template>
 
 <script setup lang="ts">
-import {computed, onMounted, onUnmounted, ref, watch} from 'vue'
-import {useRoute, useRouter} from 'vue-router'
-import {useUserStore} from '@/stores/user'
-import {ElMessage, ElMessageBox} from 'element-plus'
-import {ArrowDown, Search, Setting, Star, SwitchButton, User} from '@element-plus/icons-vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useUserStore } from '@/stores/user'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import {
+  ArrowDown,
+  Search,
+  Setting,
+  Star,
+  SwitchButton,
+  User,
+  Sunny,
+  Moon,
+} from '@element-plus/icons-vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -93,17 +120,57 @@ const searchSuggestions = ref<string[]>([])
 const isLoggedIn = computed(() => userStore.isLoggedIn)
 const userInfo = computed(() => userStore.userInfo)
 
+// 主题切换相关状态和逻辑
+const isDark = ref(false)
+
+const initTheme = () => {
+  const savedTheme = localStorage.getItem('news-theme')
+  if (
+    savedTheme === 'dark' ||
+    (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)
+  ) {
+    isDark.value = true
+    document.documentElement.classList.add('dark')
+  } else {
+    isDark.value = false
+    document.documentElement.classList.remove('dark')
+  }
+}
+
+const toggleTheme = () => {
+  isDark.value = !isDark.value
+  if (isDark.value) {
+    document.documentElement.classList.add('dark')
+    localStorage.setItem('news-theme', 'dark')
+  } else {
+    document.documentElement.classList.remove('dark')
+    localStorage.setItem('news-theme', 'light')
+  }
+}
+
+// 监听系统主题变化
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+  if (!localStorage.getItem('news-theme')) {
+    isDark.value = e.matches
+    if (e.matches) {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+  }
+})
+
 // 搜索功能
 const handleSearch = () => {
   if (searchKeyword.value.trim()) {
     if (route.path !== '/') {
-      const targetQuery = {...route.query, k: searchKeyword.value.trim()}
-      router.push({path: '/', query: targetQuery})
+      const targetQuery = { ...route.query, k: searchKeyword.value.trim() }
+      router.push({ path: '/', query: targetQuery })
     } else {
       // 触发搜索事件，通知HomeView组件
       window.dispatchEvent(
         new CustomEvent('search', {
-          detail: {keyword: searchKeyword.value.trim()},
+          detail: { keyword: searchKeyword.value.trim() },
         }),
       )
     }
@@ -183,13 +250,17 @@ watch(searchKeyword, (newKeyword) => {
 })
 
 // 监听路由改变同步状态
-watch(() => route.query, (query) => {
-  if (query.k) {
-    searchKeyword.value = query.k as string
-  } else {
-    searchKeyword.value = ''
-  }
-}, {immediate: true})
+watch(
+  () => route.query,
+  (query) => {
+    if (query.k) {
+      searchKeyword.value = query.k as string
+    } else {
+      searchKeyword.value = ''
+    }
+  },
+  { immediate: true },
+)
 
 // 点击外部关闭搜索建议
 const handleClickOutside = (event: MouseEvent) => {
@@ -201,6 +272,7 @@ const handleClickOutside = (event: MouseEvent) => {
 
 // 生命周期
 onMounted(() => {
+  initTheme()
   // 添加全局点击事件监听
   document.addEventListener('click', handleClickOutside)
 })
@@ -244,8 +316,31 @@ onUnmounted(() => {
   width: 100%;
 }
 
-.search-input {
-  width: 100%;
+.search-input :deep(.el-input__wrapper) {
+  border-radius: var(--radius-full);
+  padding: 4px 16px;
+  background: var(--bg-tertiary);
+  box-shadow: none;
+  border: 1px solid transparent;
+  transition: all var(--transition-normal);
+}
+
+.search-input :deep(.el-input__wrapper.is-focus) {
+  background: var(--bg-primary);
+  box-shadow: 0 1px 6px rgba(32, 33, 36, 0.28);
+  border-color: transparent;
+}
+
+.search-input :deep(.el-input-group__append) {
+  border-radius: 0 var(--radius-full) var(--radius-full) 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.search-input :deep(input) {
+  font-family: var(--font-family-body);
+  color: var(--text-primary);
 }
 
 .search-suggestions {
@@ -285,12 +380,26 @@ onUnmounted(() => {
   color: var(--text-primary);
 }
 
-/* 用户操作区域 */
 .user-section {
   flex-shrink: 0;
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
+}
+
+.theme-toggle-btn {
+  border: none;
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  font-size: 16px;
+  width: 36px;
+  height: 36px;
+}
+
+.theme-toggle-btn:hover,
+.theme-toggle-btn:focus {
+  background: var(--border-primary);
+  color: var(--primary-color);
 }
 
 .user-info {
