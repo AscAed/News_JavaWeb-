@@ -56,7 +56,11 @@
 
 1. **认证与鉴权模块 (Authentication)**
    - **完成度**: 高。
-   - **实现机制**: 双 Token 制体系（Access + Refresh Token）。后端使用 SHA-512 加密。前端通过 Axios 注入请求头实现静默流转。包含基本的登录、注册以及个人信息管理闭环。
+   - **实现机制**: 
+     - **双 Token 体系**: Access + Refresh Token。后端使用 SHA-512 加密。前端通过 Axios 注入请求头实现静默流转。包含基本的登录、个人信息管理。
+     - **Mailjet 邮件安全注册**: 从普通注册升级为基于发送邮件验证码的二次校验。
+       - **依赖与配置**: 后端集成 `mailjet-client`（v6.0.1），需在 `application.yml` 的 `custom.mailjet` 节点配置一对秘钥及经过网关验证的发件人邮箱(`sender-email`)。
+       - **交互流程**: 前端在注册页发送验证码并启动 60 秒防刷冷冻倒计时；后端开放 `/api/auth/send-code`，收到请求生成随机 6 位验证码存入 DB/Redis(限制 5 分钟有效)，借助第三方 API 模板下发；最终在 `/api/auth/register` 提交时比对判定。
 
 2. **内容创作模块 (Media/Original Content)**
    - **完成度**: 核心完成。

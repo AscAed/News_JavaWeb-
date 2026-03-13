@@ -140,6 +140,12 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- Email SMTP dependency -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+
         <!-- RSS依赖 -->
         <dependency>
             <groupId>com.rometools</groupId>

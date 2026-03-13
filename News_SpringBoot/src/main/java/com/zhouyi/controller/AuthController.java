@@ -8,12 +8,12 @@ import com.zhouyi.dto.LoginResponseDTO;
 import com.zhouyi.service.UserService;
 import com.zhouyi.service.UserRoleService;
 import com.zhouyi.entity.User;
-import com.zhouyi.entity.UserRole;
-import com.zhouyi.entity.Role;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import org.springframework.security.core.context.SecurityContextHolder;
+import com.zhouyi.service.VerificationService;
+import com.zhouyi.dto.SendCodeDTO;
 import java.util.Map;
 
 /**
@@ -31,6 +31,9 @@ public class AuthController {
 
     @Autowired
     private JwtUtil jwtUtil;
+
+    @Autowired
+    private VerificationService verificationService;
 
     /**
      * 用户登录接口 - RESTful标准
@@ -87,6 +90,17 @@ public class AuthController {
     }
 
     /**
+     * 发送邮箱验证码接口
+     *
+     * @param sendCodeDTO 包含邮箱信息
+     * @return 发送结果
+     */
+    @PostMapping("/send-code")
+    public Result<Void> sendCode(@Valid @RequestBody SendCodeDTO sendCodeDTO) {
+        return verificationService.sendRegistrationCode(sendCodeDTO.getEmail(), sendCodeDTO.getCaptchaToken());
+    }
+
+    /**
      * 用户注册接口 - RESTful标准
      *
      * @param userRegistDTO 用户注册DTO对象，包含手机号、密码、用户名、邮箱
@@ -95,14 +109,20 @@ public class AuthController {
     @PostMapping("/register")
     @org.springframework.web.bind.annotation.ResponseStatus(org.springframework.http.HttpStatus.CREATED)
     public Result<?> register(@Valid @RequestBody UserRegistDTO userRegistDTO) {
-        // 创建User对象
+        // 1. 验证码校验
+        Result<String> verifyResult = verificationService.verifyRegistrationCode(userRegistDTO.getEmail(), userRegistDTO.getCode());
+        if (verifyResult.getCode() != 200) {
+            return Result.error(verifyResult.getMessage(), "/api/v1/auth/register");
+        }
+
+        // 2. 创建User对象
         User user = new User();
         user.setPhone(userRegistDTO.getPhone());
         user.setPassword(userRegistDTO.getPassword());
         user.setUsername(userRegistDTO.getUsername());
         user.setEmail(userRegistDTO.getEmail());
 
-        // 调用服务层进行注册
+        // 3. 调用服务层进行注册
         Result<String> registResult = userService.addUser(user);
 
         if (registResult.getCode() != 200) {

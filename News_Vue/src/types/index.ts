@@ -20,7 +20,8 @@ export interface RegisterForm {
   username: string
   phone: string
   password: string
-  email?: string
+  email: string
+  code: string
 }
 
 // 新闻相关类型

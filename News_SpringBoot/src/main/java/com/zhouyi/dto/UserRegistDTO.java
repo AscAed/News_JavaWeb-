@@ -33,4 +33,8 @@ public class UserRegistDTO {
     @Email(message = "邮箱格式错误")
     @Size(max = 100, message = "邮箱长度不能超过100字符")
     private String email;
+
+    @NotBlank(message = "验证码不能为空")
+    @Size(min = 6, max = 6, message = "验证码必须为6位")
+    private String code;
 }

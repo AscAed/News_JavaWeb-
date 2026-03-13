@@ -44,4 +44,25 @@
         WHERE user_id = #{userId} AND token_type = #{tokenType}
     </update>
 
+    <!-- Find token by new_value and token type -->
+    <select id="selectTokenByNewValueAndType" resultType="com.zhouyi.entity.VerificationToken">
+        SELECT id, user_id, token_type, new_value, token, expires_at, created_at
+        FROM verification_tokens
+        WHERE new_value = #{newValue} AND token_type = #{tokenType}
+    </select>
+
+    <!-- Delete token by new_value and token type -->
+    <delete id="deleteTokenByNewValueAndType">
+        DELETE FROM verification_tokens
+        WHERE new_value = #{newValue} AND token_type = #{tokenType}
+    </delete>
+
+    <!-- Update token finding by new_value and type -->
+    <update id="updateTokenByNewValueAndType" parameterType="com.zhouyi.entity.VerificationToken">
+        UPDATE verification_tokens
+        SET token = #{token},
+            expires_at = #{expiresAt}
+        WHERE new_value = #{newValue} AND token_type = #{tokenType}
+    </update>
+
 </mapper>

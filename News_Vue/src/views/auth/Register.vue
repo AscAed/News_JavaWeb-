@@ -57,6 +57,27 @@
           />
         </el-form-item>
 
+        <el-form-item prop="code">
+          <div class="code-container">
+            <el-input
+              v-model="registerForm.code"
+              class="google-input"
+              maxlength="6"
+              placeholder="6位验证码"
+              size="large"
+            />
+            <el-button
+              type="primary"
+              :disabled="codeLoading || countdown > 0"
+              @click="handleSendCode"
+              class="send-btn"
+              size="large"
+            >
+              {{ countdown > 0 ? `${countdown}s 后重发` : '获取验证码' }}
+            </el-button>
+          </div>
+        </el-form-item>
+
         <el-form-item prop="password">
           <el-input
             v-model="registerForm.password"
@@ -105,13 +126,20 @@
       </el-form>
     </div>
   </div>
+  <!-- 滑块验证码组件 -->
+  <SliderCaptcha 
+    v-model="captchaVisible"
+    @success="onCaptchaSuccess"
+  />
 </template>
 
 <script setup lang="ts">
-import {reactive, ref} from 'vue'
+import {onUnmounted, reactive, ref} from 'vue'
 import {useRouter} from 'vue-router'
 import {ElMessage, ElMessageBox, type FormInstance, type FormRules} from 'element-plus'
 import {useUserStore} from '@/stores/user'
+import {sendCode} from '@/api/modules/auth'
+import SliderCaptcha from '@/components/SliderCaptcha.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -119,7 +147,12 @@ const userStore = useUserStore()
 // 响应式数据
 const registerFormRef = ref<FormInstance>()
 const loading = ref(false)
+const codeLoading = ref(false)
+const countdown = ref(0)
 const agreeTerms = ref(false)
+const captchaVisible = ref(false)
+const captchaToken = ref('')
+let timer: any = null
 
 const registerForm = reactive({
   username: '',
@@ -127,6 +160,7 @@ const registerForm = reactive({
   email: '',
   password: '',
   confirmPassword: '',
+  code: '',
 })
 
 const validateConfirmPassword = (rule: any, value: string, callback: any) => {
@@ -168,6 +202,10 @@ const registerRules: FormRules = {
     { required: true, message: '请确认密码', trigger: 'blur' },
     {validator: validateConfirmPassword, trigger: 'blur'},
   ],
+  code: [
+    { required: true, message: '请输入验证码', trigger: 'blur' },
+    { len: 6, message: '验证码必须为6位', trigger: 'blur' },
+  ],
 }
 
 // 方法
@@ -190,6 +228,7 @@ const handleRegister = async () => {
       phone: registerForm.phone,
       email: registerForm.email,
       password: registerForm.password,
+      code: registerForm.code,
     })
 
     ElMessage.success('注册成功，请登录')
@@ -217,6 +256,61 @@ const showPrivacy = () => {
     type: 'info',
   })
 }
+
+// 邮件验证码处理
+const handleSendCode = async () => {
+  if (!registerForm.email) {
+    ElMessage.warning('请先输入邮箱')
+    return
+  }
+
+  // 校验邮箱格式
+  const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+  if (!emailPattern.test(registerForm.email)) {
+    ElMessage.warning('请输入正确的邮箱格式')
+    return
+  }
+
+  // 弹出人机验证
+  captchaVisible.value = true
+}
+
+// 验证成功后的回调
+const onCaptchaSuccess = (token: string) => {
+  captchaToken.value = token
+  executeSendCode()
+}
+
+// 真正执行发送验证码
+const executeSendCode = async () => {
+  try {
+    codeLoading.value = true
+    await sendCode(registerForm.email, captchaToken.value)
+    ElMessage.success('验证码已发送')
+
+    // 启动倒计时
+    countdown.value = 60
+    timer = setInterval(() => {
+      if (countdown.value > 0) {
+        countdown.value--
+      } else {
+        if (timer) clearInterval(timer)
+      }
+    }, 1000)
+  } catch (error: any) {
+    console.error('发送验证码失败:', error)
+    // 如果是后端验证码校验失败
+    if (error.response?.data?.message?.includes('人机验证')) {
+      captchaToken.value = ''
+    }
+  } finally {
+    codeLoading.value = false
+  }
+}
+
+onUnmounted(() => {
+  if (timer) clearInterval(timer)
+})
 </script>
 
 <style scoped>
@@ -358,5 +452,24 @@ const showPrivacy = () => {
 
 .auth-link:hover {
   background-color: var(--bg-tertiary);
+}
+
+.code-container {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+}
+
+.send-btn {
+  width: 120px;
+  flex-shrink: 0;
+  background-color: var(--primary-accent);
+  color: white;
+  border: none;
+}
+
+.send-btn:disabled {
+  background-color: var(--border-primary);
+  color: var(--text-secondary);
 }
 </style>

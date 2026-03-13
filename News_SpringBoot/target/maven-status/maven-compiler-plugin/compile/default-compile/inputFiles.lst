@@ -55,6 +55,7 @@ E:\PUBLIC\Project\Java\News_JavaWeb\News_SpringBoot\src\main\java\com\zhouyi\dto
 E:\PUBLIC\Project\Java\News_JavaWeb\News_SpringBoot\src\main\java\com\zhouyi\dto\PasswordUpdateDTO.java
 E:\PUBLIC\Project\Java\News_JavaWeb\News_SpringBoot\src\main\java\com\zhouyi\dto\PhoneUpdateRequestDTO.java
 E:\PUBLIC\Project\Java\News_JavaWeb\News_SpringBoot\src\main\java\com\zhouyi\dto\RssSubscriptionCreateDTO.java
+E:\PUBLIC\Project\Java\News_JavaWeb\News_SpringBoot\src\main\java\com\zhouyi\dto\SendCodeDTO.java
 E:\PUBLIC\Project\Java\News_JavaWeb\News_SpringBoot\src\main\java\com\zhouyi\dto\SystemConfigDTO.java
 E:\PUBLIC\Project\Java\News_JavaWeb\News_SpringBoot\src\main\java\com\zhouyi\dto\SystemStatisticsDTO.java
 E:\PUBLIC\Project\Java\News_JavaWeb\News_SpringBoot\src\main\java\com\zhouyi\dto\UserLoginDTO.java
@@ -119,6 +120,7 @@ E:\PUBLIC\Project\Java\News_JavaWeb\News_SpringBoot\src\main\java\com\zhouyi\ser
 E:\PUBLIC\Project\Java\News_JavaWeb\News_SpringBoot\src\main\java\com\zhouyi\service\impl\HeadlineServiceImpl.java
 E:\PUBLIC\Project\Java\News_JavaWeb\News_SpringBoot\src\main\java\com\zhouyi\service\impl\HealthCheckServiceImpl.java
 E:\PUBLIC\Project\Java\News_JavaWeb\News_SpringBoot\src\main\java\com\zhouyi\service\impl\HybridRssServiceImpl.java
+E:\PUBLIC\Project\Java\News_JavaWeb\News_SpringBoot\src\main\java\com\zhouyi\service\impl\MailjetServiceImpl.java
 E:\PUBLIC\Project\Java\News_JavaWeb\News_SpringBoot\src\main\java\com\zhouyi\service\impl\MinioFileServiceImpl.java
 E:\PUBLIC\Project\Java\News_JavaWeb\News_SpringBoot\src\main\java\com\zhouyi\service\impl\NewsTypeServiceImpl.java
 E:\PUBLIC\Project\Java\News_JavaWeb\News_SpringBoot\src\main\java\com\zhouyi\service\impl\OperationLogServiceImpl.java
@@ -129,6 +131,7 @@ E:\PUBLIC\Project\Java\News_JavaWeb\News_SpringBoot\src\main\java\com\zhouyi\ser
 E:\PUBLIC\Project\Java\News_JavaWeb\News_SpringBoot\src\main\java\com\zhouyi\service\impl\UserRoleServiceImpl.java
 E:\PUBLIC\Project\Java\News_JavaWeb\News_SpringBoot\src\main\java\com\zhouyi\service\impl\UserServiceImpl.java
 E:\PUBLIC\Project\Java\News_JavaWeb\News_SpringBoot\src\main\java\com\zhouyi\service\impl\VerificationServiceImpl.java
+E:\PUBLIC\Project\Java\News_JavaWeb\News_SpringBoot\src\main\java\com\zhouyi\service\MailjetService.java
 E:\PUBLIC\Project\Java\News_JavaWeb\News_SpringBoot\src\main\java\com\zhouyi\service\MinioFileService.java
 E:\PUBLIC\Project\Java\News_JavaWeb\News_SpringBoot\src\main\java\com\zhouyi\service\mongo\DataMigrationService.java
 E:\PUBLIC\Project\Java\News_JavaWeb\News_SpringBoot\src\main\java\com\zhouyi\service\mongo\impl\RssMongoServiceImpl.java

@@ -20,6 +20,7 @@ com\zhouyi\service\impl\HybridRssServiceImpl.class
 com\zhouyi\common\enums\NewsSource.class
 com\zhouyi\service\impl\UserServiceImpl.class
 com\zhouyi\dto\HealthCheckDTO$ComponentHealthDTO.class
+com\zhouyi\service\MailjetService.class
 com\zhouyi\common\utils\JwtUtil$ClaimsResolver.class
 com\zhouyi\mapper\HeadlineMapper.class
 com\zhouyi\dto\UserProfileUpdateDTO.class
@@ -63,8 +64,10 @@ com\zhouyi\entity\mongodb\SeoInfo.class
 com\zhouyi\config\RedisConfig.class
 com\zhouyi\dto\AdminUserUpdateDTO.class
 com\zhouyi\dto\HeadlineQueryDTO.class
+com\zhouyi\dto\SendCodeDTO.class
 com\zhouyi\entity\mongodb\Comment$DeviceInfo.class
 com\zhouyi\dto\SystemConfigDTO.class
+com\zhouyi\service\impl\MailjetServiceImpl.class
 com\zhouyi\service\impl\MinioFileServiceImpl.class
 com\zhouyi\controller\CommonController.class
 com\zhouyi\mapper\OperationLogMapper.class

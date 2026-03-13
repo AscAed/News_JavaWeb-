@@ -10,10 +10,27 @@ export const register = (data: {
   username: string
   phone: string
   password: string
-  email?: string 
+  email: string
+  code: string
 }) => {
   return request.post('/auth/register', data)
 }
+
+// 发送验证码
+export const sendCode = (email: string, captchaToken: string) => {
+  return request.post('/auth/send-code', { email, captchaToken })
+}
+
+// 获取滑块验证码
+export const getCaptcha = () => {
+  return request.get('/auth/captcha/generate')
+}
+
+// 验证滑块位置
+export const verifyCaptcha = (data: { captchaKey: string; sliderX: number }) => {
+  return request.post('/auth/captcha/verify', data)
+}
+
 
 // 刷新token
 export const refreshToken = () => {

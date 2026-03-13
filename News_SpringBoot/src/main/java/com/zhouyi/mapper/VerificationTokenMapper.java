@@ -62,4 +62,30 @@ public interface VerificationTokenMapper {
      * @return number of affected rows
      */
     int updateToken(VerificationToken token);
+
+    /**
+     * Find token by new_value (e.g. email) and token type
+     *
+     * @param newValue  email or phone
+     * @param tokenType token type
+     * @return verification token object or null
+     */
+    VerificationToken selectTokenByNewValueAndType(@Param("newValue") String newValue, @Param("tokenType") String tokenType);
+
+    /**
+     * Delete token by new_value and token type
+     *
+     * @param newValue  email or phone
+     * @param tokenType token type
+     * @return number of affected rows
+     */
+    int deleteTokenByNewValueAndType(@Param("newValue") String newValue, @Param("tokenType") String tokenType);
+
+    /**
+     * Update token finding by new_value and type
+     *
+     * @param token verification token object
+     * @return number of affected rows
+     */
+    int updateTokenByNewValueAndType(VerificationToken token);
 }

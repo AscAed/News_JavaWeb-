@@ -49,4 +49,22 @@ public interface VerificationService {
      * @return number of tokens deleted
      */
     int cleanupExpiredTokens();
+
+    /**
+     * Send registration verification code email
+     *
+     * @param email user email
+     * @param captchaToken CAPTCHA verification token
+     * @return result message
+     */
+    Result<Void> sendRegistrationCode(String email, String captchaToken);
+
+    /**
+     * Verify registration code
+     *
+     * @param email user email
+     * @param code verification code
+     * @return verification result
+     */
+    Result<String> verifyRegistrationCode(String email, String code);
 }
