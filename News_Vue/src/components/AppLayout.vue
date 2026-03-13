@@ -49,12 +49,26 @@
 
     <!-- 页脚 -->
     <AppFooter />
+
+    <!-- 悬浮刷新按钮 (圆角方形 Fab) -->
+    <Transition name="fab-fade">
+      <div 
+        v-show="showRefreshFab" 
+        class="refresh-fab" 
+        :class="{ 'is-refreshing': isRefreshing }"
+        @click="refreshFeed"
+        title="刷新新闻并回顶"
+      >
+        <el-icon><Refresh /></el-icon>
+      </div>
+    </Transition>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
+import { Refresh } from '@element-plus/icons-vue'
 import AppHeader from './AppHeader.vue'
 import AppFooter from './AppFooter.vue'
 
@@ -162,6 +176,42 @@ const sidebarClass = computed(() => {
   classes.push(`sidebar-${props.sidebarWidth}`)
 
   return classes.join(' ')
+})
+
+// === 悬浮刷新按钮逻辑 ===
+const showRefreshFab = ref(false)
+const isRefreshing = ref(false)
+
+const handleScroll = () => {
+  showRefreshFab.value = window.scrollY > 300
+}
+
+const refreshFeed = () => {
+  if (isRefreshing.value) return
+  
+  isRefreshing.value = true
+  
+  // 1. 平滑回顶
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  })
+  
+  // 2. 派发全局刷新事件
+  window.dispatchEvent(new CustomEvent('refreshFeed'))
+  
+  // 3. 动画延迟后结束加载状态
+  setTimeout(() => {
+    isRefreshing.value = false
+  }, 1000)
+}
+
+onMounted(() => {
+  window.addEventListener('scroll', handleScroll)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll)
 })
 </script>
 
@@ -391,5 +441,71 @@ const sidebarClass = computed(() => {
 .main-content-area.empty .el-icon {
   font-size: 48px;
   margin-bottom: var(--spacing-md);
+}
+
+/* 悬浮刷新按钮样式 */
+.refresh-fab {
+  position: fixed;
+  right: 32px;
+  bottom: 40px;
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-glass);
+  backdrop-filter: var(--blur-md);
+  -webkit-backdrop-filter: var(--blur-md);
+  border: 1px solid var(--border-primary);
+  border-radius: 16px; /* 圆角方形 */
+  box-shadow: var(--shadow-lg);
+  cursor: pointer;
+  z-index: 1100;
+  color: var(--primary-color);
+  font-size: 24px;
+  transition: all var(--transition-normal);
+}
+
+.refresh-fab:hover {
+  transform: translateY(-4px);
+  background: var(--bg-primary);
+  border-color: var(--primary-color);
+  box-shadow: var(--shadow-xl);
+  color: var(--primary-hover);
+}
+
+.refresh-fab:active {
+  transform: scale(0.95);
+}
+
+.refresh-fab.is-refreshing .el-icon {
+  animation: fab-spin 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes fab-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* 动画过渡 */
+.fab-fade-enter-active,
+.fab-fade-leave-active {
+  transition: all 0.3s ease;
+}
+
+.fab-fade-enter-from,
+.fab-fade-leave-to {
+  opacity: 0;
+  transform: translateY(20px) scale(0.8);
+}
+
+@media (max-width: 768px) {
+  .refresh-fab {
+    right: 20px;
+    bottom: 30px;
+    width: 48px;
+    height: 48px;
+    font-size: 20px;
+  }
 }
 </style>

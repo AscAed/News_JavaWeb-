@@ -8,6 +8,17 @@ export const useUserStore = defineStore('user', () => {
   // 状态
   const token = ref<string>(localStorage.getItem('token') || '')
   const userInfo = ref<User | null>(null)
+  
+  // 初始化用户信息（同步尝试）
+  try {
+    const savedUserInfo = localStorage.getItem('userInfo')
+    if (savedUserInfo) {
+      userInfo.value = JSON.parse(savedUserInfo)
+    }
+  } catch (e) {
+    console.error('Failed to parse userInfo from localStorage:', e)
+  }
+
   const isLoggedIn = computed(() => !!token.value)
 
   // 注册
@@ -66,16 +77,14 @@ export const useUserStore = defineStore('user', () => {
       const response = await getUserInfo()
       userInfo.value = response.data
       localStorage.setItem('userInfo', JSON.stringify(response.data))
-    } catch (error) {
+    } catch (error: any) {
       console.error('获取用户信息失败:', error)
-      token.value = ''
-      userInfo.value = null
-      localStorage.removeItem('token')
-      localStorage.removeItem('userInfo')
+      // 注意：不再主动清除token，除非是401错误（由request.ts处理）
+      // 这里的错误可能是网络波动或非授权类错误，保留token以便重试
     }
   }
 
-  // 初始化用户信息（从本地存储恢复）
+  // 初始化用户信息（保留供App.vue调用，作为保险）
   const initUserInfo = () => {
     const savedUserInfo = localStorage.getItem('userInfo')
     if (savedUserInfo) {

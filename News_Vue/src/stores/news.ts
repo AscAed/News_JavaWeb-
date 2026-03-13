@@ -10,6 +10,16 @@ export const useNewsStore = defineStore('news', () => {
   const sources = ref<any[]>([])
   const currentNews = ref<News | null>(null)
   const currentSource = ref<any | null>(null)
+
+  // 从本地存储恢复当前源
+  try {
+    const savedSource = localStorage.getItem('currentSource')
+    if (savedSource) {
+      currentSource.value = JSON.parse(savedSource)
+    }
+  } catch (e) {
+    console.error('Failed to parse currentSource from localStorage:', e)
+  }
   const loading = ref(false)
   const total = ref(0)
   const currentPage = ref(1)
@@ -157,6 +167,11 @@ export const useNewsStore = defineStore('news', () => {
   // 设置当前新闻来源
   const setCurrentSource = (source: any) => {
     currentSource.value = source
+    if (source) {
+      localStorage.setItem('currentSource', JSON.stringify(source))
+    } else {
+      localStorage.removeItem('currentSource')
+    }
   }
 
   // 重新排序新闻来源
@@ -180,6 +195,7 @@ export const useNewsStore = defineStore('news', () => {
     newsList.value = []
     currentNews.value = null
     currentSource.value = null
+    localStorage.removeItem('currentSource')
     total.value = 0
     currentPage.value = 1
     loading.value = false

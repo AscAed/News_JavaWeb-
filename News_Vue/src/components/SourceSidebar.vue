@@ -8,7 +8,11 @@
         新闻源
       </h3>
       <div class="source-list">
-        <div :class="{ active: !selectedSource }" class="source-item" @click="goToSource('')">
+        <div 
+          :class="{ active: !newsStore.currentSource || newsStore.currentSource.type === 'original' }" 
+          class="source-item" 
+          @click="goToSource('')"
+        >
           <div class="source-abbr">
             <el-icon><Document /></el-icon>
           </div>
@@ -17,7 +21,7 @@
         <div
           v-for="source in sources"
           :key="source.id"
-          :class="{ active: selectedSource === String(source.id) }"
+          :class="{ active: newsStore.currentSource?.type === 'rss' && String(newsStore.currentSource.id) === String(source.id) }"
           class="source-item"
           @click="goToSource(source.id)"
         >
@@ -41,7 +45,6 @@ const route = useRoute()
 const newsStore = useNewsStore()
 
 const sources = ref<any[]>([])
-const selectedSource = ref<string | null>(null)
 
 const fetchSources = async () => {
   try {
@@ -49,14 +52,13 @@ const fetchSources = async () => {
     if (res.code === 200) {
       sources.value = res.data || []
 
-      // Initialize newsStore currentSource if URL has source_id on mount
+      // If we have sources now, and a query source_id, refine the currentSource in store 
+      // with full data (like name) if it was partially restored on mount
       if (route.query.source_id && route.query.source_type === 'rss') {
         const sourceObj = sources.value.find((s) => String(s.id) === String(route.query.source_id))
         if (sourceObj) {
           newsStore.setCurrentSource({ ...sourceObj, type: 'rss' })
         }
-      } else if (!newsStore.currentSource) {
-        newsStore.setCurrentSource({ id: -1, name: '原创', type: 'original' })
       }
     }
   } catch (error) {
@@ -65,7 +67,6 @@ const fetchSources = async () => {
 }
 
 const goToSource = (sourceId: string | number) => {
-  selectedSource.value = sourceId ? String(sourceId) : null
   const query = { ...route.query }
 
   const sourceObj = sourceId ? sources.value.find((s) => String(s.id) === String(sourceId)) : null
@@ -81,6 +82,10 @@ const goToSource = (sourceId: string | number) => {
     delete query.source_id
     delete query.source_type
   }
+  
+  // Clean up category when switching source
+  delete query.t
+  delete query.category
 
   window.dispatchEvent(new CustomEvent('sourceChange', { detail: { source: storeSource } }))
 
@@ -91,10 +96,20 @@ const goToSource = (sourceId: string | number) => {
 }
 
 onMounted(() => {
-  fetchSources()
+  // Eagerly restore from URL on mount
   if (route.query.source_id) {
-    selectedSource.value = String(route.query.source_id)
+    const sId = String(route.query.source_id)
+    const sType = (route.query.source_type as string) || 'rss'
+    
+    // Set a partial source in store immediately so HomeView can use it
+    if (!newsStore.currentSource || String(newsStore.currentSource.id) !== sId) {
+       newsStore.setCurrentSource({ id: sId, type: sType, name: '加载中...' })
+    }
+  } else if (!newsStore.currentSource) {
+    newsStore.setCurrentSource({ id: -1, name: '原创', type: 'original' })
   }
+
+  fetchSources()
 })
 </script>
 

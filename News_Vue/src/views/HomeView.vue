@@ -58,7 +58,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useNewsStore } from '@/stores/news'
 import { ElMessage } from 'element-plus'
@@ -102,6 +102,18 @@ const handleSearch = async (searchKeyword: string) => {
 
 const handleTypeChange = async (typeId: number | string | null) => {
   selectedType.value = typeId
+  
+  // Sync to URL
+  const query = { ...route.query }
+  if (typeId !== null && typeId !== 0) {
+    query.t = String(typeId)
+  } else {
+    delete query.t
+    delete query.category // 清理旧的参数名
+  }
+  
+  router.push({ query })
+  
   await fetchListFromBackend(1)
 }
 
@@ -132,6 +144,35 @@ const retryLoad = async () => {
   }
 }
 
+const onSourceChange = async () => {
+  selectedType.value = null
+  await newsStore.fetchNewsTypes()
+  await fetchListFromBackend(1)
+}
+
+const onSearch = (event: any) => {
+  keyword.value = event.detail.keyword
+  handleSearch(keyword.value)
+}
+
+const onTypeChange = (event: any) => {
+  selectedType.value = event.detail.type
+  handleTypeChange(event.detail.type)
+}
+
+const onRefreshFeed = async () => {
+  try {
+    newsStore.newsList.length = 0
+    await fetchListFromBackend(1)
+    ElMessage.success({
+      message: '新闻列表已更新',
+      duration: 2000
+    })
+  } catch (err) {
+    console.error('Refresh failed:', err)
+  }
+}
+
 // 生命周期
 onMounted(async () => {
   // 初始加载数据
@@ -140,10 +181,9 @@ onMounted(async () => {
     await newsStore.fetchNewsTypes()
 
     // 设置默认分类 (优先从URL参数获取)
-    if (route.query.t) {
-      selectedType.value = isNaN(Number(route.query.t))
-        ? (route.query.t as string)
-        : Number(route.query.t)
+    const urlType = route.query.t || route.query.category
+    if (urlType) {
+      selectedType.value = isNaN(Number(urlType)) ? (urlType as string) : Number(urlType)
     } else if (newsStore.defaultCategoryId) {
       selectedType.value = newsStore.defaultCategoryId
     }
@@ -159,23 +199,23 @@ onMounted(async () => {
   }
 
   // 监听来自SourceSidebar的资源变化事件
-  window.addEventListener('sourceChange', async (event: any) => {
-    selectedType.value = null // reset category when source changes
-    await newsStore.fetchNewsTypes() // reload top categories for new source
-    await fetchListFromBackend(1)
-  })
+  window.addEventListener('sourceChange', onSourceChange)
 
-  // 监听来自AppHeader的搜索事件 (为了在同页面时避免刷新)
-  window.addEventListener('search', (event: any) => {
-    keyword.value = event.detail.keyword
-    handleSearch(keyword.value)
-  })
+  // 监听来自AppHeader的搜索事件
+  window.addEventListener('search', onSearch)
 
   // 监听来自AppHeader的分类切换事件
-  window.addEventListener('typeChange', (event: any) => {
-    selectedType.value = event.detail.type
-    handleTypeChange(event.detail.type)
-  })
+  window.addEventListener('typeChange', onTypeChange)
+
+  // 监听来自刷新悬浮按钮的刷新事件
+  window.addEventListener('refreshFeed', onRefreshFeed)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('sourceChange', onSourceChange)
+  window.removeEventListener('search', onSearch)
+  window.removeEventListener('typeChange', onTypeChange)
+  window.removeEventListener('refreshFeed', onRefreshFeed)
 })
 
 // 暴露方法给父组件使用

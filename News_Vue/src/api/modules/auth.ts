@@ -44,7 +44,7 @@ export const logout = () => {
 
 // 获取用户信息
 export const getUserInfo = () => {
-  return request.get('/users/info')
+  return request.get('/users/profile')
 }
 
 // 更新用户信息
