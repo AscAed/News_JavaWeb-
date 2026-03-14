@@ -3,14 +3,10 @@
     <!-- 卡片内容 (左侧) -->
     <div class="card-content">
       <!-- 标题 -->
-      <h3 class="card-title" @click="goToDetail">
-        {{ news.title }}
-      </h3>
+      <h3 class="card-title" @click="goToDetail" v-html="news.title"></h3>
 
       <!-- 摘要 -->
-      <p v-if="news.summary" class="card-summary" @click="goToDetail">
-        {{ news.summary }}
-      </p>
+      <p v-if="news.summary" class="card-summary" @click="goToDetail" v-html="news.summary"></p>
 
       <!-- 标签 & 分类 (合并显示在摘要下方) -->
       <div class="news-tags-group">

@@ -64,6 +64,7 @@ public class SecurityConfig {
                                 "/api/v1/common/upload", // Allow upload for now
                                 "/api/v1/debug/**", // Debug endpoints for testing
                                 "/api/v1/test/**", // Test endpoints for authentication testing
+                                "/api/sync/**", // Elasticsearch sync endpoints
                                 "/files/**", // File access
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",

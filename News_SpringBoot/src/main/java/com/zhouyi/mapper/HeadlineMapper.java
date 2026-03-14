@@ -99,6 +99,14 @@ public interface HeadlineMapper {
     String selectTypeNameByType(@Param("type") Integer type);
 
     /**
+     * 根据ID集合查询头条列表
+     * 
+     * @param hids ID列表
+     * @return 头条列表
+     */
+    List<Headline> selectHeadlinesByIds(@Param("hids") List<Integer> hids);
+
+    /**
      * 根据ID查询头条
      * 
      * @param id 头条ID

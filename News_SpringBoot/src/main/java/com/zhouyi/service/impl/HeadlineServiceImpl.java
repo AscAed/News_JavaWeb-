@@ -14,10 +14,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.zhouyi.entity.elasticsearch.HeadlineEsEntity;
+import com.zhouyi.repository.elasticsearch.HeadlineEsRepository;
+import com.zhouyi.service.NewsSearchService;
+import com.zhouyi.dto.SearchResultDTO;
+import java.util.stream.Collectors;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Objects;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -47,6 +53,12 @@ public class HeadlineServiceImpl implements HeadlineService {
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
 
+    @Autowired
+    private HeadlineEsRepository headlineEsRepository;
+
+    @Autowired
+    private NewsSearchService newsSearchService;
+
     @Override
     @SuppressWarnings("unchecked")
     public Result<Map<String, Object>> getHeadlinesByPage(HeadlineQueryDTO queryDTO) {
@@ -74,9 +86,73 @@ public class HeadlineServiceImpl implements HeadlineService {
                 }
             }
 
-            // 计算偏移量
-            int offset = (queryDTO.getPageNum() - 1) * queryDTO.getPageSize();
+            // 1. Check if we should use Elasticsearch for keyword search
+            if (queryDTO.getKeywords() != null && !queryDTO.getKeywords().trim().isEmpty()) {
+                SearchResultDTO searchResult = newsSearchService.globalSearch(
+                        queryDTO.getKeywords(), queryDTO.getType(), queryDTO.getPageNum(), queryDTO.getPageSize());
 
+                List<HeadlineEsEntity> items = searchResult.getItems();
+                if (items == null || items.isEmpty()) {
+                    Map<String, Object> emptyResult = new HashMap<>();
+                    emptyResult.put("total", 0L);
+                    emptyResult.put("page", queryDTO.getPageNum());
+                    emptyResult.put("page_size", queryDTO.getPageSize());
+                    emptyResult.put("total_pages", 0);
+                    emptyResult.put("items", List.of());
+                    return Result.successWithMessageAndData("查询成功 (ES empty)", emptyResult);
+                }
+
+                // 2. Fetch full Headline data from MySQL
+                List<Integer> ids = items.stream()
+                        .map(HeadlineEsEntity::getHid)
+                        .collect(Collectors.toList());
+                
+                // Fetch only published news to be safe
+                List<Headline> dbHeadlines = headlineMapper.selectHeadlinesByIds(ids);
+                
+                // 3. Map to preserve order and overlay highlights
+                Map<Integer, Headline> dbMap = dbHeadlines.stream()
+                        .filter(h -> h.getStatus() == 1) // Ensure only published news are shown
+                        .collect(Collectors.toMap(Headline::getHid, h -> h));
+                
+                List<Headline> highlightedHeadlines = items.stream()
+                        .map(esItem -> {
+                            Headline h = dbMap.get(esItem.getHid());
+                            if (h != null) {
+                                // Overlay highlighting for title
+                                if (esItem.getTitle() != null && esItem.getTitle().contains("<em")) {
+                                    h.setTitle(esItem.getTitle());
+                                }
+                                
+                                // Overlay highlighting for summary/article snippet
+                                if (esItem.getArticle() != null && esItem.getArticle().contains("<em")) {
+                                    h.setSummary(esItem.getArticle());
+                                } else if (h.getSummary() == null || h.getSummary().isEmpty()) {
+                                    // If no highlight but summary is empty, use a snippet of the article
+                                    String article = esItem.getArticle();
+                                    if (article != null) {
+                                        h.setSummary(article.length() > 200 ? article.substring(0, 200) + "..." : article);
+                                    }
+                                }
+                            }
+                            return h;
+                        })
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toList());
+
+                Map<String, Object> result = new HashMap<>();
+                result.put("total", searchResult.getTotal());
+                result.put("page", queryDTO.getPageNum());
+                result.put("page_size", queryDTO.getPageSize());
+                result.put("total_pages", (int) Math.ceil((double) searchResult.getTotal() / queryDTO.getPageSize()));
+                result.put("items", highlightedHeadlines);
+
+                return Result.successWithMessageAndData("查询成功 (from ES)", result);
+            }
+
+            // Calculation and MySQL Query (Fallback/Default)
+            int offset = (queryDTO.getPageNum() - 1) * queryDTO.getPageSize();
+            
             // 查询头条列表
             List<Headline> headlines = headlineMapper.selectHeadlinesByPage(
                     offset, queryDTO.getPageSize(), queryDTO.getType(),
@@ -311,6 +387,21 @@ public class HeadlineServiceImpl implements HeadlineService {
             headline.setMongodbDocumentId(savedContent.getId());
             headlineMapper.updateHeadline(headline);
 
+            // 同步到 Elasticsearch
+            try {
+                HeadlineEsEntity esEntity = new HeadlineEsEntity();
+                esEntity.setHid(headline.getHid());
+                esEntity.setTitle(headline.getTitle());
+                esEntity.setArticle(publishDTO.getArticle());
+                esEntity.setTypeName(headline.getTypeName());
+                esEntity.setType(headline.getType());
+                esEntity.setPageViews(headline.getPageViews());
+                headlineEsRepository.save(esEntity);
+            } catch (Exception e) {
+                // ES同步失败不应影响主业务逻辑，仅记录日志
+                System.err.println("Elasticsearch sync failed: " + e.getMessage());
+            }
+
             return Result.success("发布成功");
 
         } catch (Exception e) {
@@ -372,6 +463,20 @@ public class HeadlineServiceImpl implements HeadlineService {
                 mongoTemplate.save(newsContent);
             }
 
+            // 同步到 Elasticsearch
+            try {
+                HeadlineEsEntity esEntity = new HeadlineEsEntity();
+                esEntity.setHid(headline.getHid());
+                esEntity.setTitle(headline.getTitle());
+                esEntity.setArticle(updateDTO.getArticle());
+                esEntity.setTypeName(headline.getTypeName());
+                esEntity.setType(headline.getType());
+                esEntity.setPageViews(existingHeadline.getPageViews()); // 使用原有的浏览量
+                headlineEsRepository.save(esEntity);
+            } catch (Exception e) {
+                System.err.println("Elasticsearch sync failed (update): " + e.getMessage());
+            }
+
             return Result.success("更新成功");
 
         } catch (Exception e) {
@@ -405,6 +510,13 @@ public class HeadlineServiceImpl implements HeadlineService {
             NewsContent newsContent = mongoTemplate.findById(hid, NewsContent.class);
             if (newsContent != null) {
                 mongoTemplate.remove(newsContent);
+            }
+
+            // 从 Elasticsearch 中删除
+            try {
+                headlineEsRepository.deleteById(hid);
+            } catch (Exception e) {
+                System.err.println("Elasticsearch sync failed (delete): " + e.getMessage());
             }
 
             return Result.success("删除成功");

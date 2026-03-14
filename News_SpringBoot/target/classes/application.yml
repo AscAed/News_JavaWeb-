@@ -39,7 +39,8 @@ spring:
       enabled: true
     # Elasticsearch配置
     elasticsearch:
-      enabled: false
+      uris: http://localhost:9200
+      enabled: true
 
   # Servlet配置
   servlet:
@@ -137,5 +138,5 @@ rss:
 
   # 搜索配置
   search:
-    provider: mongodb # mongodb, elasticsearch
+    provider: elasticsearch # mongodb, elasticsearch
     enable-full-text: true

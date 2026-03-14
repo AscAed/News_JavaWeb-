@@ -135,6 +135,36 @@
         SELECT tname FROM news_types WHERE tid = #{type}
     </select>
 
+    <!-- 根据ID集合查询头条列表 -->
+    <select id="selectHeadlinesByIds" resultType="com.zhouyi.entity.Headline">
+        SELECT h.hid, h.title, h.type, t.tname as typeName, h.page_views as pageViews,
+               h.like_count as likeCount, h.comment_count as commentCount,
+               TIMESTAMPDIFF(HOUR, h.published_time, NOW()) as pastHours,
+               h.publisher, u.username as author, h.status, h.is_top as isTop,
+               h.cover_image_url as coverImage,
+               h.created_time        as createdTime,
+               h.updated_time        as updatedTime,
+               h.published_time      as publishedTime,
+               h.source_type         as sourceType,
+               h.source_id           as sourceId,
+               h.lang,
+               h.mongodb_collection  as mongodbCollection,
+               h.mongodb_document_id as mongodbDocumentId
+        FROM headlines h
+        LEFT JOIN news_types t ON h.type = t.tid
+        LEFT JOIN users u ON h.publisher = u.id
+        WHERE h.hid IN
+        <foreach collection="hids" item="hid" open="(" separator="," close=")">
+            #{hid}
+        </foreach>
+        AND h.status = 1
+        ORDER BY FIELD(h.hid,
+        <foreach collection="hids" item="hid" separator=",">
+            #{hid}
+        </foreach>
+        )
+    </select>
+
     <!-- 根据ID查询头条 (Standard naming) -->
     <select id="selectById" resultType="com.zhouyi.entity.Headline">
         SELECT h.hid, h.title, h.type, t.tname as typeName, h.page_views as pageViews,
