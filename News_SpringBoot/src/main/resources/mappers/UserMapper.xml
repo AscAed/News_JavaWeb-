@@ -118,5 +118,23 @@
         WHERE id = #{userId}
     </update>
 
+    <!-- 根据用户ID查询完整的用户资料（包含角色） -->
+    <select id="selectUserProfileById" resultType="com.zhouyi.dto.UserProfileDTO">
+        SELECT 
+            u.id, 
+            u.username, 
+            u.phone, 
+            u.email, 
+            u.avatar, 
+            u.status, 
+            u.created_time AS createdTime,
+            r.id AS role_id,
+            r.role_name AS role_name
+        FROM users u
+        LEFT JOIN user_roles ur ON u.id = ur.user_id
+        LEFT JOIN roles r ON ur.role_id = r.id
+        WHERE u.id = #{userId}
+    </select>
+
 </mapper>
 

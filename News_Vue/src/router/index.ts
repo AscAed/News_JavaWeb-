@@ -104,6 +104,15 @@ const router = createRouter({
       meta: { title: '我的收藏' },
     },
 
+    // 发布新闻 (媒体用户)
+    {
+      path: '/publish',
+      name: 'newsPublish',
+      component: () => import('@/views/news/NewsPublish.vue'),
+      beforeEnter: requireAuth,
+      meta: { title: '发布新闻', requiresMedia: true },
+    },
+
     // 404页面
     {
       path: '/:pathMatch(.*)*',
@@ -131,6 +140,12 @@ router.beforeEach((to, from, next) => {
 
   // 检查是否需要管理员权限
   if (to.meta?.requiresAdmin && userStore.userInfo?.id !== 1) {
+    next('/')
+    return
+  }
+
+  // 检查是否需要媒体权限
+  if (to.meta?.requiresMedia && userStore.userInfo?.role_name !== 'media' && userStore.userInfo?.id !== 1) {
     next('/')
     return
   }

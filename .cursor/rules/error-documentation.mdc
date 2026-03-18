@@ -7,3 +7,9 @@
 - **Context**: Occurred during Phase 10 (Elasticsearch Preparation).
 - **Resolution**: Added the `org.springframework.boot:spring-boot-starter-data-elasticsearch` dependency to `pom.xml`.
 - **Lesson**: Always verify and add required Maven dependencies before introducing new classes that depend on external libraries.
+
+### 2. Header "Publish News" Button Not Showing for Media Users
+- **Issue**: Media users were not seeing the "Publish News" button after logging in because the frontend expected `role_name` to be `'媒体'`.
+- **Context**: The `roles` table in the database maps the media role to the string `'media'` rather than the localized text `'媒体'`. This mismatch caused the `v-if` condition to fail on the `AppHeader.vue`.
+- **Resolution**: Updated `AppHeader.vue` and `router/index.ts` to perform checks against `'media'` instead of `'媒体'`.
+- **Lesson**: Always verify exact database text or identifier names when using them in UI conditions or routing guards, rather than assuming translated display names.

@@ -1,4 +1,5 @@
 import request from '../request'
+import type { ApiResponse, NewsType, NewsPublishForm, UploadResult } from '@/types'
 
 // 获取新闻列表
 export const getNewsList = (params: {
@@ -31,14 +32,7 @@ export const getNewsDetail = (hid: number) => {
 }
 
 // 发布新闻
-export const publishNews = (data: {
-  title: string
-  content: string
-  summary?: string
-  type: number
-  tags?: string
-  coverImage?: string
-}) => {
+export const publishNews = (data: NewsPublishForm): Promise<ApiResponse<string>> => {
   return request.post('/headlines', data)
 }
 
@@ -53,7 +47,7 @@ export const deleteNews = (hid: number) => {
 }
 
 // 获取新闻分类
-export const getNewsTypes = (params?: { sourceType?: string, sourceId?: string }) => {
+export const getNewsTypes = (params?: { sourceType?: string, sourceId?: string }): Promise<ApiResponse<NewsType[]>> => {
   return request.get('/categories', {params})
 }
 
@@ -68,7 +62,7 @@ export const createRssSubscription = (data: { name: string, url: string }) => {
 }
 
 // 上传文件
-export const uploadFile = (file: File) => {
+export const uploadFile = (file: File): Promise<ApiResponse<string | UploadResult>> => {
   const formData = new FormData()
   formData.append('file', file)
 

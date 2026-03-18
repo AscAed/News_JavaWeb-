@@ -41,6 +41,16 @@
 
       <!-- 用户操作区域 (重新加回) -->
       <div class="user-section">
+        <!-- 发布新闻按钮 (仅媒体用户可见) -->
+        <el-button
+          v-if="isLoggedIn && userInfo?.role_name === 'media'"
+          type="primary"
+          class="publish-btn hover-lift"
+          @click="router.push('/publish')"
+        >
+          发布新闻
+        </el-button>
+
         <!-- 主题切换按钮 -->
         <el-button
           circle

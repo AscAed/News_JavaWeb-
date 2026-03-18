@@ -18,6 +18,8 @@
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.2",
     "@tailwindcss/postcss": "^4.1.18",
+    "@wangeditor/editor": "^5.1.23",
+    "@wangeditor/editor-for-vue": "^5.1.12",
     "axios": "^1.13.2",
     "element-plus": "^2.13.1",
     "pinia": "^3.0.4",

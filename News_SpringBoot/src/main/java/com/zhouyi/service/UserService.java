@@ -3,6 +3,7 @@ package com.zhouyi.service;
 import com.zhouyi.common.result.Result;
 import com.zhouyi.entity.User;
 import com.zhouyi.dto.PasswordUpdateDTO;
+import com.zhouyi.dto.UserProfileDTO;
 
 import java.util.List;
 
@@ -16,9 +17,17 @@ public interface UserService {
      * 
      * @param phone    手机号
      * @param password 密码
-     * @return 登录结果，包含用户对象或错误信息
+     * @return 登录结果，包含用户对象 or 错误信息
      */
     Result<User> login(String phone, String password);
+
+    /**
+     * 获取用户个人资料（包含角色信息）
+     * 
+     * @param id 用户ID
+     * @return 查询结果
+     */
+    Result<UserProfileDTO> getUserProfile(Integer id);
 
     /**
      * 根据ID查询用户

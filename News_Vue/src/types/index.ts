@@ -7,6 +7,8 @@ export interface User {
   avatarUrl?: string
   status: number
   lastLoginTime?: string
+  role_id?: number
+  role_name?: string
   createdTime: string
   updatedTime: string
 }
@@ -63,7 +65,7 @@ export interface NewsType {
 
 export interface NewsPublishForm {
   title: string
-  content: string
+  article: string
   summary?: string
   type: number
   tags?: string

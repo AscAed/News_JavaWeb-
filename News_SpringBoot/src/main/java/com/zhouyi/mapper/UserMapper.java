@@ -132,4 +132,12 @@ public interface UserMapper {
      * @return 影响行数
      */
     int updateUserPhone(@Param("userId") Integer userId, @Param("phone") String phone);
+
+    /**
+     * 根据用户ID查询完整的用户个人资料（包含角色信息）
+     * 
+     * @param userId 用户ID
+     * @return 用户个人资料DTO
+     */
+    com.zhouyi.dto.UserProfileDTO selectUserProfileById(@Param("userId") Integer userId);
 }

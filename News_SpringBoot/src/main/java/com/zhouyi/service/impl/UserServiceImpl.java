@@ -6,6 +6,7 @@ import com.zhouyi.entity.User;
 import com.zhouyi.mapper.UserMapper;
 import com.zhouyi.service.UserService;
 import com.zhouyi.dto.PasswordUpdateDTO;
+import com.zhouyi.dto.UserProfileDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -239,5 +240,19 @@ public class UserServiceImpl implements UserService {
         }
 
         return Result.success("Phone verification successful. Phone will be updated.");
+    }
+
+    @Override
+    public Result<UserProfileDTO> getUserProfile(Integer id) {
+        if (id == null) {
+            return Result.error("User ID cannot be null");
+        }
+
+        UserProfileDTO profile = userMapper.selectUserProfileById(id);
+        if (profile == null) {
+            return Result.error("User not found");
+        }
+
+        return Result.success(profile);
     }
 }
