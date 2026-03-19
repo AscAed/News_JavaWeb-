@@ -12,6 +12,7 @@ import com.zhouyi.service.CommentService;
 import com.zhouyi.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +30,12 @@ public class CommentServiceImpl implements CommentService {
     
     @Autowired
     private UserService userService;
+    
+    @Autowired
+    private org.springframework.data.mongodb.core.MongoTemplate mongoTemplate;
+
+    @Autowired
+    private com.zhouyi.mapper.HeadlineMapper headlineMapper;
     
     @Override
     public Result<Map<String, Object>> getCommentsByHeadline(Integer headlineId, Integer page, Integer pageSize, 
@@ -60,11 +67,12 @@ public class CommentServiceImpl implements CommentService {
             }
             
             // 分页处理
-            int total = topComments.size();
+            int totalTopLevel = topComments.size();
+            long totalGlobal = commentRepository.countByNewsIdAndIsDeleted(headlineId, false);
             int startIndex = (page - 1) * pageSize;
-            int endIndex = Math.min(startIndex + pageSize, total);
+            int endIndex = Math.min(startIndex + pageSize, totalTopLevel);
             
-            List<Comment> pagedComments = startIndex < total ? 
+            List<Comment> pagedComments = startIndex < totalTopLevel ? 
                 topComments.subList(startIndex, endIndex) : new ArrayList<>();
             
             // 构建评论树结构
@@ -76,10 +84,10 @@ public class CommentServiceImpl implements CommentService {
             
             // 构建返回结果
             Map<String, Object> data = new HashMap<>();
-            data.put("total", total);
+            data.put("total", totalGlobal);
             data.put("page", page);
             data.put("page_size", pageSize);
-            data.put("total_pages", (int) Math.ceil((double) total / pageSize));
+            data.put("total_pages", (int) Math.ceil((double) totalTopLevel / pageSize));
             data.put("items", commentTrees);
             
             return Result.success(data);
@@ -141,7 +149,7 @@ public class CommentServiceImpl implements CommentService {
             comment.setNewsId(commentCreateDTO.getHeadlineId());
             comment.setUserId(userId);
             comment.setContent(commentCreateDTO.getContent());
-            comment.setParentId(commentCreateDTO.getParentId() != null ? commentCreateDTO.getParentId().toString() : null);
+            comment.setParentId(commentCreateDTO.getParentId() != null && !commentCreateDTO.getParentId().trim().isEmpty() ? commentCreateDTO.getParentId() : null);
             comment.setLikeCount(0);
             comment.setReplyCount(0);
             comment.setIsDeleted(false);
@@ -159,15 +167,21 @@ public class CommentServiceImpl implements CommentService {
             // 保存评论
             Comment savedComment = commentRepository.save(comment);
             
-            // 如果是回复评论，更新父评论的回复数
-            if (commentCreateDTO.getParentId() != null) {
-                Optional<Comment> parentCommentOpt = commentRepository.findById(commentCreateDTO.getParentId().toString());
-                if (parentCommentOpt.isPresent()) {
-                    Comment parentComment = parentCommentOpt.get();
-                    parentComment.setReplyCount(parentComment.getReplyCount() + 1);
-                    parentComment.setUpdatedAt(LocalDateTime.now());
-                    commentRepository.save(parentComment);
-                }
+            // 如果是回复评论，更新父评论的回复数 (原子操作)
+            if (comment.getParentId() != null) {
+                org.springframework.data.mongodb.core.query.Query query = new org.springframework.data.mongodb.core.query.Query(
+                    org.springframework.data.mongodb.core.query.Criteria.where("_id").is(comment.getParentId())
+                );
+                Update update = new Update().inc("reply_count", 1).set("updated_at", LocalDateTime.now());
+                mongoTemplate.updateFirst(query, update, Comment.class);
+            }
+
+            // 更新 MySQL 中的新闻评论总数
+            try {
+                headlineMapper.incrementCommentCount(comment.getNewsId());
+            } catch (Exception e) {
+                // 记录日志但不影响主流程
+                System.err.println("Failed to increment headline comment count: " + e.getMessage());
             }
             
             return Result.success(savedComment);
@@ -249,17 +263,20 @@ public class CommentServiceImpl implements CommentService {
             comment.setUpdatedAt(LocalDateTime.now());
             commentRepository.save(comment);
             
-            // 如果是回复评论，更新父评论的回复数
+            // 如果是回复评论，更新父评论的回复数 (原子操作)
             if (comment.getParentId() != null) {
-                Optional<Comment> parentCommentOpt = commentRepository.findById(comment.getParentId());
-                if (parentCommentOpt.isPresent()) {
-                    Comment parentComment = parentCommentOpt.get();
-                    if (parentComment.getReplyCount() > 0) {
-                        parentComment.setReplyCount(parentComment.getReplyCount() - 1);
-                        parentComment.setUpdatedAt(LocalDateTime.now());
-                        commentRepository.save(parentComment);
-                    }
-                }
+                org.springframework.data.mongodb.core.query.Query query = new org.springframework.data.mongodb.core.query.Query(
+                    org.springframework.data.mongodb.core.query.Criteria.where("_id").is(comment.getParentId()).and("reply_count").gt(0)
+                );
+                Update update = new Update().inc("reply_count", -1).set("updated_at", LocalDateTime.now());
+                mongoTemplate.updateFirst(query, update, Comment.class);
+            }
+
+            // 更新 MySQL 中的新闻评论总数
+            try {
+                headlineMapper.decrementCommentCount(comment.getNewsId());
+            } catch (Exception e) {
+                System.err.println("Failed to decrement headline comment count: " + e.getMessage());
             }
             
             return Result.success();
@@ -330,18 +347,26 @@ public class CommentServiceImpl implements CommentService {
                 return Result.error(404, "评论已删除");
             }
             
-            // 处理点赞逻辑（简化处理，实际应该有点赞记录表）
+            // 处理点赞逻辑（原子操作）
             boolean isLiked = "like".equals(commentLikeDTO.getAction());
-            int currentLikeCount = comment.getLikeCount() != null ? comment.getLikeCount() : 0;
             
+            org.springframework.data.mongodb.core.query.Query query = new org.springframework.data.mongodb.core.query.Query(
+                org.springframework.data.mongodb.core.query.Criteria.where("_id").is(commentId)
+            );
+            
+            Update update = new Update().set("updated_at", LocalDateTime.now());
             if (isLiked) {
-                comment.setLikeCount(currentLikeCount + 1);
+                update.inc("like_count", 1);
             } else {
-                comment.setLikeCount(Math.max(0, currentLikeCount - 1));
+                update.inc("like_count", -1);
+                // 确保不出现负数点赞
+                query.addCriteria(org.springframework.data.mongodb.core.query.Criteria.where("like_count").gt(0));
             }
             
-            comment.setUpdatedAt(LocalDateTime.now());
-            Comment updatedComment = commentRepository.save(comment);
+            mongoTemplate.updateFirst(query, update, Comment.class);
+            
+            // 重新获取更新后的评论以返回最新的点赞数
+            Comment updatedComment = commentRepository.findById(commentId).orElse(comment);
             
             // 构建返回结果
             Map<String, Object> data = new HashMap<>();

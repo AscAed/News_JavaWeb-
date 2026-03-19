@@ -113,4 +113,45 @@ public interface HeadlineMapper {
      * @return 头条信息
      */
     Headline selectById(@Param("id") Integer id);
+
+    /**
+     * 更新头条状态
+     *
+     * @param hid    头条ID
+     * @param status 状态：0-审核中，1-已发布，2-已下线
+     * @return 影响行数
+     */
+    int updateStatus(@Param("hid") Integer hid, @Param("status") Integer status);
+
+    /**
+     * 增加评论数
+     * 
+     * @param hid 头条ID
+     * @return 影响行数
+     */
+    int incrementCommentCount(@Param("hid") Integer hid);
+
+    /**
+     * 减少评论数
+     * 
+     * @param hid 头条ID
+     * @return 影响行数
+     */
+    int decrementCommentCount(@Param("hid") Integer hid);
+
+    /**
+     * 增加点赞数
+     * 
+     * @param hid 头条ID
+     * @return 影响行数
+     */
+    int incrementLikeCount(@Param("hid") Integer hid);
+
+    /**
+     * 减少点赞数
+     * 
+     * @param hid 头条ID
+     * @return 影响行数
+     */
+    int decrementLikeCount(@Param("hid") Integer hid);
 }

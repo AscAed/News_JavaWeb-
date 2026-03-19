@@ -50,6 +50,18 @@
         >
           发布新闻
         </el-button>
+        
+        <!-- 后台管理按钮 (仅管理员可见) -->
+        <el-button
+          v-if="isLoggedIn && userInfo?.id === 1"
+          type="warning"
+          plain
+          class="admin-btn hover-lift"
+          @click="router.push('/admin')"
+        >
+          <el-icon><Management /></el-icon>
+          后台管理
+        </el-button>
 
         <!-- 主题切换按钮 -->
         <el-button
@@ -115,6 +127,7 @@ import {
   User,
   Sunny,
   Moon,
+  Management,
 } from '@element-plus/icons-vue'
 
 const router = useRouter()

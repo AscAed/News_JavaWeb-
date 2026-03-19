@@ -106,6 +106,7 @@ import { ref, reactive, shallowRef, onBeforeUnmount, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Edit } from '@element-plus/icons-vue'
+// @ts-ignore: Could not find a declaration file for module
 import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
 import '@wangeditor/editor/dist/css/style.css'
 import { getNewsTypes, publishNews, uploadFile } from '@/api/modules/news'

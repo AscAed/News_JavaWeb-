@@ -1,13 +1,14 @@
 package com.zhouyi.controller;
 
 import com.zhouyi.common.result.Result;
-import com.zhouyi.service.FileService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.Map;
 
 /**
  * 通用控制器，处理文件上传等通用功能
@@ -17,7 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class CommonController {
 
     @Autowired
-    private FileService fileService;
+    private com.zhouyi.service.MinioFileService minioFileService;
 
     /**
      * 文件上传接口
@@ -29,8 +30,15 @@ public class CommonController {
     @PostMapping("/upload")
     public Result<String> uploadFile(@RequestParam("file") MultipartFile file) {
         try {
-            String fileUrl = fileService.uploadFile(file);
-            return Result.success("上传成功", fileUrl, null);
+            // Use MinIO for storage with "images" category as required by the scheme
+            Result<Map<String, Object>> uploadResult = minioFileService.uploadFile(file, "images", "上传的图片");
+            
+            if (uploadResult.getCode() == 200 && uploadResult.getData() != null) {
+                String accessUrl = (String) uploadResult.getData().get("accessUrl");
+                return Result.success("上传成功", accessUrl, null);
+            } else {
+                return Result.error("文件上传失败：" + uploadResult.getMessage());
+            }
         } catch (Exception e) {
             return Result.error("文件上传失败：" + e.getMessage());
         }

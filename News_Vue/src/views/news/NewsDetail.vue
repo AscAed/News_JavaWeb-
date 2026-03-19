@@ -63,16 +63,20 @@
         </article>
 
         <!-- 评论区 -->
-        <section class="comments-section">
-          <h3>评论 ({{ comments.length }})</h3>
+        <section class="comments-section" id="comments">
+          <h3>评论 ({{ totalComments }})</h3>
 
           <!-- 发表评论 -->
           <div class="comment-form" v-if="isLoggedIn">
+            <div v-if="replyingTo" class="reply-indicator">
+              <span>正在回复 @{{ replyingTo.author.username }}</span>
+              <el-button type="text" size="small" @click="cancelReply">取消回复</el-button>
+            </div>
             <el-input
               v-model="newComment"
               type="textarea"
               :rows="3"
-              placeholder="发表你的评论..."
+              :placeholder="replyingTo ? '发表回复...' : '发表你的评论...'"
               maxlength="500"
               show-word-limit
             />
@@ -82,7 +86,7 @@
               :loading="submittingComment"
               style="margin-top: 10px"
             >
-              发表评论
+              {{ replyingTo ? '发表回复' : '发表评论' }}
             </el-button>
           </div>
           <div v-else class="login-prompt">
@@ -91,43 +95,18 @@
 
           <!-- 评论列表 -->
           <div class="comments-list">
-            <div
-              v-for="comment in comments"
-              :key="comment.id"
-              class="comment-item"
-            >
-              <div class="comment-avatar">
-                <el-avatar :src="comment.userAvatar" :alt="comment.username">
-                  {{ comment.username?.charAt(0) }}
-                </el-avatar>
-              </div>
-              <div class="comment-content">
-                <div class="comment-header">
-                  <span class="username">{{ comment.username }}</span>
-                  <span class="comment-time">{{ formatTime(comment.createdTime) }}</span>
-                </div>
-                <div class="comment-text">{{ comment.content }}</div>
-                <div class="comment-actions">
-                  <el-button
-                    type="text"
-                    size="small"
-                    @click="likeComment(comment.id)"
-                    :disabled="!isLoggedIn"
-                  >
-                    <el-icon><Star /></el-icon>
-                    {{ comment.likeCount }}
-                  </el-button>
-                  <el-button
-                    type="text"
-                    size="small"
-                    @click="replyComment(comment)"
-                    :disabled="!isLoggedIn"
-                  >
-                    回复
-                  </el-button>
-                </div>
-              </div>
-            </div>
+            <template v-if="comments.length > 0">
+              <CommentItem
+                v-for="comment in comments"
+                :key="comment.id"
+                :comment="comment"
+                :current-user="userStore.userInfo?.username"
+                @like="handleLike"
+                @reply="handleReply"
+                @delete="handleDelete"
+              />
+            </template>
+            <el-empty v-else description="暂无评论，快来抢沙发吧~" />
           </div>
         </section>
       </el-main>
@@ -136,13 +115,15 @@
 </template>
 
 <script setup lang="ts">
-import {computed, onMounted, ref} from 'vue'
+import {computed, onMounted, ref, nextTick} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 import {ArrowLeft, ChatDotRound, Collection, Share, Star, View} from '@element-plus/icons-vue'
-import {ElMessage} from 'element-plus'
+import {ElMessage, ElMessageBox} from 'element-plus'
 import type {Comment, Headline} from '@/types/headline'
 import {getHeadlineById} from '@/api/headline'
 import {useUserStore} from '@/stores/user'
+import CommentItem from '@/components/CommentItem.vue'
+import {getComments, addComment, likeComment as likeCommentApi, deleteComment as deleteCommentApi} from '@/api/modules/interaction'
 
 const route = useRoute()
 const router = useRouter()
@@ -152,10 +133,12 @@ const userStore = useUserStore()
 const loading = ref(false)
 const newsDetail = ref<Headline | null>(null)
 const comments = ref<Comment[]>([])
-const newComment = ref('')
 const submittingComment = ref(false)
 const isLiked = ref(false)
 const isFavorited = ref(false)
+const totalComments = ref(0)
+const newComment = ref('')
+const replyingTo = ref<Comment | null>(null)
 
 // 计算属性
 const isLoggedIn = computed(() => userStore.isLoggedIn)
@@ -232,30 +215,52 @@ const shareNews = () => {
   }
 }
 
+const fetchCommentsList = async () => {
+  const hid = Number(route.params.hid)
+  if (!hid) return
+  try {
+    const res = await getComments(hid, { page: 1, page_size: 100 })
+    if (res.code === 200) {
+      comments.value = res.data.items || []
+      totalComments.value = res.data.total || comments.value.length
+    }
+  } catch (err) {
+    console.error('获取评论失败', err)
+  }
+}
+
+const cancelReply = () => {
+  replyingTo.value = null
+  newComment.value = ''
+}
+
 const submitComment = async () => {
   if (!newComment.value.trim()) {
     ElMessage.warning('请输入评论内容')
     return
   }
 
+  const hid = Number(route.params.hid)
   submittingComment.value = true
   try {
-    // TODO: 实现评论API调用
-    await new Promise(resolve => setTimeout(resolve, 1000)) // 模拟API调用
-
-    comments.value.unshift({
-      id: Date.now(),
-      newsId: Number(route.params.hid),
-      userId: userStore.userInfo?.id || 0,
-      username: userStore.userInfo?.username || '匿名用户',
-      userAvatar: userStore.userInfo?.avatarUrl,
-      content: newComment.value,
-      likeCount: 0,
-      createdTime: new Date().toISOString()
+    const res = await addComment({
+      headlineId: hid,
+      content: newComment.value.trim(),
+      parentId: replyingTo.value ? replyingTo.value.id : undefined
     })
 
-    newComment.value = ''
-    ElMessage.success('评论发表成功')
+    if (res.code === 200) {
+      ElMessage.success(replyingTo.value ? '回复成功' : '评论发表成功')
+      newComment.value = ''
+      replyingTo.value = null
+      await fetchCommentsList() // 刷新评论列表
+      // 更新顶部统计数据
+      if (newsDetail.value) {
+        newsDetail.value.commentCount = (newsDetail.value.commentCount || 0) + 1
+      }
+    } else {
+      ElMessage.error(res.message || '评论失败')
+    }
   } catch (error) {
     ElMessage.error('评论发表失败')
   } finally {
@@ -263,22 +268,59 @@ const submitComment = async () => {
   }
 }
 
-const likeComment = (commentId: number) => {
-  // TODO: 实现评论点赞API调用
-  const comment = comments.value.find(c => c.id === commentId)
-  if (comment) {
-    comment.likeCount += 1
+const handleLike = async (comment: Comment) => {
+  if (!isLoggedIn.value) {
+    ElMessage.warning('请先登录')
+    return
+  }
+  try {
+    // 这里简单的认为是切换like，实际应用需要记录是否已经点赞过
+    const res = await likeCommentApi(comment.id, 'like')
+    if (res.code === 200) {
+      // 简单地在本地更新数字，或重新拉取全量评论
+      comment.like_count = res.data.like_count
+      ElMessage.success('操作成功')
+    }
+  } catch (error) {
+    ElMessage.error('点赞失败')
   }
 }
 
-const replyComment = (comment: any) => {
-  newComment.value = `@${comment.username} `
-  // TODO: 聚焦到评论输入框
+const handleReply = (comment: Comment) => {
+  if (!isLoggedIn.value) {
+    ElMessage.warning('请先登录')
+    return
+  }
+  replyingTo.value = comment
+  // 滚动到评论框
+  nextTick(() => {
+    document.getElementById('comments')?.scrollIntoView({ behavior: 'smooth' })
+  })
+}
+
+const handleDelete = async (comment: Comment) => {
+  try {
+    await ElMessageBox.confirm('确定要删除这条评论吗？', '提示', {
+      type: 'warning'
+    })
+    const res = await deleteCommentApi(comment.id)
+    if (res.code === 200) {
+      ElMessage.success('删除成功')
+      await fetchCommentsList() // 刷新评论列表
+    } else {
+      ElMessage.error(res.message || '删除失败')
+    }
+  } catch (e) {
+    // user cancelled
+  }
 }
 
 // 生命周期
 onMounted(() => {
   fetchNewsDetail()
+  if (route.params.hid) {
+    fetchCommentsList()
+  }
 })
 </script>
 

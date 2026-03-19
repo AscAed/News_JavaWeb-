@@ -74,6 +74,7 @@ import { useUserStore } from '@/stores/user'
 import { ElMessage } from 'element-plus'
 import { Document, User, View, Star } from '@element-plus/icons-vue'
 import type { News } from '@/types'
+import { getStatisticsOverview, getAdminRecentNews } from '@/api/modules/admin'
 
 const userStore = useUserStore()
 
@@ -88,51 +89,29 @@ const recentNews = ref<News[]>([])
 
 const fetchDashboardData = async () => {
   try {
-    // 模拟数据，实际应该调用API
-    stats.value = {
-      totalNews: 156,
-      totalUsers: 1234,
-      totalViews: 56789,
-      totalLikes: 2345
-    }
-    
-    recentNews.value = [
-      {
-        hid: 1,
-        title: 'Vue 3 新特性介绍',
-        author: '张三',
-        pageViews: 1234,
-        status: 1,
-        createdTime: '2025-12-31 10:30:00',
-        type: 1,
-        typeName: '技术',
-        publisher: 1,
-        likeCount: 56,
-        commentCount: 12,
-        favoriteCount: 8,
-        isTop: false,
-        isHot: true,
-        updatedTime: '2025-12-31 10:30:00'
-      },
-      {
-        hid: 2,
-        title: 'Spring Boot 最佳实践',
-        author: '李四',
-        pageViews: 987,
-        status: 1,
-        createdTime: '2025-12-31 09:15:00',
-        type: 1,
-        typeName: '技术',
-        publisher: 1,
-        likeCount: 43,
-        commentCount: 8,
-        favoriteCount: 5,
-        isTop: false,
-        isHot: false,
-        updatedTime: '2025-12-31 09:15:00'
+    // 获取统计概览
+    const statsRes = await getStatisticsOverview() as any
+    if (statsRes.code === 200) {
+      // 这里的字段名需要对应后端 SystemStatisticsDTO 或具体返回结构
+      // 根据之前的 SystemStatisticsDTO，字段是 totalVisits, totalComments 等
+      // 我们在 Controller 返回的是 statisticsService.getOverviewStatistics()
+      // 假设它返回了一个包含这些字段的对象
+      const data = statsRes.data
+      stats.value = {
+        totalNews: data.totalNews || 0,
+        totalUsers: data.totalUsers || 0,
+        totalViews: data.totalVisits || data.totalViews || 0,
+        totalLikes: data.totalLikes || 0
       }
-    ] as News[]
+    }
+
+    // 获取最近新闻
+    const newsRes = await getAdminRecentNews(5) as any
+    if (newsRes.code === 200) {
+      recentNews.value = newsRes.data.items || []
+    }
   } catch (error) {
+    console.error('Fetch dashboard data error:', error)
     ElMessage.error('获取仪表盘数据失败')
   }
 }

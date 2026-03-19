@@ -97,9 +97,9 @@ custom:
     # MinIO服务地址
     endpoint: http://localhost:9000
     # Access Key
-    access-key: minioadmin
+    access-key: admin
     # Secret Key
-    secret-key: minioadmin
+    secret-key: password123
     # 默认存储桶名称
     bucket-name: news-storage
     # 文件访问URL前缀
