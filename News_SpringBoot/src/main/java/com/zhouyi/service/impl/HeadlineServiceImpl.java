@@ -316,8 +316,9 @@ public class HeadlineServiceImpl implements HeadlineService {
     }
 
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public Result<String> publishHeadline(HeadlinePublishDTO publishDTO, Integer publisher) {
+        String mongoDocumentId = null;
         try {
             // 获取发布者信息（使用JWT验证的用户ID）
             var userResult = userService.getUserById(publisher);
@@ -353,13 +354,13 @@ public class HeadlineServiceImpl implements HeadlineService {
                     : "en";
             headline.setLang(lang);
 
-            // 插入头条
+            // 1. MySQL 插入元数据
             int rows = headlineMapper.insertHeadline(headline);
             if (rows <= 0) {
                 return Result.error("发布失败");
             }
 
-            // 保存详细内容到MongoDB
+            // 2. MongoDB 保存富文本
             NewsContent newsContent = new NewsContent();
             newsContent.setHid(headline.getHid());
             newsContent.setTitle(publishDTO.getTitle());
@@ -382,30 +383,43 @@ public class HeadlineServiceImpl implements HeadlineService {
             newsContent.setUpdatedTime(LocalDateTime.now());
 
             NewsContent savedContent = mongoTemplate.save(newsContent);
+            mongoDocumentId = savedContent.getId(); // 记录已生成的 MongoDB ID
 
-            // Update Headline with MongoDB Document ID
-            headline.setMongodbDocumentId(savedContent.getId());
+            // 3. MySQL 更新关联外键
+            headline.setMongodbDocumentId(mongoDocumentId);
             headlineMapper.updateHeadline(headline);
 
-            // 同步到 Elasticsearch
-            try {
-                HeadlineEsEntity esEntity = new HeadlineEsEntity();
-                esEntity.setHid(headline.getHid());
-                esEntity.setTitle(headline.getTitle());
-                esEntity.setArticle(publishDTO.getArticle());
-                esEntity.setTypeName(headline.getTypeName());
-                esEntity.setType(headline.getType());
-                esEntity.setPageViews(headline.getPageViews());
-                headlineEsRepository.save(esEntity);
-            } catch (Exception e) {
-                // ES同步失败不应影响主业务逻辑，仅记录日志
-                System.err.println("Elasticsearch sync failed: " + e.getMessage());
-            }
+            // 4. 同步到 Elasticsearch (最容易发生网络超时异常的一步)
+            HeadlineEsEntity esEntity = new HeadlineEsEntity();
+            esEntity.setHid(headline.getHid());
+            esEntity.setTitle(headline.getTitle());
+            esEntity.setArticle(publishDTO.getArticle());
+            esEntity.setTypeName(headline.getTypeName());
+            esEntity.setType(headline.getType());
+            esEntity.setPageViews(headline.getPageViews());
+            headlineEsRepository.save(esEntity);
 
             return Result.success("发布成功");
 
         } catch (Exception e) {
-            return Result.error("发布失败：" + e.getMessage());
+            // 导师画重点：记录日志并触发补偿与回滚
+            System.err.println("新闻发布流转失败，触发数据清洗与回滚逻辑: " + e.getMessage());
+            
+            // 导师画重点 1：应用级的数据补偿（清理 MongoDB 脏数据）
+            if (mongoDocumentId != null) {
+                mongoTemplate.remove(new org.springframework.data.mongodb.core.query.Query(
+                        org.springframework.data.mongodb.core.query.Criteria.where("_id").is(mongoDocumentId)), NewsContent.class);
+                System.out.println("已成功清理 MongoDB 残留脏数据: " + mongoDocumentId);
+            }
+            
+            // 导师画重点 2：手动干预 Spring 事务，确保 MySQL 正常回滚，避免异常被 catch 吞噬
+            try {
+                org.springframework.transaction.interceptor.TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+            } catch (Exception te) {
+                System.err.println("Could not set rollback only (maybe no transaction active): " + te.getMessage());
+            }
+            
+            return Result.error("发布失败，系统已触发柔性回滚保障数据一致性");
         }
     }
 
