@@ -41,6 +41,17 @@
 
       <!-- 用户操作区域 (重新加回) -->
       <div class="user-section">
+        <!-- 后台管理按钮 (仅管理员可见) -->
+        <el-button
+          v-if="isLoggedIn && (userInfo?.role_name === 'admin' || userInfo?.id === 1)"
+          type="warning"
+          class="admin-btn hover-lift"
+          @click="router.push('/admin')"
+          :icon="TrendCharts"
+        >
+          后台管理
+        </el-button>
+
         <!-- 发布新闻按钮 (仅媒体用户可见) -->
         <el-button
           v-if="isLoggedIn && userInfo?.role_name === 'media'"
@@ -115,6 +126,7 @@ import {
   User,
   Sunny,
   Moon,
+  TrendCharts,
 } from '@element-plus/icons-vue'
 
 const router = useRouter()

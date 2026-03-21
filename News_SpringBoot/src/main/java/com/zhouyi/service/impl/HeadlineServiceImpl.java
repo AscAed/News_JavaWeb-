@@ -15,10 +15,13 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.zhouyi.entity.elasticsearch.HeadlineEsEntity;
-import com.zhouyi.repository.elasticsearch.HeadlineEsRepository;
+import com.zhouyi.service.OutboxService;
 import com.zhouyi.service.NewsSearchService;
 import com.zhouyi.dto.SearchResultDTO;
 import java.util.stream.Collectors;
+import com.zhouyi.common.result.ResultCode;
+import com.zhouyi.common.exception.BusinessException;
+import com.zhouyi.component.NewsMetricsService;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -46,18 +49,18 @@ public class HeadlineServiceImpl implements HeadlineService {
 
     @Autowired
     private MongoTemplate mongoTemplate;
-
-    @Autowired
-    private com.zhouyi.service.HybridRssService hybridRssService;
     
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
 
     @Autowired
-    private HeadlineEsRepository headlineEsRepository;
+    private OutboxService outboxService;
 
     @Autowired
     private NewsSearchService newsSearchService;
+
+    @Autowired
+    private NewsMetricsService newsMetricsService;
 
     @Override
     @SuppressWarnings("unchecked")
@@ -72,19 +75,6 @@ public class HeadlineServiceImpl implements HeadlineService {
                 }
             }
 
-            // Check if this is a request for RSS Zaobao section
-            if ("rss".equalsIgnoreCase(queryDTO.getSourceType()) && queryDTO.getSourceId() != null
-                    && queryDTO.getSection() != null) {
-                try {
-                    Long subId = Long.valueOf(queryDTO.getSourceId());
-                    // Synchronously wait for the fetch to complete with a 10s timeout
-                    hybridRssService.fetchAndSave(subId, queryDTO.getSection()).get(10,
-                            java.util.concurrent.TimeUnit.SECONDS);
-                } catch (Exception e) {
-                    // Log but don't fail the whole request if fetch times out
-                    System.err.println("Failed to fetch RSS synchronously: " + e.getMessage());
-                }
-            }
 
             // 1. Check if we should use Elasticsearch for keyword search
             if (queryDTO.getKeywords() != null && !queryDTO.getKeywords().trim().isEmpty()) {
@@ -191,15 +181,23 @@ public class HeadlineServiceImpl implements HeadlineService {
     @Cacheable(value = "articleDetail", key = "#hid", sync = true)
     public Result<HeadlineDetailDTO> getHeadlineById(Integer hid) {
         try {
+            newsMetricsService.incrementArticleView();
             // 查询MySQL中的头条基本信息
             Headline headline = headlineMapper.selectHeadlineById(hid);
             if (headline == null) {
                 return Result.error("头条不存在");
             }
 
-            // 增加浏览量
-            headlineMapper.incrementPageViews(hid);
-            headline.setPageViews(headline.getPageViews() + 1);
+            // 增加浏览量 (改为调用异步Redis方法，此处不再同步更新MySQL)
+            // incrementViewCount(hid); // 在Controller调用更合适，以免缓存命中时失效
+
+            // 查询细节并考虑Redis缓冲中的浏览量
+            Integer redisViews = 0;
+            Object viewBuffer = redisTemplate.opsForValue().get("headline:page_views:" + hid);
+            if (viewBuffer != null) {
+                redisViews = ((Number) viewBuffer).intValue();
+            }
+            headline.setPageViews(headline.getPageViews() + redisViews);
 
             // 查询MongoDB中的详细内容
             String docId = headline.getMongodbDocumentId();
@@ -310,8 +308,10 @@ public class HeadlineServiceImpl implements HeadlineService {
 
             return Result.successWithMessageAndData("查询成功", detailDTO);
 
+        } catch (BusinessException e) {
+            throw e;
         } catch (Exception e) {
-            return Result.error("查询失败：" + e.getMessage());
+            throw new BusinessException(ResultCode.SYSTEM_INNER_ERROR, e);
         }
     }
 
@@ -323,7 +323,7 @@ public class HeadlineServiceImpl implements HeadlineService {
             // 获取发布者信息（使用JWT验证的用户ID）
             var userResult = userService.getUserById(publisher);
             if (userResult.getCode() != 200 || userResult.getData() == null) {
-                return Result.error("发布者不存在");
+                throw new BusinessException(ResultCode.USER_NOT_EXIST);
             }
 
             // 创建头条实体
@@ -357,7 +357,7 @@ public class HeadlineServiceImpl implements HeadlineService {
             // 1. MySQL 插入元数据
             int rows = headlineMapper.insertHeadline(headline);
             if (rows <= 0) {
-                return Result.error("发布失败");
+                throw new BusinessException(ResultCode.DATA_IS_WRONG);
             }
 
             // 2. MongoDB 保存富文本
@@ -389,37 +389,28 @@ public class HeadlineServiceImpl implements HeadlineService {
             headline.setMongodbDocumentId(mongoDocumentId);
             headlineMapper.updateHeadline(headline);
 
-            // 4. 同步到 Elasticsearch (最容易发生网络超时异常的一步)
-            HeadlineEsEntity esEntity = new HeadlineEsEntity();
-            esEntity.setHid(headline.getHid());
-            esEntity.setTitle(headline.getTitle());
-            esEntity.setArticle(publishDTO.getArticle());
-            esEntity.setTypeName(headline.getTypeName());
-            esEntity.setType(headline.getType());
-            esEntity.setPageViews(headline.getPageViews());
-            headlineEsRepository.save(esEntity);
+            // 4. 发送异步事件同步到 Elasticsearch (改为 Outbox 模式)
+            outboxService.saveEsSyncMessage(headline.getHid(), "SAVE");
 
+            newsMetricsService.incrementHeadlinePublished();
             return Result.success("发布成功");
 
         } catch (Exception e) {
             // 导师画重点：记录日志并触发补偿与回滚
             System.err.println("新闻发布流转失败，触发数据清洗与回滚逻辑: " + e.getMessage());
             
-            // 导师画重点 1：应用级的数据补偿（清理 MongoDB 脏数据）
             if (mongoDocumentId != null) {
                 mongoTemplate.remove(new org.springframework.data.mongodb.core.query.Query(
                         org.springframework.data.mongodb.core.query.Criteria.where("_id").is(mongoDocumentId)), NewsContent.class);
-                System.out.println("已成功清理 MongoDB 残留脏数据: " + mongoDocumentId);
             }
             
-            // 导师画重点 2：手动干预 Spring 事务，确保 MySQL 正常回滚，避免异常被 catch 吞噬
             try {
                 org.springframework.transaction.interceptor.TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
             } catch (Exception te) {
-                System.err.println("Could not set rollback only (maybe no transaction active): " + te.getMessage());
+                // Ignore if no transaction
             }
             
-            return Result.error("发布失败，系统已触发柔性回滚保障数据一致性");
+            throw new BusinessException(ResultCode.DATA_IS_WRONG, e);
         }
     }
 
@@ -432,12 +423,12 @@ public class HeadlineServiceImpl implements HeadlineService {
             Headline existingHeadline = headlineMapper
                     .selectHeadlineById(updateDTO.getId() != null ? updateDTO.getId() : updateDTO.getHid());
             if (existingHeadline == null) {
-                return Result.error("头条不存在");
+                throw new BusinessException(ResultCode.ARTICLE_NOT_FOUND);
             }
 
             // 验证权限: 只有原作者才能修改
             if (!existingHeadline.getPublisher().equals(userId)) {
-                return Result.error("无权修改该新闻,只有作者才能修改自己的作品");
+                throw new BusinessException(ResultCode.PERMISSION_NO_ACCESS);
             }
 
             // 更新头条基本信息
@@ -455,7 +446,7 @@ public class HeadlineServiceImpl implements HeadlineService {
 
             int rows = headlineMapper.updateHeadline(headline);
             if (rows <= 0) {
-                return Result.error("更新失败");
+                throw new BusinessException(ResultCode.DATA_IS_WRONG);
             }
 
             // 更新MongoDB中的详细内容
@@ -477,24 +468,15 @@ public class HeadlineServiceImpl implements HeadlineService {
                 mongoTemplate.save(newsContent);
             }
 
-            // 同步到 Elasticsearch
-            try {
-                HeadlineEsEntity esEntity = new HeadlineEsEntity();
-                esEntity.setHid(headline.getHid());
-                esEntity.setTitle(headline.getTitle());
-                esEntity.setArticle(updateDTO.getArticle());
-                esEntity.setTypeName(headline.getTypeName());
-                esEntity.setType(headline.getType());
-                esEntity.setPageViews(existingHeadline.getPageViews()); // 使用原有的浏览量
-                headlineEsRepository.save(esEntity);
-            } catch (Exception e) {
-                System.err.println("Elasticsearch sync failed (update): " + e.getMessage());
-            }
+            // 发送异步事件同步到 Elasticsearch (改为 Outbox 模式)
+            outboxService.saveEsSyncMessage(headline.getHid(), "SAVE");
 
             return Result.success("更新成功");
 
+        } catch (BusinessException e) {
+            throw e;
         } catch (Exception e) {
-            return Result.error("更新失败：" + e.getMessage());
+            throw new BusinessException(ResultCode.DATA_IS_WRONG, e);
         }
     }
 
@@ -506,18 +488,18 @@ public class HeadlineServiceImpl implements HeadlineService {
             // 检查头条是否存在
             Headline headline = headlineMapper.selectHeadlineById(hid);
             if (headline == null) {
-                return Result.error("头条不存在");
+                throw new BusinessException(ResultCode.ARTICLE_NOT_FOUND);
             }
 
             // 验证权限: 只有原作者才能删除
             if (!headline.getPublisher().equals(userId)) {
-                return Result.error("无权删除该新闻,只有作者才能删除自己的作品");
+                throw new BusinessException(ResultCode.PERMISSION_NO_ACCESS);
             }
 
             // 删除MySQL中的头条
             int rows = headlineMapper.deleteHeadline(hid);
             if (rows <= 0) {
-                return Result.error("删除失败");
+                throw new BusinessException(ResultCode.DATA_IS_WRONG);
             }
 
             // 删除MongoDB中的详细内容
@@ -526,17 +508,22 @@ public class HeadlineServiceImpl implements HeadlineService {
                 mongoTemplate.remove(newsContent);
             }
 
-            // 从 Elasticsearch 中删除
-            try {
-                headlineEsRepository.deleteById(hid);
-            } catch (Exception e) {
-                System.err.println("Elasticsearch sync failed (delete): " + e.getMessage());
-            }
+            // 通过异步事件从 Elasticsearch 中删除 (改为 Outbox 模式)
+            outboxService.saveEsSyncMessage(hid, "DELETE");
 
             return Result.success("删除成功");
 
+        } catch (BusinessException e) {
+            throw e;
         } catch (Exception e) {
-            return Result.error("删除失败：" + e.getMessage());
+            throw new BusinessException(ResultCode.DATA_IS_WRONG, e);
         }
+    }
+
+    @Override
+    public void incrementViewCount(Integer hid) {
+        if (hid == null) return;
+        String key = "headline:page_views:" + hid;
+        redisTemplate.opsForValue().increment(key);
     }
 }

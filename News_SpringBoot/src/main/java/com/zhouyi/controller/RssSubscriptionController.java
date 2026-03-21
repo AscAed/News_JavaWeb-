@@ -36,14 +36,9 @@ public class RssSubscriptionController {
     @Operation(summary = "RSS内容采集", description = "手动触发RSS订阅源的内容采集")
     public Result<Map<String, Object>> fetchRssContent(
             @Parameter(description = "订阅源ID") @PathVariable Long id) {
-        try {
-            log.info("Request to fetch RSS subscription: {}", id);
-            Map<String, Object> result = rssService.fetchAndSave(id);
-            return Result.success(result);
-        } catch (Exception e) {
-            log.error("Failed to fetch RSS: {}", e.getMessage(), e);
-            return Result.error("RSS内容采集失败: " + e.getMessage());
-        }
+        log.info("Request to fetch RSS subscription: {}", id);
+        Map<String, Object> result = rssService.fetchAndSave(id);
+        return Result.success(result);
     }
 
     /**
@@ -57,14 +52,9 @@ public class RssSubscriptionController {
     @Operation(summary = "创建RSS订阅源", description = "添加新的RSS订阅源")
     public Result<Map<String, Object>> createSubscription(
             @org.springframework.validation.annotation.Validated @RequestBody com.zhouyi.dto.RssSubscriptionCreateDTO createDTO) {
-        try {
-            log.info("Request to create RSS subscription: {}", createDTO.getName());
-            Map<String, Object> result = rssService.createSubscription(createDTO);
-            return Result.success(result);
-        } catch (Exception e) {
-            log.error("Failed to create RSS subscription: {}", e.getMessage(), e);
-            return Result.error("RSS订阅源创建失败: " + e.getMessage());
-        }
+        log.info("Request to create RSS subscription: {}", createDTO.getName());
+        Map<String, Object> result = rssService.createSubscription(createDTO);
+        return Result.success(result);
     }
 
     /**
@@ -75,12 +65,7 @@ public class RssSubscriptionController {
     @GetMapping("/list")
     @Operation(summary = "获取启用的订阅源列表", description = "供前端展示新闻源分类筛选框使用")
     public Result<List<com.zhouyi.entity.RssSubscription>> listActiveSubscriptions() {
-        try {
-            List<com.zhouyi.entity.RssSubscription> list = rssService.listActiveSubscriptions();
-            return Result.success(list);
-        } catch (Exception e) {
-            log.error("Failed to fetch active subscriptions: {}", e.getMessage(), e);
-            return Result.error("获取订阅源列表失败: " + e.getMessage());
-        }
+        List<com.zhouyi.entity.RssSubscription> list = rssService.listActiveSubscriptions();
+        return Result.success(list);
     }
 }

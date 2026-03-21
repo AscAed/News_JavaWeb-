@@ -42,8 +42,10 @@ public class NewsSearchServiceImpl implements NewsSearchService {
         // 构建分面/分页原生查询
         NativeQuery query = NativeQuery.builder()
                 .withQuery(q -> q.bool(b -> {
-                    // 关键词匹配
-                    b.must(m -> m.multiMatch(mm -> mm.fields("title", "article").query(keyword)));
+                    // 关键词匹配：标题权重增强为 3.0，正文权重 1.0
+                    b.must(m -> m.multiMatch(mm -> mm
+                            .fields(java.util.List.of("title^3", "article"))
+                            .query(keyword)));
                     // 类型过滤 (如果提供且不为0)
                     if (typeId != null && typeId != 0) {
                         b.filter(f -> f.term(t -> t.field("type").value(typeId)));

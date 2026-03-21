@@ -1,20 +1,27 @@
 package com.zhouyi.common.exception;
 
+import com.zhouyi.common.result.ResultCode;
+import lombok.Getter;
+
 /**
- * 业务异常类
- * 继承全局异常基类，提供业务相关的异常处理
+ * 自定义业务异常
  */
+@Getter
 public class BusinessException extends GlobalException {
+
+    private ResultCode resultCode;
+
+    public BusinessException(ResultCode resultCode) {
+        super(resultCode.getCode(), resultCode.getMessage());
+        this.resultCode = resultCode;
+    }
+
+    public BusinessException(ResultCode resultCode, Throwable cause) {
+        super(resultCode.getCode(), resultCode.getMessage(), cause);
+        this.resultCode = resultCode;
+    }
 
     public BusinessException(String message) {
         super(500, message);
-    }
-
-    public BusinessException(Integer code, String message) {
-        super(code, message);
-    }
-
-    public BusinessException(Integer code, String message, Throwable cause) {
-        super(code, message, cause);
     }
 }

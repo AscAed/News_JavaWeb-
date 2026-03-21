@@ -1,15 +1,16 @@
 package com.zhouyi.controller;
 
 import com.zhouyi.common.result.Result;
-import com.zhouyi.common.utils.JwtUtil;
+import com.zhouyi.common.security.CustomUserDetails;
 import com.zhouyi.dto.HeadlineDetailDTO;
 import com.zhouyi.dto.HeadlinePublishDTO;
 import com.zhouyi.dto.HeadlineQueryDTO;
 import com.zhouyi.dto.HeadlineUpdateDTO;
 import com.zhouyi.service.HeadlineService;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -21,9 +22,6 @@ public class HeadlineController {
 
     @Autowired
     private HeadlineService headlineService;
-
-    @Autowired
-    private JwtUtil jwtUtil;
 
     /**
      * 查询新闻列表 - RESTful标准GET方法
@@ -53,26 +51,22 @@ public class HeadlineController {
             @RequestParam(required = false) String sourceType,
             @RequestParam(required = false) String sourceId,
             @RequestParam(required = false) String section) {
-        try {
-            // 构建查询DTO
-            HeadlineQueryDTO queryDTO = new HeadlineQueryDTO();
-            queryDTO.setKeywords(keywords);
-            queryDTO.setType(typeId);
-            queryDTO.setStatus(status);
-            queryDTO.setSortBy(sortBy);
-            queryDTO.setSortOrder(sortOrder);
-            queryDTO.setPageNum(page);
-            queryDTO.setPageSize(pageSize);
-            queryDTO.setDateFrom(dateFrom);
-            queryDTO.setDateTo(dateTo);
-            queryDTO.setSourceType(sourceType);
-            queryDTO.setSourceId(sourceId);
-            queryDTO.setSection(section);
+        
+        HeadlineQueryDTO queryDTO = new HeadlineQueryDTO();
+        queryDTO.setKeywords(keywords);
+        queryDTO.setType(typeId);
+        queryDTO.setStatus(status);
+        queryDTO.setSortBy(sortBy);
+        queryDTO.setSortOrder(sortOrder);
+        queryDTO.setPageNum(page);
+        queryDTO.setPageSize(pageSize);
+        queryDTO.setDateFrom(dateFrom);
+        queryDTO.setDateTo(dateTo);
+        queryDTO.setSourceType(sourceType);
+        queryDTO.setSourceId(sourceId);
+        queryDTO.setSection(section);
 
-            return headlineService.getHeadlinesByPage(queryDTO);
-        } catch (Exception e) {
-            return Result.error("查询失败：" + e.getMessage(), "/api/v1/headlines");
-        }
+        return headlineService.getHeadlinesByPage(queryDTO);
     }
 
     /**
@@ -83,46 +77,30 @@ public class HeadlineController {
      */
     @GetMapping("/{id}")
     public Result<HeadlineDetailDTO> getHeadlineById(@PathVariable Integer id) {
-        try {
-            if (id == null || id <= 0) {
-                return Result.error("新闻ID不能为空或小于等于0", "/api/v1/headlines/" + id);
-            }
-            return headlineService.getHeadlineById(id);
-        } catch (Exception e) {
-            return Result.error("查询失败：" + e.getMessage(), "/api/v1/headlines/" + id);
+        if (id == null || id <= 0) {
+            return Result.error("新闻ID不能为空或小于等于0");
         }
+        // 记录浏览（异步写入Redis缓冲）
+        headlineService.incrementViewCount(id);
+        
+        return headlineService.getHeadlineById(id);
     }
 
     /**
      * 创建新闻 - RESTful标准POST方法
      * 
      * @param publishDTO 发布信息
-     * @param request    HTTP请求
      * @return 创建结果
      */
     @PostMapping
-    public Result<String> createHeadline(@Valid @RequestBody HeadlinePublishDTO publishDTO,
-                                         HttpServletRequest request) {
-        try {
-            // 从Authorization Bearer头中获取用户ID进行权限验证
-            String authorizationHeader = request.getHeader("Authorization");
-            if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-                return Result.error("请先登录", "/api/v1/headlines");
-            }
-
-            String token = authorizationHeader.substring(7);
-            Integer userId = jwtUtil.getUserIdFromToken(token);
-            if (userId == null) {
-                return Result.error("Token无效，请重新登录", "/api/v1/headlines");
-            }
-
-            // 验证用户是否有发布权限（可选）
-            // 这里可以添加角色权限验证逻辑
-
-            return headlineService.publishHeadline(publishDTO, userId);
-        } catch (Exception e) {
-            return Result.error("创建失败：" + e.getMessage(), "/api/v1/headlines");
+    public Result<String> createHeadline(@Valid @RequestBody HeadlinePublishDTO publishDTO) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof CustomUserDetails)) {
+            return Result.error(401, "请先登录");
         }
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+
+        return headlineService.publishHeadline(publishDTO, userDetails.getUserId());
     }
 
     /**
@@ -130,65 +108,42 @@ public class HeadlineController {
      *
      * @param id        新闻ID
      * @param updateDTO 更新信息
-     * @param request   HTTP请求
      * @return 更新结果
      */
     @PutMapping("/{id}")
     public Result<String> updateHeadline(@PathVariable Integer id,
-                                         @Valid @RequestBody HeadlineUpdateDTO updateDTO,
-                                         HttpServletRequest request) {
-        try {
-            // 从Authorization Bearer头中获取用户信息进行权限验证
-            String authorizationHeader = request.getHeader("Authorization");
-            if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-                return Result.error("请先登录", "/api/v1/headlines/" + id);
-            }
-
-            String token = authorizationHeader.substring(7);
-            Integer userId = jwtUtil.getUserIdFromToken(token);
-            if (userId == null) {
-                return Result.error("Token无效,请重新登录", "/api/v1/headlines/" + id);
-            }
-
-            // 设置新闻ID到DTO中
-            updateDTO.setId(id); // API统一字段
-            updateDTO.setHid(id); // 数据库字段
-
-            return headlineService.updateHeadline(updateDTO, userId);
-        } catch (Exception e) {
-            return Result.error("更新失败：" + e.getMessage(), "/api/v1/headlines/" + id);
+                                         @Valid @RequestBody HeadlineUpdateDTO updateDTO) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof CustomUserDetails)) {
+            return Result.error(401, "请先登录");
         }
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+
+        // 设置新闻ID到DTO中
+        updateDTO.setId(id); // API统一字段
+        updateDTO.setHid(id); // 数据库字段
+
+        return headlineService.updateHeadline(updateDTO, userDetails.getUserId());
     }
 
     /**
      * 删除新闻 - RESTful标准DELETE方法
      *
      * @param id      新闻ID
-     * @param request HTTP请求
      * @return 删除结果
      */
     @DeleteMapping("/{id}")
-    public Result<String> deleteHeadline(@PathVariable Integer id, HttpServletRequest request) {
-        try {
-            if (id == null || id <= 0) {
-                return Result.error("新闻ID不能为空或小于等于0", "/api/v1/headlines/" + id);
-            }
-
-            // 从Authorization Bearer头中获取用户信息进行权限验证
-            String authorizationHeader = request.getHeader("Authorization");
-            if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-                return Result.error("请先登录", "/api/v1/headlines/" + id);
-            }
-
-            String token = authorizationHeader.substring(7);
-            Integer userId = jwtUtil.getUserIdFromToken(token);
-            if (userId == null) {
-                return Result.error("Token无效,请重新登录", "/api/v1/headlines/" + id);
-            }
-
-            return headlineService.deleteHeadline(id, userId);
-        } catch (Exception e) {
-            return Result.error("删除失败：" + e.getMessage(), "/api/v1/headlines/" + id);
+    public Result<String> deleteHeadline(@PathVariable Integer id) {
+        if (id == null || id <= 0) {
+            return Result.error("新闻ID不能为空或小于等于0");
         }
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof CustomUserDetails)) {
+            return Result.error(401, "请先登录");
+        }
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+
+        return headlineService.deleteHeadline(id, userDetails.getUserId());
     }
 }

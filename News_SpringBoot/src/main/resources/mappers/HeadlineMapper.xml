@@ -186,4 +186,18 @@
         WHERE h.hid = #{id}
     </select>
 
+    <!-- 批量更新浏览量 (Redis回写) -->
+    <update id="updatePageViewsBatch">
+        UPDATE headlines
+        SET page_views = CASE hid
+        <foreach collection="stats" item="item">
+            WHEN #{item.hid} THEN page_views + #{item.pageViews}
+        </foreach>
+        END
+        WHERE hid IN
+        <foreach collection="stats" item="item" open="(" separator="," close=")">
+            #{item.hid}
+        </foreach>
+    </update>
+
 </mapper>

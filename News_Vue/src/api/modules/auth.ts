@@ -33,13 +33,13 @@ export const verifyCaptcha = (data: { captchaKey: string; sliderX: number }) => 
 
 
 // 刷新token
-export const refreshToken = () => {
-  return request.post('/auth/refresh')
+export const refreshToken = (refreshTokenStr: string) => {
+  return request.post('/auth/refresh', { refreshToken: refreshTokenStr })
 }
 
 // 用户登出
-export const logout = () => {
-  return request.post('/auth/logout')
+export const logout = (refreshTokenStr?: string) => {
+  return request.post('/auth/logout', refreshTokenStr ? { refreshToken: refreshTokenStr } : undefined)
 }
 
 // 获取用户信息

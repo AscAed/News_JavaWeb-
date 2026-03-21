@@ -113,4 +113,11 @@ public interface HeadlineMapper {
      * @return 头条信息
      */
     Headline selectById(@Param("id") Integer id);
+    /**
+     * 批量更新浏览量 (Redis回写)
+     * 
+     * @param stats 统计数据列表
+     * @return 影响行数
+     */
+    int updatePageViewsBatch(@Param("stats") List<com.zhouyi.dto.HeadlineStatDTO> stats);
 }

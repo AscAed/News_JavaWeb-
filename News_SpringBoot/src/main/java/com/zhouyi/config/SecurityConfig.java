@@ -17,6 +17,8 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import com.zhouyi.common.security.CustomAccessDeniedHandler;
+import com.zhouyi.common.security.CustomAuthenticationEntryPoint;
 import java.util.Arrays;
 import java.util.List;
 
@@ -32,10 +34,10 @@ public class SecurityConfig {
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Autowired
-    private com.zhouyi.common.security.CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+    private CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
     @Autowired
-    private com.zhouyi.common.security.CustomAccessDeniedHandler customAccessDeniedHandler;
+    private CustomAccessDeniedHandler customAccessDeniedHandler;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -62,14 +64,19 @@ public class SecurityConfig {
                                 "/api/v1/rss/articles/**", // Public RSS news view
                                 "/api/v1/rss/categories/**", // Public RSS category view
                                 "/api/v1/common/upload", // Allow upload for now
-                                "/api/v1/debug/**", // Debug endpoints for testing
-                                "/api/v1/test/**", // Test endpoints for authentication testing
-                                "/api/sync/**", // Elasticsearch sync endpoints
                                 "/files/**", // File access
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
+                                "/actuator/prometheus", // Prometheus scrape endpoint - no auth needed
+                                "/actuator/health",
                                 "/error")
                         .permitAll()
+                        // 仅管理员可访问的调试和同步接口
+                        .requestMatchers(
+                                "/api/v1/debug/**",
+                                "/api/v1/test/**",
+                                "/api/sync/**")
+                        .hasRole("ADMIN")
                         // 其他所有请求都需要认证
                         .anyRequest().authenticated())
                 // 添加JWT过滤器

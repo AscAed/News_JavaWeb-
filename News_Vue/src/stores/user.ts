@@ -7,6 +7,7 @@ import type {LoginForm, RegisterForm, User} from '@/types'
 export const useUserStore = defineStore('user', () => {
   // 状态
   const token = ref<string>(localStorage.getItem('token') || '')
+  const refreshToken = ref<string>(localStorage.getItem('refreshToken') || '')
   const userInfo = ref<User | null>(null)
   
   // 初始化用户信息（同步尝试）
@@ -37,13 +38,17 @@ export const useUserStore = defineStore('user', () => {
   const userLogin = async (loginForm: LoginForm) => {
     try {
       const response = await login(loginForm)
-      const { data: { token: newToken, user } } = response
+      const { data: { token: newToken, refreshToken: newRefreshToken, user } } = response
 
       // 保存token和用户信息
       token.value = newToken
+      refreshToken.value = newRefreshToken || ''
       userInfo.value = user
 
       localStorage.setItem('token', newToken)
+      if (newRefreshToken) {
+        localStorage.setItem('refreshToken', newRefreshToken)
+      }
       localStorage.setItem('userInfo', JSON.stringify(user))
 
       ElMessage.success('登录成功')
@@ -57,14 +62,16 @@ export const useUserStore = defineStore('user', () => {
   // 登出
   const userLogout = async () => {
     try {
-      await logout()
+      await logout(refreshToken.value)
     } catch (error) {
       console.error('登出请求失败:', error)
     } finally {
       // 清除本地数据
       token.value = ''
+      refreshToken.value = ''
       userInfo.value = null
       localStorage.removeItem('token')
+      localStorage.removeItem('refreshToken')
       localStorage.removeItem('userInfo')
 
       ElMessage.success('已退出登录')
@@ -108,6 +115,7 @@ export const useUserStore = defineStore('user', () => {
   return {
     // 状态
     token,
+    refreshToken,
     userInfo,
     isLoggedIn,
 
