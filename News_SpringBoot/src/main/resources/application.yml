@@ -59,7 +59,7 @@ spring:
     host: smtp.qq.com
     port: 465
     username: 3204520263@qq.com
-    password: nacyfiufrlngddeg
+    password: ${MAIL_PASSWORD}
     default-encoding: UTF-8
     properties:
       mail:
@@ -97,9 +97,9 @@ custom:
     # MinIO服务地址
     endpoint: http://localhost:9000
     # Access Key
-    access-key: admin
+    access-key: ${MINIO_ACCESS_KEY:admin}
     # Secret Key
-    secret-key: password123
+    secret-key: ${MINIO_SECRET_KEY:password123}
     # 默认存储桶名称
     bucket-name: news-storage
     # 文件访问URL前缀
@@ -111,7 +111,7 @@ custom:
   # JWT配置
   jwt:
     # JWT密钥，使用512位安全密钥（Base64编码）
-    secret: "bXlfc2VjdXJlX2p3dF9zZWNyZXRfa2V5XzIwMjVfZm9yX25ld3Nfc3ByaW5nYm9vdF9hcHBsaWNhdGlvbl9tdXN0X2JlX2F0X2xlYXN0XzY0X2J5dGVzX2xvbmdfZW5vdWdoX2Zvcl9obWFjX3NoYV81MTI="
+    secret: ${JWT_SECRET}
     # JWT过期时间，单位毫秒（24小时）
     expiration: 86400000
     # JWT刷新令牌过期时间，单位毫秒（7天）
