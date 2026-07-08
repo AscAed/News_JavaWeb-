@@ -124,8 +124,8 @@ public class CustomProperties {
      */
     public static class Minio {
         private String endpoint = "http://localhost:9000";
-        private String accessKey = "minioadmin";
-        private String secretKey = "minioadmin";
+        private String accessKey;
+        private String secretKey;
         private String bucketName = "news-storage";
         private String accessUrl = "http://localhost:9000";
 
