@@ -28,7 +28,7 @@ public class HeadlineStatScheduler {
     @Autowired
     private HeadlineMapper headlineMapper;
 
-    private static final String VIEW_KEY_PATTERN = "headline:page_views:*";
+    private static final String VIEW_HASH_KEY = "headline:page_views:hash";
 
     /**
      * 每 5 分钟同步一次浏览量到数据库
@@ -37,38 +37,35 @@ public class HeadlineStatScheduler {
     public void syncPageViews() {
         log.info("Starting page views sync job...");
         
-        Set<String> keys = redisTemplate.keys(VIEW_KEY_PATTERN);
-        if (keys == null || keys.isEmpty()) {
-            log.info("No page views buffer found in Redis.");
+        // 获取 Hash 中所有的缓冲数据
+        java.util.Map<Object, Object> entries = redisTemplate.opsForHash().entries(VIEW_HASH_KEY);
+        if (entries == null || entries.isEmpty()) {
+            log.info("No page views buffer found in Redis Hash.");
             return;
         }
 
         List<HeadlineStatDTO> stats = new ArrayList<>();
         
-        for (String key : keys) {
+        for (java.util.Map.Entry<Object, Object> entry : entries.entrySet()) {
             try {
-                // 获取当前增量值
-                Object val = redisTemplate.opsForValue().get(key);
-                if (val == null) continue;
+                // 解析 hid
+                String hidStr = entry.getKey().toString();
+                Integer hid = Integer.valueOf(hidStr);
                 
-                Long increment = ((Number) val).longValue();
+                // 获取当前增量值
+                Long increment = ((Number) entry.getValue()).longValue();
                 if (increment <= 0) {
-                    redisTemplate.delete(key);
+                    redisTemplate.opsForHash().delete(VIEW_HASH_KEY, hidStr);
                     continue;
                 }
 
-                // 解析 hid
-                String hidStr = key.substring(key.lastIndexOf(":") + 1);
-                Integer hid = Integer.valueOf(hidStr);
-                
                 stats.add(new HeadlineStatDTO(hid, increment));
                 
-                // 处理完后删除Redis中的键（或者重置为0）
-                // 采用删除策略，下次INCR会自动从0开始
-                redisTemplate.delete(key);
+                // 处理完后从Hash中删除该字段
+                redisTemplate.opsForHash().delete(VIEW_HASH_KEY, hidStr);
                 
             } catch (Exception e) {
-                log.error("Error processing sync for key {}: {}", key, e.getMessage());
+                log.error("Error processing sync for hid {}: {}", entry.getKey(), e.getMessage());
             }
 
             // 分批处理，防止 SQL 过长

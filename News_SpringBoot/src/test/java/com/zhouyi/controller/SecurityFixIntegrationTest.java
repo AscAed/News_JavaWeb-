@@ -76,9 +76,9 @@ public class SecurityFixIntegrationTest {
         userId2 = user2.getId();
 
         // 准备 SecurityContext 用户详情
-        userDetails1 = new CustomUserDetails(userId1, user1.getUsername(), user1.getPassword(), 
+        userDetails1 = new CustomUserDetails(userId1, "test-jti-1", user1.getUsername(), user1.getPassword(), 
                 AuthorityUtils.createAuthorityList("ROLE_USER"));
-        adminDetails = new CustomUserDetails(999, "admin", "admin_pass", 
+        adminDetails = new CustomUserDetails(999, "admin-jti", "admin", "admin_pass", 
                 AuthorityUtils.createAuthorityList("ROLE_ADMIN"));
     }
 

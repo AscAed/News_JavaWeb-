@@ -183,7 +183,21 @@ const fetchCategories = async () => {
   try {
     const res = await getNewsTypes({ sourceType: 'local' })
     if (res.code === 200) {
-      categories.value = res.data
+      const categoriesData = res.data
+      const backendCategories = Array.isArray(categoriesData)
+        ? categoriesData
+        : (categoriesData?.items || [])
+
+      categories.value = backendCategories.map((item: any) => ({
+        tid: item.tid ?? item.id,
+        tname: item.tname ?? item.typeName,
+        description: item.description,
+        iconUrl: item.iconUrl,
+        sortOrder: item.sortOrder ?? 0,
+        status: item.status ?? 1,
+        createdTime: item.createdTime ?? '',
+        updatedTime: item.updatedTime ?? ''
+      }))
     }
   } catch (error) {
     ElMessage.error('获取分类列表失败')

@@ -54,13 +54,13 @@ public class AopLoggingIntegrationTest {
     @Test
     void testAdminOperationIsLoggedAutomatically() throws Exception {
         // 1. 准备管理员身份
-        CustomUserDetails adminDetails = new CustomUserDetails(1, "admin", "password", 
-                AuthorityUtils.createAuthorityList("ROLE_ADMIN"));
+        CustomUserDetails userDetails = new CustomUserDetails(1, "test-jti", "13800000001", "password", 
+                AuthorityUtils.createAuthorityList("ROLE_USER"));
 
         // 2. 执行被 @LogOperation 标记的方法 (获取系统配置)
         mockMvc.perform(get("/api/v1/admin/config")
                 .param("category", "system")
-                .with(user(adminDetails)))
+                .with(user(userDetails)))
                 .andExpect(status().isOk());
 
         // 3. 验证数据库中是否产生了日志记录

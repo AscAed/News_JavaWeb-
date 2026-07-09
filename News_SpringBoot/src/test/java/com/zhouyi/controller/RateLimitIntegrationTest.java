@@ -47,7 +47,7 @@ public class RateLimitIntegrationTest {
         when(valueOperations.increment(anyString())).thenReturn(6L); // 返回 6，触发限流
 
         // 2. 准备用户信息
-        CustomUserDetails userDetails = new CustomUserDetails(1, "testuser", "pass", 
+        CustomUserDetails userDetails = new CustomUserDetails(1, "test-jti", "testuser", "pass", 
                 AuthorityUtils.createAuthorityList("ROLE_USER"));
 
         // 3. 执行被 @RateLimit 标记的方法 (发送验证码)
@@ -67,7 +67,7 @@ public class RateLimitIntegrationTest {
         when(valueOperations.increment(anyString())).thenReturn(1L); 
 
         // 2. 准备用户信息
-        CustomUserDetails userDetails = new CustomUserDetails(1, "testuser", "pass", 
+        CustomUserDetails userDetails = new CustomUserDetails(1, "test-jti-2", "testuser", "pass", 
                 AuthorityUtils.createAuthorityList("ROLE_USER"));
 
         // 3. 执行发送验证码请求

@@ -17,8 +17,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import com.zhouyi.common.security.CustomAccessDeniedHandler;
-import com.zhouyi.common.security.CustomAuthenticationEntryPoint;
 import java.util.Arrays;
 import java.util.List;
 
@@ -34,10 +32,10 @@ public class SecurityConfig {
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Autowired
-    private CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+    private com.zhouyi.common.security.CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
     @Autowired
-    private CustomAccessDeniedHandler customAccessDeniedHandler;
+    private com.zhouyi.common.security.CustomAccessDeniedHandler customAccessDeniedHandler;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -56,6 +54,13 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // 允许访问的端点（不需要认证）
                         .requestMatchers(
+                                "/", // SPA entry
+                                "/index.html",
+                                "/favicon.ico",
+                                "/assets/**",
+                                "/*.js",
+                                "/*.css",
+                                "/*.map",
                                 "/api/v1/auth/**", // Auth endpoints
                                 "/api/v1/headlines/**", // Public news view
                                 "/api/v1/categories/**", // Public category view

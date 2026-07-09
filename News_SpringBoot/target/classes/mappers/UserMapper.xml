@@ -125,7 +125,7 @@
             u.username, 
             u.phone, 
             u.email, 
-            u.avatar, 
+            u.avatar_url, 
             u.status, 
             u.created_time AS createdTime,
             r.id AS role_id,

@@ -193,7 +193,7 @@ public class HeadlineServiceImpl implements HeadlineService {
 
             // 查询细节并考虑Redis缓冲中的浏览量
             Integer redisViews = 0;
-            Object viewBuffer = redisTemplate.opsForValue().get("headline:page_views:" + hid);
+            Object viewBuffer = redisTemplate.opsForHash().get("headline:page_views:hash", String.valueOf(hid));
             if (viewBuffer != null) {
                 redisViews = ((Number) viewBuffer).intValue();
             }
@@ -523,7 +523,6 @@ public class HeadlineServiceImpl implements HeadlineService {
     @Override
     public void incrementViewCount(Integer hid) {
         if (hid == null) return;
-        String key = "headline:page_views:" + hid;
-        redisTemplate.opsForValue().increment(key);
+        redisTemplate.opsForHash().increment("headline:page_views:hash", String.valueOf(hid), 1);
     }
 }

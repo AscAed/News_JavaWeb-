@@ -1,6 +1,17 @@
 import request from '../request'
 import type { ApiResponse, NewsType, NewsPublishForm, UploadResult } from '@/types'
 
+interface BackendNewsType {
+  id: number
+  typeName: string
+  description?: string
+  iconUrl?: string
+  sortOrder?: number
+  status?: number
+  createdTime?: string
+  updatedTime?: string
+}
+
 // 获取新闻列表
 export const getNewsList = (params: {
   page?: number
@@ -47,7 +58,9 @@ export const deleteNews = (hid: number) => {
 }
 
 // 获取新闻分类
-export const getNewsTypes = (params?: { sourceType?: string, sourceId?: string }): Promise<ApiResponse<NewsType[]>> => {
+export const getNewsTypes = (
+  params?: { sourceType?: string, sourceId?: string }
+): Promise<ApiResponse<NewsType[] | { items?: BackendNewsType[] }>> => {
   return request.get('/categories', {params})
 }
 

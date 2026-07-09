@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -63,7 +64,8 @@ public class FileServiceImpl implements FileService {
 
         // 4. 保存文件
         Path filePath = uploadDir.resolve(newFilename);
-        file.transferTo(filePath.toFile());
+        File dest = filePath.toAbsolutePath().toFile();
+        file.transferTo(dest);
 
         // 5. 返回访问URL
         String accessUrl = customProperties.getFile().getUpload().getAccessUrl();

@@ -21,5 +21,5 @@ public class CommentCreateDTO {
     @Size(min = 1, max = 1000, message = "评论内容长度必须在1-1000字符之间")
     private String content;
 
-    private Integer parentId; // 父评论ID，用于回复
+    private String parentId; // 父评论ID，用于回复
 }

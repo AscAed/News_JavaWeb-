@@ -67,6 +67,7 @@ com\zhouyi\controller\SyncController.class
 com\zhouyi\common\exception\GlobalException.class
 com\zhouyi\test\MongoConnectionTest.class
 com\zhouyi\common\security\CustomAccessDeniedHandler.class
+com\zhouyi\component\NewsMetricsService.class
 com\zhouyi\entity\mongodb\UserInfo.class
 com\zhouyi\test\BasicMongoTest.class
 com\zhouyi\config\CustomProperties$Minio.class
@@ -140,6 +141,7 @@ com\zhouyi\service\RssService.class
 com\zhouyi\repository\mongo\RssCategoryRepository.class
 com\zhouyi\service\FileService.class
 com\zhouyi\aspect\RateLimitAspect.class
+com\zhouyi\controller\AdminGovernanceController.class
 com\zhouyi\entity\OutboxMessage$OutboxMessageBuilder.class
 com\zhouyi\dto\HealthCheckDTO.class
 com\zhouyi\test\SimpleMongoRssTest.class

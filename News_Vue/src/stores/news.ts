@@ -119,8 +119,10 @@ export const useNewsStore = defineStore('news', () => {
         params.sourceType = 'original'
       }
       const response = await getNewsTypes(params)
-      // Backend returns Result<Map<String, Object>> with "items" key containing list
-      const backendCategories = response.data?.items || []
+      const categoriesData = response.data
+      const backendCategories = Array.isArray(categoriesData)
+        ? categoriesData
+        : (categoriesData?.items || [])
 
       // Map backend fields to frontend interface (id -> tid, typeName -> tname)
       const mappedCategories = backendCategories.map((item: any) => ({

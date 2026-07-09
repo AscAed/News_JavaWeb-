@@ -91,44 +91,43 @@
 
           <!-- 评论列表 -->
           <div class="comments-list">
-            <div
-              v-for="comment in comments"
-              :key="comment.id"
-              class="comment-item"
-            >
-              <div class="comment-avatar">
-                <el-avatar :src="comment.userAvatar" :alt="comment.username">
-                  {{ comment.username?.charAt(0) }}
-                </el-avatar>
-              </div>
-              <div class="comment-content">
-                <div class="comment-header">
-                  <span class="username">{{ comment.username }}</span>
-                  <span class="comment-time">{{ formatTime(comment.createdTime) }}</span>
-                </div>
-                <div class="comment-text">{{ comment.content }}</div>
-                <div class="comment-actions">
-                  <el-button
-                    type="text"
-                    size="small"
-                    @click="likeComment(comment.id)"
-                    :disabled="!isLoggedIn"
-                  >
-                    <el-icon><Star /></el-icon>
-                    {{ comment.likeCount }}
-                  </el-button>
-                  <el-button
-                    type="text"
-                    size="small"
-                    @click="replyComment(comment)"
-                    :disabled="!isLoggedIn"
-                  >
-                    回复
-                  </el-button>
-                </div>
-              </div>
-            </div>
+            <template v-if="comments.length > 0">
+              <CommentItem
+                v-for="comment in comments"
+                :key="comment.id"
+                :comment="comment"
+                :depth="0"
+                @reply="handleReply"
+                @like="handleLike"
+              />
+            </template>
+            <el-empty v-else description="暂无评论，快来抢沙发吧！" />
           </div>
+
+          <!-- 回复对话框 -->
+          <el-dialog
+            v-model="replyDialogVisible"
+            :title="`回复 @${replyTo?.userInfo?.username}`"
+            width="50%"
+            destroy-on-close
+          >
+            <el-input
+              v-model="replyContent"
+              type="textarea"
+              :rows="3"
+              :placeholder="`回复 ${replyTo?.userInfo?.username}...`"
+              maxlength="500"
+              show-word-limit
+            />
+            <template #footer>
+              <span class="dialog-footer">
+                <el-button @click="replyDialogVisible = false">取消</el-button>
+                <el-button type="primary" @click="submitReply" :loading="submittingReply">
+                  发表回复
+                </el-button>
+              </span>
+            </template>
+          </el-dialog>
         </section>
       </el-main>
     </el-container>
@@ -142,7 +141,9 @@ import {ArrowLeft, ChatDotRound, Collection, Share, Star, View} from '@element-p
 import {ElMessage} from 'element-plus'
 import type {Comment, Headline} from '@/types/headline'
 import {getHeadlineById} from '@/api/headline'
+import {getComments, addComment, likeComment} from '@/api/modules/interaction'
 import {useUserStore} from '@/stores/user'
+import CommentItem from '@/components/news/CommentItem.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -156,6 +157,12 @@ const newComment = ref('')
 const submittingComment = ref(false)
 const isLiked = ref(false)
 const isFavorited = ref(false)
+
+// 回复相关
+const replyDialogVisible = ref(false)
+const replyTo = ref<Comment | null>(null)
+const replyContent = ref('')
+const submittingReply = ref(false)
 
 // 计算属性
 const isLoggedIn = computed(() => userStore.isLoggedIn)
@@ -181,6 +188,18 @@ const fetchNewsDetail = async () => {
     ElMessage.error('获取新闻详情失败')
   } finally {
     loading.value = false
+  }
+}
+
+const fetchComments = async () => {
+  const hid = Number(route.params.hid)
+  try {
+    const response = await getComments({ headlineId: hid })
+    if (response.code === 200) {
+      comments.value = response.data.items || []
+    }
+  } catch (error) {
+    console.error('获取评论失败:', error)
   }
 }
 
@@ -238,24 +257,19 @@ const submitComment = async () => {
     return
   }
 
+  const hid = Number(route.params.hid)
   submittingComment.value = true
   try {
-    // TODO: 实现评论API调用
-    await new Promise(resolve => setTimeout(resolve, 1000)) // 模拟API调用
-
-    comments.value.unshift({
-      id: Date.now(),
-      newsId: Number(route.params.hid),
-      userId: userStore.userInfo?.id || 0,
-      username: userStore.userInfo?.username || '匿名用户',
-      userAvatar: userStore.userInfo?.avatarUrl,
-      content: newComment.value,
-      likeCount: 0,
-      createdTime: new Date().toISOString()
+    const response = await addComment({
+      headlineId: hid,
+      content: newComment.value
     })
 
-    newComment.value = ''
-    ElMessage.success('评论发表成功')
+    if (response.code === 200) {
+      ElMessage.success('评论发表成功')
+      newComment.value = ''
+      await fetchComments() // 重新获取列表，保证树形结构正确
+    }
   } catch (error) {
     ElMessage.error('评论发表失败')
   } finally {
@@ -263,22 +277,78 @@ const submitComment = async () => {
   }
 }
 
-const likeComment = (commentId: number) => {
-  // TODO: 实现评论点赞API调用
-  const comment = comments.value.find(c => c.id === commentId)
-  if (comment) {
-    comment.likeCount += 1
+const handleReply = (comment: Comment) => {
+  if (!isLoggedIn.value) {
+    ElMessage.warning('请先登录后回复')
+    return
+  }
+  replyTo.value = comment
+  replyContent.value = ''
+  replyDialogVisible.value = true
+}
+
+const submitReply = async () => {
+  if (!replyContent.value.trim() || !replyTo.value) {
+    ElMessage.warning('请输入回复内容')
+    return
+  }
+
+  const hid = Number(route.params.hid)
+  submittingReply.value = true
+  try {
+    const response = await addComment({
+      headlineId: hid,
+      content: replyContent.value,
+      parentId: replyTo.value.id
+    })
+
+    if (response.code === 200) {
+      ElMessage.success('回复发表成功')
+      replyDialogVisible.value = false
+      replyContent.value = ''
+      await fetchComments()
+    }
+  } catch (error) {
+    ElMessage.error('回复失败')
+  } finally {
+    submittingReply.value = false
   }
 }
 
-const replyComment = (comment: any) => {
-  newComment.value = `@${comment.username} `
-  // TODO: 聚焦到评论输入框
+const handleLike = async (commentId: string) => {
+  if (!isLoggedIn.value) {
+    ElMessage.warning('请先登录后操作')
+    return
+  }
+
+  try {
+    const response = await likeComment(commentId, 'like')
+    if (response.code === 200) {
+      // 局部更新点赞数
+      updateLikeInTree(comments.value, commentId)
+    }
+  } catch (error) {
+    // 错误已由拦截器处理
+  }
+}
+
+const updateLikeInTree = (list: Comment[], id: string) => {
+  for (const item of list) {
+    if (item.id === id) {
+      item.likeCount++
+      return true
+    }
+    if (item.children && updateLikeInTree(item.children, id)) {
+      return true
+    }
+  }
+  return false
 }
 
 // 生命周期
 onMounted(() => {
   fetchNewsDetail()
+  fetchComments()
 })
 </script>
 
@@ -399,53 +469,5 @@ onMounted(() => {
 
 .comments-list {
   margin-top: 20px;
-}
-
-.comment-item {
-  display: flex;
-  gap: 15px;
-  padding: 20px 0;
-  border-bottom: 1px solid #eee;
-}
-
-.comment-item:last-child {
-  border-bottom: none;
-}
-
-.comment-avatar {
-  flex-shrink: 0;
-}
-
-.comment-content {
-  flex: 1;
-}
-
-.comment-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-.username {
-  font-weight: bold;
-  color: #333;
-}
-
-.comment-time {
-  font-size: 12px;
-  color: #999;
-}
-
-.comment-text {
-  font-size: 14px;
-  line-height: 1.6;
-  color: #333;
-  margin-bottom: 10px;
-}
-
-.comment-actions {
-  display: flex;
-  gap: 15px;
 }
 </style>

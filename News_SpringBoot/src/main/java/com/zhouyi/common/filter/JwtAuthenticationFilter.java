@@ -9,12 +9,9 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -43,9 +40,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private StringRedisTemplate redisTemplate;
 
     @Override
-    protected void doFilterInternal(@NonNull HttpServletRequest request,
-                                    @NonNull HttpServletResponse response,
-                                    @NonNull FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
 
         logger.info("JWT Filter called for: " + request.getMethod() + " " + request.getRequestURI());
 
@@ -75,10 +72,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // 验证token并设置认证信息
         if (phone != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             try {
-                // 检查是否在 Redis 黑名单中
-                Boolean isBlacklisted = redisTemplate.hasKey("jwt:blacklist:" + jwtToken);
+                // 检查是否在 Redis 黑名单中 (使用 JTI 作为标识)
+                String jti = jwtUtil.getJtiFromToken(jwtToken);
+                Boolean isBlacklisted = jti != null && redisTemplate.hasKey("jwt:blacklist:" + jti);
+                
                 if (Boolean.TRUE.equals(isBlacklisted)) {
-                    logger.warn("JWT Token 在黑名单中，已被撤销: " + phone);
+                    logger.warn("JWT 会话已被撤销 (JTI): " + jti + ", 用户: " + phone);
                 } else if (jwtUtil.validateToken(jwtToken)) {
                     logger.info("JWT Token验证成功，用户: " + phone);
 
@@ -92,6 +91,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     // 构建自定义用户详情，包含用户ID
                     com.zhouyi.common.security.CustomUserDetails userDetails = new com.zhouyi.common.security.CustomUserDetails(
                             userId,
+                            jti,
                             phone,
                             "", // 密码不需要，因为已经通过JWT验证
                             authorities
