@@ -65,11 +65,23 @@ public interface NewsTypeMapper {
     /**
      * 分页查询分类列表
      */
-    @Select("SELECT tid as id, tname as typeName, description, icon_url as iconUrl, " +
+    @Select("<script>" +
+            "SELECT tid as id, tname as typeName, description, icon_url as iconUrl, " +
             "sort_order as sortOrder, status, created_time as createdTime, updated_time as updatedTime, " +
             "source_type as sourceType, source_id as sourceId " +
             "FROM news_types WHERE status = #{status} " +
-            "ORDER BY ${sortBy} ${sortOrder} LIMIT #{offset}, #{pageSize}")
+            "ORDER BY " +
+            "<choose>" +
+            "<when test='sortBy == \"tname\"'>tname</when>" +
+            "<when test='sortBy == \"created_time\"'>created_time</when>" +
+            "<otherwise>sort_order</otherwise>" +
+            "</choose> " +
+            "<choose>" +
+            "<when test='sortOrder != null and sortOrder.toLowerCase() == \"desc\"'>DESC</when>" +
+            "<otherwise>ASC</otherwise>" +
+            "</choose> " +
+            "LIMIT #{offset}, #{pageSize}" +
+            "</script>")
     List<NewsType> findByPage(@Param("status") Integer status,
                               @Param("sortBy") String sortBy,
                               @Param("sortOrder") String sortOrder,
