@@ -62,8 +62,8 @@ spring:
   mail:
     host: ${MAIL_HOST:smtp.qq.com}
     port: ${MAIL_PORT:465}
-    username: ${MAIL_USERNAME:3204520263@qq.com}
-    password: ${MAIL_PASSWORD:nacyfiufrlngddeg}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
     default-encoding: UTF-8
     properties:
       mail:
@@ -110,7 +110,7 @@ custom:
     access-url: http://localhost:9000
   # 邮件业务配置
   mail:
-    sender-email: "3204520263@qq.com"
+    sender-email: ${MAIL_USERNAME}
     sender-name: "易闻趣事官方"
   # JWT配置
   jwt:
