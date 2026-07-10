@@ -1,5 +1,6 @@
 package com.zhouyi.service;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import com.zhouyi.common.result.Result;
 import com.zhouyi.entity.User;
 import com.zhouyi.dto.PasswordUpdateDTO;
@@ -35,6 +36,7 @@ public interface UserService {
      * @param id 用户ID
      * @return 查询结果
      */
+    @PreAuthorize("@authService.isOwnerOrAdmin(#p0)")
     Result<User> getUserById(Integer id);
 
     /**

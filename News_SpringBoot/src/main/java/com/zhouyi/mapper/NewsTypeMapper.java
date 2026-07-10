@@ -72,12 +72,13 @@ public interface NewsTypeMapper {
             "FROM news_types WHERE status = #{status} " +
             "ORDER BY " +
             "<choose>" +
-            "<when test='sortBy == \"tname\"'>tname</when>" +
-            "<when test='sortBy == \"created_time\"'>created_time</when>" +
+            "<when test=\"sortBy == 'created_time'\">created_time</when>" +
+            "<when test=\"sortBy == 'tname'\">tname</when>" +
+            "<when test=\"sortBy == 'tid'\">tid</when>" +
             "<otherwise>sort_order</otherwise>" +
             "</choose> " +
             "<choose>" +
-            "<when test='sortOrder != null and sortOrder.toLowerCase() == \"desc\"'>DESC</when>" +
+            "<when test=\"sortOrder == 'DESC' or sortOrder == 'desc'\">DESC</when>" +
             "<otherwise>ASC</otherwise>" +
             "</choose> " +
             "LIMIT #{offset}, #{pageSize}" +

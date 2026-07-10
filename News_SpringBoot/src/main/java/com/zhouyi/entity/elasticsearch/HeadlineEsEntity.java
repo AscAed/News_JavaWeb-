@@ -17,7 +17,7 @@ public class HeadlineEsEntity {
     private Integer hid; // 对应 MySQL 中的主键 ID
 
     // analyzer="ik_max_word" 表示存入时细粒度拆分，searchAnalyzer="ik_smart" 表示搜索时粗粒度拆分
-    @Field(type = FieldType.Text, analyzer = "ik_max_word", searchAnalyzer = "ik_smart")
+    @Field(type = FieldType.Text, analyzer = "ik_max_word", searchAnalyzer = "ik_smart", fielddata = true)
     private String title;
 
     @Field(type = FieldType.Text, analyzer = "ik_max_word", searchAnalyzer = "ik_smart")

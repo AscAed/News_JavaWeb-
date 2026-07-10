@@ -9,12 +9,9 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -22,6 +19,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.data.redis.core.StringRedisTemplate;
 
 /**
  * JWT认证过滤器 - 统一Authorization Bearer Token认证
@@ -38,10 +36,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private StringRedisTemplate redisTemplate;
+
     @Override
-    protected void doFilterInternal(@NonNull HttpServletRequest request,
-                                    @NonNull HttpServletResponse response,
-                                    @NonNull FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
 
         logger.info("JWT Filter called for: " + request.getMethod() + " " + request.getRequestURI());
 
@@ -71,19 +72,30 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // 验证token并设置认证信息
         if (phone != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             try {
-                if (jwtUtil.validateToken(jwtToken)) {
+                // 检查是否在 Redis 黑名单中 (使用 JTI 作为标识)
+                String jti = jwtUtil.getJtiFromToken(jwtToken);
+                Boolean isBlacklisted = jti != null && redisTemplate.hasKey("jwt:blacklist:" + jti);
+                
+                if (Boolean.TRUE.equals(isBlacklisted)) {
+                    logger.warn("JWT 会话已被撤销 (JTI): " + jti + ", 用户: " + phone);
+                } else if (jwtUtil.validateToken(jwtToken)) {
                     logger.info("JWT Token验证成功，用户: " + phone);
 
                     // 获取用户角色
                     List<SimpleGrantedAuthority> authorities = getUserAuthorities(phone);
                     logger.info("用户权限数量: " + authorities.size());
 
-                    // 构建用户详情
-                    UserDetails userDetails = User.builder()
-                            .username(phone)
-                            .password("") // 密码不需要，因为已经通过JWT验证
-                            .authorities(authorities) // 设置用户角色权限
-                            .build();
+                    // 从Token中获取用户ID
+                    Integer userId = jwtUtil.getUserIdFromToken(jwtToken);
+
+                    // 构建自定义用户详情，包含用户ID
+                    com.zhouyi.common.security.CustomUserDetails userDetails = new com.zhouyi.common.security.CustomUserDetails(
+                            userId,
+                            jti,
+                            phone,
+                            "", // 密码不需要，因为已经通过JWT验证
+                            authorities
+                    );
 
                     // 创建认证token
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
@@ -93,7 +105,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     // 设置认证信息到SecurityContext
                     SecurityContextHolder.getContext().setAuthentication(authentication);
 
-                    logger.info("用户认证成功: " + phone + ", 权限: " +
+                    logger.info("用户认证成功: " + phone + " (ID: " + userId + "), 权限: " +
                             authorities.stream().map(SimpleGrantedAuthority::getAuthority)
                                     .collect(Collectors.joining(", ")));
                 } else {

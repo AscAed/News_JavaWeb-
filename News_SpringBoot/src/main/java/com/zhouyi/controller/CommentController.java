@@ -8,8 +8,8 @@ import com.zhouyi.dto.CommentStatusDTO;
 import com.zhouyi.dto.CommentLikeDTO;
 import com.zhouyi.service.CommentService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
@@ -53,6 +53,7 @@ public class CommentController {
      * 创建评论
      */
     @PostMapping("/comments")
+    @com.zhouyi.annotation.RateLimit(count = 5, period = 60, limitType = com.zhouyi.annotation.RateLimit.LimitType.USER, key = "comment_create_limit:")
     public Result<?> createComment(@Valid @RequestBody CommentCreateDTO commentCreateDTO,
                                   HttpServletRequest request) {
         // 从JWT Token中获取用户ID
@@ -99,6 +100,7 @@ public class CommentController {
      * 更新评论状态
      */
     @PatchMapping("/comments/{id}/status")
+    @PreAuthorize("hasRole('ADMIN')")
     public Result<?> updateCommentStatus(@PathVariable("id") String id,
                                         @Valid @RequestBody CommentStatusDTO commentStatusDTO,
                                         HttpServletRequest request) {
@@ -115,6 +117,7 @@ public class CommentController {
      * 点赞或取消点赞评论
      */
     @PostMapping("/comments/{id}/like")
+    @com.zhouyi.annotation.RateLimit(count = 20, period = 60, limitType = com.zhouyi.annotation.RateLimit.LimitType.USER, key = "comment_like_limit:")
     public Result<?> likeComment(@PathVariable("id") String id,
                                  @Valid @RequestBody CommentLikeDTO commentLikeDTO,
                                  HttpServletRequest request) {

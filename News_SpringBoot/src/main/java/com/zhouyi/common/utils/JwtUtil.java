@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * JWT工具类，用于生成和验证JWT token
@@ -81,6 +82,16 @@ public class JwtUtil {
      */
     public Integer getUserIdFromToken(String token) {
         return getClaimFromToken(token, "userId", Integer.class);
+    }
+
+    /**
+     * 从token中获取JTI (JWT ID)
+     *
+     * @param token JWT token
+     * @return JTI
+     */
+    public String getJtiFromToken(String token) {
+        return getClaimFromToken(token, Claims.ID, String.class);
     }
 
     /**
@@ -171,6 +182,7 @@ public class JwtUtil {
         Date expiryDate = new Date(now.getTime() + expiration);
 
         return Jwts.builder()
+                .id(UUID.randomUUID().toString()) // 添加 JTI (JWT ID) 用于唯一标识会话
                 .claims(claims)
                 .subject(subject)
                 .issuedAt(now)

@@ -22,6 +22,14 @@ public class Result<T> {
         this.path = path;
     }
 
+    private Result(ResultCode resultCode, T data, String path) {
+        this.code = resultCode.getCode();
+        this.message = resultCode.getMessage();
+        this.data = data;
+        this.timestamp = DateTimeFormatter.ISO_INSTANT.format(Instant.now());
+        this.path = path;
+    }
+
     // 默认构造函数，供无参反序列化使用
     public Result() {
     }
@@ -104,6 +112,15 @@ public class Result<T> {
     // 失败响应（自定义状态码，消息和数据）
     public static <T> Result<T> error(int code, String message, T data) {
         return new Result<>(code, message, data, null);
+    }
+
+    // 失败响应（ResultCode 方式）
+    public static <T> Result<T> error(ResultCode resultCode) {
+        return new Result<>(resultCode, null, null);
+    }
+
+    public static <T> Result<T> error(ResultCode resultCode, T data) {
+        return new Result<>(resultCode, data, null);
     }
 
     // Getter方法

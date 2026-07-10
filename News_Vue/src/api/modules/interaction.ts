@@ -1,12 +1,25 @@
 import request from '../request'
+import type { ApiResponse, Comment } from '@/types/headline'
 import type { ApiResponse } from '@/types/headline'
 
 // 获取评论列表
-export const getComments = (headlineId: number, params: {
+export const getComments = (params: {
+  headlineId: number
   page?: number
-  page_size?: number
-}): Promise<ApiResponse<any>> => {
-  return request.get(`/headlines/${headlineId}/comments`, { params })
+  pageSize?: number
+  sortBy?: string
+  sortOrder?: string
+  status?: number
+}): Promise<ApiResponse<{ items: Comment[], total: number }>> => {
+  return request.get(`/headlines/${params.headlineId}/comments`, { 
+    params: {
+      page: params.page,
+      page_size: params.pageSize,
+      sort_by: params.sortBy,
+      sort_order: params.sortOrder,
+      status: params.status
+    }
+  })
 }
 
 // 发表评论
@@ -14,7 +27,7 @@ export const addComment = (data: {
   headlineId: number
   content: string
   parentId?: string
-}): Promise<ApiResponse<any>> => {
+}): Promise<ApiResponse<Comment>> => {
   return request.post('/comments', data)
 }
 
@@ -24,7 +37,7 @@ export const likeComment = (commentId: string, action: 'like' | 'unlike' = 'like
 }
 
 // 删除评论
-export const deleteComment = (commentId: string): Promise<ApiResponse<any>> => {
+export const deleteComment = (commentId: string): Promise<ApiResponse<void>> => {
   return request.delete(`/comments/${commentId}`)
 }
 

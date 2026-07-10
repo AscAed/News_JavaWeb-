@@ -1,6 +1,6 @@
 <template>
   <div id="app" class="app-container">
-    <component :is="layoutComponent">
+    <component :is="layoutComponent" :show-sidebar="!route.path.startsWith('/admin')">
       <!-- 主应用头部 -->
       <template #header>
         <AppHeader />
@@ -18,7 +18,7 @@
 
       <!-- 主应用侧边栏 -->
       <template #sidebar>
-        <SourceSidebar/>
+        <SourceSidebar v-if="!route.path.startsWith('/admin')"/>
       </template>
 
       <!-- 主应用页脚 -->

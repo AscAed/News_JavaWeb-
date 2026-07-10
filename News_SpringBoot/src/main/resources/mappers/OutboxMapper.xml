@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhouyi.mapper.OutboxMapper">
+
+    <resultMap id="BaseResultMap" type="com.zhouyi.entity.OutboxMessage">
+        <id column="id" property="id"/>
+        <result column="category" property="category"/>
+        <result column="payload" property="payload"/>
+        <result column="status" property="status"/>
+        <result column="retry_count" property="retryCount"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO outbox_message (category, payload, status, retry_count, create_time, update_time)
+        VALUES (#{category}, #{payload}, #{status}, #{retryCount}, #{createTime}, #{updateTime})
+    </insert>
+
+    <select id="selectPending" resultMap="BaseResultMap">
+        SELECT * FROM outbox_message
+        WHERE category = #{category}
+        AND (status = 'PENDING' OR (status = 'FAILED' AND retry_count &lt; 3))
+        ORDER BY create_time ASC
+        LIMIT #{limit}
+    </select>
+
+    <update id="updateStatus">
+        UPDATE outbox_message
+        SET status = #{status}, update_time = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateRetry">
+        UPDATE outbox_message
+        SET status = #{status}, retry_count = #{retryCount}, update_time = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT * FROM outbox_message WHERE id = #{id}
+    </select>
+
+</mapper>

@@ -1,5 +1,6 @@
 package com.zhouyi.entity.mongodb;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
@@ -7,6 +8,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import java.time.LocalDateTime;
+
 import java.util.List;
 
 /**
@@ -43,6 +45,7 @@ public class Comment {
     @Field("is_deleted")
     private Boolean isDeleted; // 是否已删除
 
+    @JsonProperty("userInfo")
     @Field("user_info")
     private UserInfo userInfo; // 冗余用户信息
 
@@ -76,7 +79,9 @@ public class Comment {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class UserInfo {
+        @JsonProperty("username")
         private String username; // 用户名
+        @JsonProperty("avatarUrl")
         private String avatarUrl; // 头像URL
     }
 

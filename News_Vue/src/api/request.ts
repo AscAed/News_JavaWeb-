@@ -2,6 +2,31 @@ import axios from 'axios'
 import {ElMessage} from 'element-plus'
 import {API_BASE_URL, REQUEST_CONFIG} from './config'
 
+let isRefreshing = false
+let retryQueue: Function[] = []
+
+const handleLogoutLocal = () => {
+  localStorage.removeItem('token')
+  localStorage.removeItem('refreshToken')
+  localStorage.removeItem('userInfo')
+
+  import('@/stores/user').then(({useUserStore}) => {
+    const userStore = useUserStore()
+    userStore.token = ''
+    userStore.refreshToken = ''
+    userStore.userInfo = null
+  })
+
+  import('@/router').then(({default: router}) => {
+    if (
+      router.currentRoute.value.meta?.requiresAuth ||
+      router.currentRoute.value.meta?.requiresAdmin
+    ) {
+      router.push('/login')
+    }
+  })
+}
+
 // 创建axios实例
 const request = axios.create({
   baseURL: API_BASE_URL,
@@ -40,29 +65,65 @@ request.interceptors.response.use(
   (error) => {
     // 处理HTTP错误状态
     if (error.response) {
-      const { status, data } = error.response
+      const { status, data, config } = error.response
 
       switch (status) {
         case 401:
-          ElMessage.error('登录已过期，请重新登录')
-          localStorage.removeItem('token')
-          localStorage.removeItem('userInfo')
+          // 判断接口是否已经是刷新Token的接口，防止死循环
+          if (config.url && config.url.includes('/auth/refresh')) {
+            ElMessage.error('登录已过期，请重新登录')
+            handleLogoutLocal()
+            return Promise.reject(error)
+          }
 
-          import('@/stores/user').then(({useUserStore}) => {
-            const userStore = useUserStore()
-            userStore.token = ''
-            userStore.userInfo = null
-          })
-
-          import('@/router').then(({default: router}) => {
-            if (
-              router.currentRoute.value.meta?.requiresAuth ||
-              router.currentRoute.value.meta?.requiresAdmin
-            ) {
-              router.push('/login')
+          if (!isRefreshing) {
+            isRefreshing = true
+            const refreshTokenStr = localStorage.getItem('refreshToken')
+            if (!refreshTokenStr) {
+              ElMessage.error('登录已过期，请重新登录')
+              handleLogoutLocal()
+              return Promise.reject(error)
             }
-          })
-          break
+
+            // 动态引入避免循环依赖
+            return import('@/api/modules/auth').then(({ refreshToken }) => {
+              return refreshToken(refreshTokenStr)
+            }).then((res: any) => {
+              const newTokens = res.data
+              localStorage.setItem('token', newTokens.token)
+              if (newTokens.refreshToken) {
+                localStorage.setItem('refreshToken', newTokens.refreshToken)
+              }
+              import('@/stores/user').then(({useUserStore}) => {
+                const store = useUserStore()
+                store.token = newTokens.token
+                if (newTokens.refreshToken) store.refreshToken = newTokens.refreshToken
+              })
+
+              config.headers.Authorization = `Bearer ${newTokens.token}`
+              // 执行队列中排队的请求
+              retryQueue.forEach((cb) => cb(newTokens.token))
+              retryQueue = []
+              
+              // 重新发起当前失败的请求并返回
+              return request(config)
+            }).catch((refreshErr) => {
+              ElMessage.error('登录已过期，请重新登录')
+              retryQueue = []
+              handleLogoutLocal()
+              return Promise.reject(refreshErr)
+            }).finally(() => {
+              isRefreshing = false
+            })
+          } else {
+            // 正在刷新时，将新请求挂起，放入重试队列
+            return new Promise((resolve) => {
+              retryQueue.push((token: string) => {
+                config.headers.Authorization = `Bearer ${token}`
+                resolve(request(config))
+              })
+            })
+          }
         case 403:
           ElMessage.error('没有权限访问该资源')
           break

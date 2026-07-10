@@ -108,6 +108,31 @@
             </template>
             <el-empty v-else description="暂无评论，快来抢沙发吧~" />
           </div>
+
+          <!-- 回复对话框 -->
+          <el-dialog
+            v-model="replyDialogVisible"
+            :title="`回复 @${replyTo?.userInfo?.username}`"
+            width="50%"
+            destroy-on-close
+          >
+            <el-input
+              v-model="replyContent"
+              type="textarea"
+              :rows="3"
+              :placeholder="`回复 ${replyTo?.userInfo?.username}...`"
+              maxlength="500"
+              show-word-limit
+            />
+            <template #footer>
+              <span class="dialog-footer">
+                <el-button @click="replyDialogVisible = false">取消</el-button>
+                <el-button type="primary" @click="submitReply" :loading="submittingReply">
+                  发表回复
+                </el-button>
+              </span>
+            </template>
+          </el-dialog>
         </section>
       </el-main>
     </el-container>
@@ -121,6 +146,7 @@ import {ArrowLeft, ChatDotRound, Collection, Share, Star, View} from '@element-p
 import {ElMessage, ElMessageBox} from 'element-plus'
 import type {Comment, Headline} from '@/types/headline'
 import {getHeadlineById} from '@/api/headline'
+import {getComments, addComment, likeComment} from '@/api/modules/interaction'
 import {useUserStore} from '@/stores/user'
 import CommentItem from '@/components/CommentItem.vue'
 import {getComments, addComment, likeComment as likeCommentApi, deleteComment as deleteCommentApi} from '@/api/modules/interaction'
@@ -139,6 +165,12 @@ const isFavorited = ref(false)
 const totalComments = ref(0)
 const newComment = ref('')
 const replyingTo = ref<Comment | null>(null)
+
+// 回复相关
+const replyDialogVisible = ref(false)
+const replyTo = ref<Comment | null>(null)
+const replyContent = ref('')
+const submittingReply = ref(false)
 
 // 计算属性
 const isLoggedIn = computed(() => userStore.isLoggedIn)
@@ -164,6 +196,18 @@ const fetchNewsDetail = async () => {
     ElMessage.error('获取新闻详情失败')
   } finally {
     loading.value = false
+  }
+}
+
+const fetchComments = async () => {
+  const hid = Number(route.params.hid)
+  try {
+    const response = await getComments({ headlineId: hid })
+    if (response.code === 200) {
+      comments.value = response.data.items || []
+    }
+  } catch (error) {
+    console.error('获取评论失败:', error)
   }
 }
 
@@ -268,51 +312,72 @@ const submitComment = async () => {
   }
 }
 
-const handleLike = async (comment: Comment) => {
-  if (!isLoggedIn.value) {
-    ElMessage.warning('请先登录')
-    return
-  }
-  try {
-    // 这里简单的认为是切换like，实际应用需要记录是否已经点赞过
-    const res = await likeCommentApi(comment.id, 'like')
-    if (res.code === 200) {
-      // 简单地在本地更新数字，或重新拉取全量评论
-      comment.like_count = res.data.like_count
-      ElMessage.success('操作成功')
-    }
-  } catch (error) {
-    ElMessage.error('点赞失败')
-  }
-}
-
 const handleReply = (comment: Comment) => {
   if (!isLoggedIn.value) {
-    ElMessage.warning('请先登录')
+    ElMessage.warning('请先登录后回复')
     return
   }
-  replyingTo.value = comment
-  // 滚动到评论框
-  nextTick(() => {
-    document.getElementById('comments')?.scrollIntoView({ behavior: 'smooth' })
-  })
+  replyTo.value = comment
+  replyContent.value = ''
+  replyDialogVisible.value = true
 }
 
-const handleDelete = async (comment: Comment) => {
-  try {
-    await ElMessageBox.confirm('确定要删除这条评论吗？', '提示', {
-      type: 'warning'
-    })
-    const res = await deleteCommentApi(comment.id)
-    if (res.code === 200) {
-      ElMessage.success('删除成功')
-      await fetchCommentsList() // 刷新评论列表
-    } else {
-      ElMessage.error(res.message || '删除失败')
-    }
-  } catch (e) {
-    // user cancelled
+const submitReply = async () => {
+  if (!replyContent.value.trim() || !replyTo.value) {
+    ElMessage.warning('请输入回复内容')
+    return
   }
+
+  const hid = Number(route.params.hid)
+  submittingReply.value = true
+  try {
+    const response = await addComment({
+      headlineId: hid,
+      content: replyContent.value,
+      parentId: replyTo.value.id
+    })
+
+    if (response.code === 200) {
+      ElMessage.success('回复发表成功')
+      replyDialogVisible.value = false
+      replyContent.value = ''
+      await fetchComments()
+    }
+  } catch (error) {
+    ElMessage.error('回复失败')
+  } finally {
+    submittingReply.value = false
+  }
+}
+
+const handleLike = async (commentId: string) => {
+  if (!isLoggedIn.value) {
+    ElMessage.warning('请先登录后操作')
+    return
+  }
+
+  try {
+    const response = await likeComment(commentId, 'like')
+    if (response.code === 200) {
+      // 局部更新点赞数
+      updateLikeInTree(comments.value, commentId)
+    }
+  } catch (error) {
+    // 错误已由拦截器处理
+  }
+}
+
+const updateLikeInTree = (list: Comment[], id: string) => {
+  for (const item of list) {
+    if (item.id === id) {
+      item.likeCount++
+      return true
+    }
+    if (item.children && updateLikeInTree(item.children, id)) {
+      return true
+    }
+  }
+  return false
 }
 
 // 生命周期
@@ -441,53 +506,5 @@ onMounted(() => {
 
 .comments-list {
   margin-top: 20px;
-}
-
-.comment-item {
-  display: flex;
-  gap: 15px;
-  padding: 20px 0;
-  border-bottom: 1px solid #eee;
-}
-
-.comment-item:last-child {
-  border-bottom: none;
-}
-
-.comment-avatar {
-  flex-shrink: 0;
-}
-
-.comment-content {
-  flex: 1;
-}
-
-.comment-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-.username {
-  font-weight: bold;
-  color: #333;
-}
-
-.comment-time {
-  font-size: 12px;
-  color: #999;
-}
-
-.comment-text {
-  font-size: 14px;
-  line-height: 1.6;
-  color: #333;
-  margin-bottom: 10px;
-}
-
-.comment-actions {
-  display: flex;
-  gap: 15px;
 }
 </style>

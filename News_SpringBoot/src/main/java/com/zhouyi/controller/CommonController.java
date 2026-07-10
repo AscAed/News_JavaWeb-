@@ -30,12 +30,12 @@ public class CommonController {
     @PostMapping("/upload")
     public Result<String> uploadFile(@RequestParam("file") MultipartFile file) {
         try {
-            // Use MinIO for storage with "images" category as required by the scheme
-            Result<Map<String, Object>> uploadResult = minioFileService.uploadFile(file, "images", "上传的图片");
+            // 使用 MinioFileService 进行上传，指定分类为 images
+            Result<java.util.Map<String, Object>> uploadResult = minioFileService.uploadFile(file, "images", "Uploaded via CommonController");
             
             if (uploadResult.getCode() == 200 && uploadResult.getData() != null) {
-                String accessUrl = (String) uploadResult.getData().get("accessUrl");
-                return Result.success("上传成功", accessUrl, null);
+                String fileUrl = (String) uploadResult.getData().get("accessUrl");
+                return Result.success("上传成功", fileUrl, null);
             } else {
                 return Result.error("文件上传失败：" + uploadResult.getMessage());
             }

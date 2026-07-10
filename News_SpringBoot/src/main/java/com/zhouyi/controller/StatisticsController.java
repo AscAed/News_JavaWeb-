@@ -81,13 +81,20 @@ public class StatisticsController {
         return statisticsService.getFavoriteStatistics();
     }
 
-    /**
-     * 获取文件统计数据（管理员功能）
-     * @return 文件统计数据
-     */
     @GetMapping("/files")
     @PreAuthorize("hasRole('ADMIN')")
     public Result<?> getFileStatistics() {
         return statisticsService.getFileStatistics();
+    }
+
+    /**
+     * 获取热力词云/趋势主题（从 Elasticsearch 实时聚合）
+     * @param size 返回词条数，默认 20
+     * @return 关键词频统计
+     */
+    @GetMapping("/trending")
+    @PreAuthorize("hasRole('ADMIN')")
+    public Result<?> getTrendingKeywords(Integer size) {
+        return statisticsService.getTrendingKeywords(size);
     }
 }

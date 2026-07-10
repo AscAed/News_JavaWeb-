@@ -4,6 +4,8 @@ import com.zhouyi.common.result.Result;
 import com.zhouyi.dto.NewsStatisticsDTO;
 import com.zhouyi.dto.UserStatisticsDTO;
 import com.zhouyi.dto.SystemStatisticsDTO;
+import com.zhouyi.dto.KeywordStatDTO;
+import java.util.List;
 
 /**
  * 统计服务接口
@@ -51,4 +53,11 @@ public interface StatisticsService {
      * @return 文件统计数据
      */
     Result<?> getFileStatistics();
+
+    /**
+     * 获取热点关键词统计（从 Elasticsearch 聚合）
+     * @param size 返回的关键词数量
+     * @return 关键词统计列表
+     */
+    Result<List<KeywordStatDTO>> getTrendingKeywords(Integer size);
 }

@@ -79,10 +79,15 @@ export interface Comment {
   parent_id: string | null
   author: CommentAuthor
   content: string
-  like_count: number
-  reply_count: number
+  parentId?: string
+  likeCount: number
+  replyCount: number
   status: number
-  created_time: string
-  updated_time: string
-  replies?: Comment[]
+  createdAt: string
+  updatedAt: string
+  userInfo: {
+    username: string
+    avatarUrl?: string
+  }
+  children?: Comment[]
 }

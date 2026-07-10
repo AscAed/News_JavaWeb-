@@ -8,6 +8,7 @@ import com.zhouyi.dto.LoginResponseDTO;
 import com.zhouyi.service.UserService;
 import com.zhouyi.service.UserRoleService;
 import com.zhouyi.entity.User;
+import com.zhouyi.component.NewsMetricsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
@@ -15,6 +16,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import com.zhouyi.service.VerificationService;
 import com.zhouyi.dto.SendCodeDTO;
 import java.util.Map;
+import java.util.Date;
+import java.util.concurrent.TimeUnit;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.data.redis.core.StringRedisTemplate;
 
 /**
  * 认证控制器 - 统一认证接口
@@ -35,6 +40,12 @@ public class AuthController {
     @Autowired
     private VerificationService verificationService;
 
+    @Autowired
+    private StringRedisTemplate redisTemplate;
+
+    @Autowired
+    private NewsMetricsService newsMetricsService;
+
     /**
      * 用户登录接口 - RESTful标准
      *
@@ -42,6 +53,8 @@ public class AuthController {
      * @return 登录结果，包含JWT Token
      */
     @PostMapping("/login")
+    @com.zhouyi.annotation.RateLimit(count = 10, period = 60, key = "login_limit:")
+    @com.zhouyi.annotation.LogOperation(operationType = "LOGIN", resourceType = "USER", description = "用户登录")
     public Result<LoginResponseDTO> login(@Valid @RequestBody UserLoginDTO loginDTO) {
         // 调用服务层进行登录验证
         Result<User> loginResult = userService.login(loginDTO.getPhone(), loginDTO.getPassword());
@@ -86,6 +99,7 @@ public class AuthController {
 
         response.setUser(userInfo);
 
+        newsMetricsService.incrementLogin(roleName);
         return Result.success("登录成功", response, "/api/v1/auth/login");
     }
 
@@ -96,6 +110,8 @@ public class AuthController {
      * @return 发送结果
      */
     @PostMapping("/send-code")
+    @com.zhouyi.annotation.RateLimit(count = 1, period = 60, key = "send_code_limit:")
+    @com.zhouyi.annotation.LogOperation(operationType = "SEND_CODE", resourceType = "VERIFICATION", description = "发送验证码")
     public Result<Void> sendCode(@Valid @RequestBody SendCodeDTO sendCodeDTO) {
         return verificationService.sendRegistrationCode(sendCodeDTO.getEmail(), sendCodeDTO.getCaptchaToken());
     }
@@ -108,6 +124,8 @@ public class AuthController {
      */
     @PostMapping("/register")
     @org.springframework.web.bind.annotation.ResponseStatus(org.springframework.http.HttpStatus.CREATED)
+    @com.zhouyi.annotation.RateLimit(count = 3, period = 3600, key = "register_limit:")
+    @com.zhouyi.annotation.LogOperation(operationType = "CREATE", resourceType = "USER", description = "用户注册")
     public Result<?> register(@Valid @RequestBody UserRegistDTO userRegistDTO) {
         // 1. 验证码校验
         Result<String> verifyResult = verificationService.verifyRegistrationCode(userRegistDTO.getEmail(), userRegistDTO.getCode());
@@ -173,6 +191,12 @@ public class AuthController {
                     !jwtUtil.validateTokenType(refreshToken, "refresh")) {
                 return Result.error("无效的refresh token", "/api/v1/auth/refresh");
             }
+            
+            // 检查是否在 Redis 黑名单中
+            Boolean isBlacklisted = redisTemplate.hasKey("jwt:blacklist:" + refreshToken);
+            if (Boolean.TRUE.equals(isBlacklisted)) {
+                return Result.error("Refresh token 已失效，请重新登录", "/api/v1/auth/refresh");
+            }
 
             // 从refresh token中获取用户信息
             String phone = jwtUtil.getPhoneFromToken(refreshToken);
@@ -188,6 +212,17 @@ public class AuthController {
             // 生成新的access token和refresh token
             String newAccessToken = jwtUtil.generateToken(user.getId(), user.getPhone());
             String newRefreshToken = jwtUtil.generateRefreshToken(user.getId(), user.getPhone());
+            
+            // 将旧的 Refresh Token 加入黑名单，防止重复使用
+            try {
+                Date expirationDate = jwtUtil.getExpirationDateFromToken(refreshToken);
+                long ttl = expirationDate.getTime() - System.currentTimeMillis();
+                if (ttl > 0) {
+                    redisTemplate.opsForValue().set("jwt:blacklist:" + refreshToken, "true", ttl, TimeUnit.MILLISECONDS);
+                }
+            } catch (Exception e) {
+                // Ignore parsing errors for blacklist
+            }
 
             // 构建响应
             LoginResponseDTO response = new LoginResponseDTO();
@@ -288,13 +323,35 @@ public class AuthController {
     }
 
     /**
-     * 登出操作（可选，主要用于记录日志等）
+     * 登出操作 - 将当前 Token 加入黑名单
      *
      * @return 登出结果
      */
     @PostMapping("/logout")
-    public Result<String> logout() {
+    public Result<String> logout(HttpServletRequest request, @RequestBody(required = false) Map<String, String> body) {
         try {
+            // 获取当前的 Access Token
+            String token = jwtUtil.extractTokenFromRequest(request);
+            if (token != null && jwtUtil.validateToken(token)) {
+                Date expirationDate = jwtUtil.getExpirationDateFromToken(token);
+                long ttl = expirationDate.getTime() - System.currentTimeMillis();
+                if (ttl > 0) {
+                    redisTemplate.opsForValue().set("jwt:blacklist:" + token, "true", ttl, TimeUnit.MILLISECONDS);
+                }
+            }
+            
+            // 如果前端传了 Refresh Token 也一并加入黑名单
+            if (body != null && body.containsKey("refreshToken")) {
+                String refreshToken = body.get("refreshToken");
+                if (refreshToken != null && jwtUtil.validateToken(refreshToken)) {
+                    Date expirationDate = jwtUtil.getExpirationDateFromToken(refreshToken);
+                    long ttl = expirationDate.getTime() - System.currentTimeMillis();
+                    if (ttl > 0) {
+                        redisTemplate.opsForValue().set("jwt:blacklist:" + refreshToken, "true", ttl, TimeUnit.MILLISECONDS);
+                    }
+                }
+            }
+
             // 清除SecurityContext
             SecurityContextHolder.clearContext();
             return Result.successWithMessageAndPath("登出成功", "/api/v1/auth/logout");

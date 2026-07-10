@@ -54,6 +54,13 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // 允许访问的端点（不需要认证）
                         .requestMatchers(
+                                "/", // SPA entry
+                                "/index.html",
+                                "/favicon.ico",
+                                "/assets/**",
+                                "/*.js",
+                                "/*.css",
+                                "/*.map",
                                 "/api/v1/auth/**", // Auth endpoints
                                 "/api/v1/headlines/**", // Public news view
                                 "/api/v1/categories/**", // Public category view
@@ -62,14 +69,19 @@ public class SecurityConfig {
                                 "/api/v1/rss/articles/**", // Public RSS news view
                                 "/api/v1/rss/categories/**", // Public RSS category view
                                 "/api/v1/common/upload", // Allow upload for now
-                                "/api/v1/debug/**", // Debug endpoints for testing
-                                "/api/v1/test/**", // Test endpoints for authentication testing
-                                "/api/sync/**", // Elasticsearch sync endpoints
                                 "/files/**", // File access
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
+                                "/actuator/prometheus", // Prometheus scrape endpoint - no auth needed
+                                "/actuator/health",
                                 "/error")
                         .permitAll()
+                        // 仅管理员可访问的调试和同步接口
+                        .requestMatchers(
+                                "/api/v1/debug/**",
+                                "/api/v1/test/**",
+                                "/api/sync/**")
+                        .hasRole("ADMIN")
                         // 其他所有请求都需要认证
                         .anyRequest().authenticated())
                 // 添加JWT过滤器

@@ -19,6 +19,11 @@ public interface CommentRepository extends MongoRepository<Comment, String> {
     List<Comment> findByNewsIdAndIsDeletedOrderByCreatedAtDesc(Integer newsId, Boolean isDeleted);
     
     /**
+     * 根据新闻ID查找评论（按时间正序）
+     */
+    List<Comment> findByNewsIdAndIsDeletedOrderByCreatedAtAsc(Integer newsId, Boolean isDeleted);
+    
+    /**
      * 根据用户ID查找评论
      */
     List<Comment> findByUserIdAndIsDeletedOrderByCreatedAtDesc(Integer userId, Boolean isDeleted);
@@ -57,6 +62,16 @@ public interface CommentRepository extends MongoRepository<Comment, String> {
      * 统计用户评论数
      */
     long countByUserIdAndIsDeleted(Integer userId, Boolean isDeleted);
+    
+    /**
+     * 统计顶级新闻评论数
+     */
+    long countByNewsIdAndParentIdIsNullAndIsDeleted(Integer newsId, Boolean isDeleted);
+    
+    /**
+     * 根据状态统计顶级新闻评论数
+     */
+    long countByNewsIdAndParentIdIsNullAndStatus(Integer newsId, Integer status);
     
     /**
      * 查找指定时间后的评论

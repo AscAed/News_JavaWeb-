@@ -31,6 +31,18 @@ public class GlobalExceptionHandler {
     private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     /**
+     * 处理业务异常 BusinessException
+     */
+    @ExceptionHandler(BusinessException.class)
+    public Result<Void> handleBusinessException(BusinessException e) {
+        logger.warn("业务代码异常: code={}, message={}", e.getCode(), e.getMessage());
+        if (e.getResultCode() != null) {
+            return Result.error(e.getResultCode());
+        }
+        return Result.error(e.getCode(), e.getMessage());
+    }
+
+    /**
      * 注册校验异常处理
      */
     @ExceptionHandler(RegistrationValidationException.class)
@@ -226,6 +238,15 @@ public class GlobalExceptionHandler {
                 .collect(Collectors.joining(", "));
         logger.warn("约束违反: {}", message);
         return Result.error(400, "参数校验失败: " + message);
+    }
+
+    /**
+     * 处理自定义全局异常
+     */
+    @ExceptionHandler(GlobalException.class)
+    public Result<String> handleGlobalException(GlobalException e) {
+        logger.warn("业务/全局异常: code={}, message={}", e.getCode(), e.getMessage());
+        return Result.error(e.getCode(), e.getMessage());
     }
 
     /**
