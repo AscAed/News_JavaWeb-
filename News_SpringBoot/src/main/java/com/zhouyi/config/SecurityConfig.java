@@ -16,6 +16,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.http.HttpMethod;
 
 import java.util.Arrays;
 import java.util.List;
@@ -62,12 +63,6 @@ public class SecurityConfig {
                                 "/*.css",
                                 "/*.map",
                                 "/api/v1/auth/**", // Auth endpoints
-                                "/api/v1/headlines/**", // Public news view
-                                "/api/v1/categories/**", // Public category view
-                                "/api/v1/sources/**", // Public sources list
-                                "/api/v1/rss-subscriptions/**", // Public RSS subscriptions list
-                                "/api/v1/rss/articles/**", // Public RSS news view
-                                "/api/v1/rss/categories/**", // Public RSS category view
                                 "/api/v1/common/upload", // Allow upload for now
                                 "/files/**", // File access
                                 "/swagger-ui/**",
@@ -75,6 +70,15 @@ public class SecurityConfig {
                                 "/actuator/prometheus", // Prometheus scrape endpoint - no auth needed
                                 "/actuator/health",
                                 "/error")
+                        .permitAll()
+                        // 允许通过GET方法访问的公共端点
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v1/headlines/**", // Public news view
+                                "/api/v1/categories/**", // Public category view
+                                "/api/v1/sources/**", // Public sources list
+                                "/api/v1/rss-subscriptions/**", // Public RSS subscriptions list
+                                "/api/v1/rss/articles/**", // Public RSS news view
+                                "/api/v1/rss/categories/**") // Public RSS category view
                         .permitAll()
                         // 仅管理员可访问的调试和同步接口
                         .requestMatchers(
