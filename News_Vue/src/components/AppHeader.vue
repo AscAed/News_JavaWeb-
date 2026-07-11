@@ -20,7 +20,7 @@
             clearable
           >
             <template #append>
-              <el-button @click="handleSearch" :icon="Search" />
+              <el-button @click="handleSearch" :icon="Search" aria-label="搜索" />
             </template>
           </el-input>
         </div>
@@ -80,6 +80,7 @@
           class="theme-toggle-btn hover-lift"
           @click="toggleTheme"
           :title="isDark ? '切换到浅色模式' : '切换到深色模式'"
+          :aria-label="isDark ? '切换到浅色模式' : '切换到深色模式'"
         >
           <el-icon v-if="isDark"><Sunny /></el-icon>
           <el-icon v-else><Moon /></el-icon>

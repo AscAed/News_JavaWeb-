@@ -146,7 +146,6 @@ import {ArrowLeft, ChatDotRound, Collection, Share, Star, View} from '@element-p
 import {ElMessage, ElMessageBox} from 'element-plus'
 import type {Comment, Headline} from '@/types/headline'
 import {getHeadlineById} from '@/api/headline'
-import {getComments, addComment, likeComment} from '@/api/modules/interaction'
 import {useUserStore} from '@/stores/user'
 import CommentItem from '@/components/CommentItem.vue'
 import {getComments, addComment, likeComment as likeCommentApi, deleteComment as deleteCommentApi} from '@/api/modules/interaction'
