@@ -31,7 +31,8 @@
             <img :src="newsDetail.coverImage" :alt="newsDetail.title" />
           </div>
 
-          <div class="article-content" v-html="newsDetail.content"></div>
+          <!-- Security: Sanitize user input before rendering with v-html to prevent XSS -->
+          <div class="article-content" v-html="DOMPurify.sanitize(newsDetail.content || '')"></div>
 
           <footer class="article-footer">
             <div class="article-tags" v-if="newsDetail.tags">
@@ -146,10 +147,10 @@ import {ArrowLeft, ChatDotRound, Collection, Share, Star, View} from '@element-p
 import {ElMessage, ElMessageBox} from 'element-plus'
 import type {Comment, Headline} from '@/types/headline'
 import {getHeadlineById} from '@/api/headline'
-import {getComments, addComment, likeComment} from '@/api/modules/interaction'
 import {useUserStore} from '@/stores/user'
 import CommentItem from '@/components/CommentItem.vue'
 import {getComments, addComment, likeComment as likeCommentApi, deleteComment as deleteCommentApi} from '@/api/modules/interaction'
+import DOMPurify from 'dompurify'
 
 const route = useRoute()
 const router = useRouter()
@@ -357,7 +358,7 @@ const handleLike = async (commentId: string) => {
   }
 
   try {
-    const response = await likeComment(commentId, 'like')
+    const response = await likeCommentApi(commentId, 'like')
     if (response.code === 200) {
       // 局部更新点赞数
       updateLikeInTree(comments.value, commentId)
