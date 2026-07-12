@@ -8,6 +8,7 @@ import com.zhouyi.service.NewsTypeService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -46,6 +47,7 @@ public class NewsTypeController {
      * 创建分类
      */
     @PostMapping("/categories")
+    @PreAuthorize("hasRole('ADMIN')")
     public Result<?> createCategory(@Valid @RequestBody NewsTypeCreateDTO createDTO,
             HttpServletRequest request) {
 
@@ -57,6 +59,7 @@ public class NewsTypeController {
      * 更新分类
      */
     @PutMapping("/categories/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public Result<?> updateCategory(@PathVariable("id") Integer id,
             @Valid @RequestBody NewsTypeUpdateDTO updateDTO,
             HttpServletRequest request) {
@@ -69,6 +72,7 @@ public class NewsTypeController {
      * 更新分类状态
      */
     @PatchMapping("/categories/{id}/status")
+    @PreAuthorize("hasRole('ADMIN')")
     public Result<?> updateCategoryStatus(@PathVariable("id") Integer id,
             @Valid @RequestBody NewsTypeStatusDTO statusDTO,
             HttpServletRequest request) {
@@ -81,6 +85,7 @@ public class NewsTypeController {
      * 删除分类
      */
     @DeleteMapping("/categories/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public Result<?> deleteCategory(@PathVariable("id") Integer id,
             HttpServletRequest request) {
 
