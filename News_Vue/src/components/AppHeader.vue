@@ -275,11 +275,31 @@ const fetchSearchSuggestions = async (keyword: string) => {
   }
 }
 
+// 简易防抖实现
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function customDebounce<T extends (...args: any[]) => any>(fn: T, delay: number) {
+  let timeoutId: ReturnType<typeof setTimeout> | null = null
+  const debounced = function (...args: Parameters<T>) {
+    if (timeoutId) clearTimeout(timeoutId)
+    timeoutId = setTimeout(() => fn(...args), delay)
+  }
+  debounced.cancel = () => {
+    if (timeoutId) clearTimeout(timeoutId)
+  }
+  return debounced
+}
+
+// 防抖处理的搜索建议函数
+const debouncedFetchSearchSuggestions = customDebounce((keyword: string) => {
+  fetchSearchSuggestions(keyword)
+}, 300)
+
 // 监听搜索关键词变化
 watch(searchKeyword, (newKeyword) => {
   if (newKeyword.trim()) {
-    fetchSearchSuggestions(newKeyword)
+    debouncedFetchSearchSuggestions(newKeyword)
   } else {
+    debouncedFetchSearchSuggestions.cancel()
     searchSuggestions.value = []
     showSuggestions.value = false
   }
@@ -316,6 +336,8 @@ onMounted(() => {
 onUnmounted(() => {
   // 移除全局点击事件监听
   document.removeEventListener('click', handleClickOutside)
+  // 取消可能挂起的防抖调用
+  debouncedFetchSearchSuggestions.cancel()
 })
 </script>
 
