@@ -31,7 +31,8 @@
             <img :src="newsDetail.coverImage" :alt="newsDetail.title" />
           </div>
 
-          <div class="article-content" v-html="newsDetail.content"></div>
+          <!-- Security: Sanitize user input before rendering with v-html to prevent XSS -->
+          <div class="article-content" v-html="DOMPurify.sanitize(newsDetail.content || '')"></div>
 
           <footer class="article-footer">
             <div class="article-tags" v-if="newsDetail.tags">
@@ -63,16 +64,20 @@
         </article>
 
         <!-- 评论区 -->
-        <section class="comments-section">
-          <h3>评论 ({{ comments.length }})</h3>
+        <section class="comments-section" id="comments">
+          <h3>评论 ({{ totalComments }})</h3>
 
           <!-- 发表评论 -->
           <div class="comment-form" v-if="isLoggedIn">
+            <div v-if="replyingTo" class="reply-indicator">
+              <span>正在回复 @{{ replyingTo.author.username }}</span>
+              <el-button type="text" size="small" @click="cancelReply">取消回复</el-button>
+            </div>
             <el-input
               v-model="newComment"
               type="textarea"
               :rows="3"
-              placeholder="发表你的评论..."
+              :placeholder="replyingTo ? '发表回复...' : '发表你的评论...'"
               maxlength="500"
               show-word-limit
             />
@@ -82,7 +87,7 @@
               :loading="submittingComment"
               style="margin-top: 10px"
             >
-              发表评论
+              {{ replyingTo ? '发表回复' : '发表评论' }}
             </el-button>
           </div>
           <div v-else class="login-prompt">
@@ -96,12 +101,13 @@
                 v-for="comment in comments"
                 :key="comment.id"
                 :comment="comment"
-                :depth="0"
-                @reply="handleReply"
+                :current-user="userStore.userInfo?.username"
                 @like="handleLike"
+                @reply="handleReply"
+                @delete="handleDelete"
               />
             </template>
-            <el-empty v-else description="暂无评论，快来抢沙发吧！" />
+            <el-empty v-else description="暂无评论，快来抢沙发吧~" />
           </div>
 
           <!-- 回复对话框 -->
@@ -135,15 +141,16 @@
 </template>
 
 <script setup lang="ts">
-import {computed, onMounted, ref} from 'vue'
+import {computed, onMounted, ref, nextTick} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 import {ArrowLeft, ChatDotRound, Collection, Share, Star, View} from '@element-plus/icons-vue'
-import {ElMessage} from 'element-plus'
+import {ElMessage, ElMessageBox} from 'element-plus'
 import type {Comment, Headline} from '@/types/headline'
 import {getHeadlineById} from '@/api/headline'
-import {getComments, addComment, likeComment} from '@/api/modules/interaction'
 import {useUserStore} from '@/stores/user'
-import CommentItem from '@/components/news/CommentItem.vue'
+import CommentItem from '@/components/CommentItem.vue'
+import {getComments, addComment, likeComment as likeCommentApi, deleteComment as deleteCommentApi} from '@/api/modules/interaction'
+import DOMPurify from 'dompurify'
 
 const route = useRoute()
 const router = useRouter()
@@ -153,10 +160,12 @@ const userStore = useUserStore()
 const loading = ref(false)
 const newsDetail = ref<Headline | null>(null)
 const comments = ref<Comment[]>([])
-const newComment = ref('')
 const submittingComment = ref(false)
 const isLiked = ref(false)
 const isFavorited = ref(false)
+const totalComments = ref(0)
+const newComment = ref('')
+const replyingTo = ref<Comment | null>(null)
 
 // 回复相关
 const replyDialogVisible = ref(false)
@@ -251,6 +260,25 @@ const shareNews = () => {
   }
 }
 
+const fetchCommentsList = async () => {
+  const hid = Number(route.params.hid)
+  if (!hid) return
+  try {
+    const res = await getComments(hid, { page: 1, page_size: 100 })
+    if (res.code === 200) {
+      comments.value = res.data.items || []
+      totalComments.value = res.data.total || comments.value.length
+    }
+  } catch (err) {
+    console.error('获取评论失败', err)
+  }
+}
+
+const cancelReply = () => {
+  replyingTo.value = null
+  newComment.value = ''
+}
+
 const submitComment = async () => {
   if (!newComment.value.trim()) {
     ElMessage.warning('请输入评论内容')
@@ -260,15 +288,23 @@ const submitComment = async () => {
   const hid = Number(route.params.hid)
   submittingComment.value = true
   try {
-    const response = await addComment({
+    const res = await addComment({
       headlineId: hid,
-      content: newComment.value
+      content: newComment.value.trim(),
+      parentId: replyingTo.value ? replyingTo.value.id : undefined
     })
 
-    if (response.code === 200) {
-      ElMessage.success('评论发表成功')
+    if (res.code === 200) {
+      ElMessage.success(replyingTo.value ? '回复成功' : '评论发表成功')
       newComment.value = ''
-      await fetchComments() // 重新获取列表，保证树形结构正确
+      replyingTo.value = null
+      await fetchCommentsList() // 刷新评论列表
+      // 更新顶部统计数据
+      if (newsDetail.value) {
+        newsDetail.value.commentCount = (newsDetail.value.commentCount || 0) + 1
+      }
+    } else {
+      ElMessage.error(res.message || '评论失败')
     }
   } catch (error) {
     ElMessage.error('评论发表失败')
@@ -322,7 +358,7 @@ const handleLike = async (commentId: string) => {
   }
 
   try {
-    const response = await likeComment(commentId, 'like')
+    const response = await likeCommentApi(commentId, 'like')
     if (response.code === 200) {
       // 局部更新点赞数
       updateLikeInTree(comments.value, commentId)
@@ -348,7 +384,9 @@ const updateLikeInTree = (list: Comment[], id: string) => {
 // 生命周期
 onMounted(() => {
   fetchNewsDetail()
-  fetchComments()
+  if (route.params.hid) {
+    fetchCommentsList()
+  }
 })
 </script>
 

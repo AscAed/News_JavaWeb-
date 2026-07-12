@@ -20,7 +20,7 @@
             clearable
           >
             <template #append>
-              <el-button @click="handleSearch" :icon="Search" />
+              <el-button @click="handleSearch" :icon="Search" aria-label="搜索" />
             </template>
           </el-input>
         </div>
@@ -61,6 +61,18 @@
         >
           发布新闻
         </el-button>
+        
+        <!-- 后台管理按钮 (仅管理员可见) -->
+        <el-button
+          v-if="isLoggedIn && userInfo?.id === 1"
+          type="warning"
+          plain
+          class="admin-btn hover-lift"
+          @click="router.push('/admin')"
+        >
+          <el-icon><Management /></el-icon>
+          后台管理
+        </el-button>
 
         <!-- 主题切换按钮 -->
         <el-button
@@ -68,6 +80,7 @@
           class="theme-toggle-btn hover-lift"
           @click="toggleTheme"
           :title="isDark ? '切换到浅色模式' : '切换到深色模式'"
+          :aria-label="isDark ? '切换到浅色模式' : '切换到深色模式'"
         >
           <el-icon v-if="isDark"><Sunny /></el-icon>
           <el-icon v-else><Moon /></el-icon>
@@ -127,6 +140,7 @@ import {
   Sunny,
   Moon,
   TrendCharts,
+  Management,
 } from '@element-plus/icons-vue'
 
 const router = useRouter()
@@ -261,11 +275,31 @@ const fetchSearchSuggestions = async (keyword: string) => {
   }
 }
 
+// 简易防抖实现
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function customDebounce<T extends (...args: any[]) => any>(fn: T, delay: number) {
+  let timeoutId: ReturnType<typeof setTimeout> | null = null
+  const debounced = function (...args: Parameters<T>) {
+    if (timeoutId) clearTimeout(timeoutId)
+    timeoutId = setTimeout(() => fn(...args), delay)
+  }
+  debounced.cancel = () => {
+    if (timeoutId) clearTimeout(timeoutId)
+  }
+  return debounced
+}
+
+// 防抖处理的搜索建议函数
+const debouncedFetchSearchSuggestions = customDebounce((keyword: string) => {
+  fetchSearchSuggestions(keyword)
+}, 300)
+
 // 监听搜索关键词变化
 watch(searchKeyword, (newKeyword) => {
   if (newKeyword.trim()) {
-    fetchSearchSuggestions(newKeyword)
+    debouncedFetchSearchSuggestions(newKeyword)
   } else {
+    debouncedFetchSearchSuggestions.cancel()
     searchSuggestions.value = []
     showSuggestions.value = false
   }
@@ -302,6 +336,8 @@ onMounted(() => {
 onUnmounted(() => {
   // 移除全局点击事件监听
   document.removeEventListener('click', handleClickOutside)
+  // 取消可能挂起的防抖调用
+  debouncedFetchSearchSuggestions.cancel()
 })
 </script>
 

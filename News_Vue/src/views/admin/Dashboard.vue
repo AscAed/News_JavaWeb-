@@ -239,6 +239,7 @@ import {
   clearRateLimitLogs, addToBlacklist 
 } from '@/api/modules/governance'
 import dayjs from 'dayjs'
+import { getStatisticsOverview, getAdminRecentNews } from '@/api/modules/admin'
 
 const userStore = useUserStore()
 const loading = ref(false)
@@ -379,6 +380,7 @@ const fetchDashboardData = async () => {
     await fetchGovernanceData()
   } catch (error) {
     console.error('Fetch dashboard error:', error)
+    console.error('Fetch dashboard data error:', error)
     ElMessage.error('获取仪表盘数据失败')
   } finally {
     loading.value = false

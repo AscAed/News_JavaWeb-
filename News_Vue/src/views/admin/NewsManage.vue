@@ -74,6 +74,18 @@
         
         <el-table-column label="操作" width="200" fixed="right">
           <template #default="scope">
+            <el-button 
+              v-if="scope.row.status === 0" 
+              size="small" 
+              type="success" 
+              @click="handleReview(scope.row, 1)"
+            >通过</el-button>
+            <el-button 
+              v-if="scope.row.status === 0" 
+              size="small" 
+              type="warning" 
+              @click="handleReview(scope.row, 2)"
+            >拒绝</el-button>
             <el-button size="small" @click="editNews(scope.row)">编辑</el-button>
             <el-button size="small" type="danger" @click="deleteNews(scope.row)">删除</el-button>
           </template>
@@ -99,8 +111,10 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Search } from '@element-plus/icons-vue'
+import { Plus, Search, Check, Close } from '@element-plus/icons-vue'
 import type { News, NewsType } from '@/types'
+import { getNewsList, getNewsTypes, deleteNews as deleteNewsApi } from '@/api/modules/news'
+import { updateNewsStatus } from '@/api/modules/admin'
 
 const router = useRouter()
 
@@ -136,28 +150,17 @@ const getStatusText = (status: number) => {
 const fetchNews = async () => {
   loading.value = true
   try {
-    // 模拟数据，实际应该调用API
-    newsList.value = [
-      {
-        hid: 1,
-        title: 'Vue 3 Composition API 深度解析',
-        summary: '详细介绍Vue 3的新特性',
-        type: 1,
-        typeName: '技术',
-        publisher: 1,
-        author: '张三',
-        pageViews: 1234,
-        likeCount: 56,
-        commentCount: 12,
-        favoriteCount: 8,
-        isTop: true,
-        isHot: false,
-        status: 1,
-        createdTime: '2025-12-31 10:30:00',
-        updatedTime: '2025-12-31 10:30:00'
-      }
-    ]
-    total.value = 1
+    const params: any = {
+      page: currentPage.value,
+      size: pageSize.value,
+      type: selectedType.value || undefined,
+      keyword: searchKeyword.value,
+    }
+    const res = await getNewsList(params) as any
+    if (res.code === 200) {
+      newsList.value = res.data.items || []
+      total.value = res.data.total || 0
+    }
   } catch (error) {
     ElMessage.error('获取新闻列表失败')
   } finally {
@@ -167,13 +170,33 @@ const fetchNews = async () => {
 
 const fetchNewsTypes = async () => {
   try {
-    // 模拟数据
-    newsTypes.value = [
-      { tid: 1, tname: '技术', sortOrder: 1, status: 1, createdTime: '', updatedTime: '' },
-      { tid: 2, tname: '新闻', sortOrder: 2, status: 1, createdTime: '', updatedTime: '' }
-    ]
+    const res = await getNewsTypes() as any
+    if (res.code === 200) {
+      newsTypes.value = res.data
+    }
   } catch (error) {
     ElMessage.error('获取分类列表失败')
+  }
+}
+
+const handleReview = async (news: News, status: number) => {
+  const action = status === 1 ? '通过' : '拒绝'
+  try {
+    await ElMessageBox.confirm(`确定要${action}这篇新闻吗？`, '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: status === 1 ? 'success' : 'warning'
+    })
+    
+    const res = await updateNewsStatus(news.hid, status) as any
+    if (res.code === 200) {
+      ElMessage.success(`${action}操作成功`)
+      fetchNews()
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error(`${action}操作失败`)
+    }
   }
 }
 
@@ -189,9 +212,11 @@ const deleteNews = async (news: News) => {
       type: 'warning'
     })
     
-    // 调用删除API
-    ElMessage.success('删除成功')
-    fetchNews()
+    const res = await deleteNewsApi(Number(news.hid)) as any
+    if (res.code === 200) {
+      ElMessage.success('刪除成功')
+      fetchNews()
+    }
   } catch (error) {
     if (error !== 'cancel') {
       ElMessage.error('删除失败')

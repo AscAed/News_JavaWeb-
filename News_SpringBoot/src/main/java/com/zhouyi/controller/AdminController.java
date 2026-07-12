@@ -96,7 +96,84 @@ public class AdminController {
     @GetMapping("/health")
     @Operation(summary = "系统健康检查", description = "检查系统各组件健康状态")
     public Result<HealthCheckDTO> healthCheck(HttpServletRequest request) {
-        HealthCheckDTO health = healthCheckService.performHealthCheck();
-        return Result.success(health);
+        try {
+            HealthCheckDTO health = healthCheckService.performHealthCheck();
+
+            // 健康检查不需要记录日志，避免循环
+            return Result.success(health);
+        } catch (Exception e) {
+            return Result.error("健康检查失败：" + e.getMessage());
+        }
+    }
+
+    @Autowired
+    private com.zhouyi.service.HeadlineService headlineService;
+
+    /**
+     * 审核/下线新闻
+     * status: 1-发布/通过, 2-下线/拒绝
+     */
+    @PatchMapping("/news/{id}/status")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "审核新闻状态", description = "用于通过或拒绝新闻发布")
+    public Result<String> updateNewsStatus(
+            @PathVariable("id") Integer id,
+            @RequestParam Integer status,
+            HttpServletRequest request) {
+
+        try {
+            Result<String> result = headlineService.updateHeadlineStatus(id, status, getCurrentUserId());
+
+            // 记录操作日志
+            String username = getCurrentUsername();
+            operationLogService.logOperation(
+                    getCurrentUserId(),
+                    username,
+                    "UPDATE",
+                    "NEWS_STATUS",
+                    String.valueOf(id),
+                    "更新新闻 " + id + " 状态为 " + status,
+                    getClientIpAddress(request),
+                    request.getHeader("User-Agent"));
+
+            return result;
+        } catch (Exception e) {
+            return Result.error("更新新闻状态失败：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 获取当前用户ID
+     */
+    private Integer getCurrentUserId() {
+        // 这里应该从SecurityContext获取当前用户ID
+        // 简化实现，实际项目中需要从JWT Token中解析
+        return 1; // 暂时返回固定值
+    }
+
+    /**
+     * 获取当前用户名
+     */
+    private String getCurrentUsername() {
+        // 这里应该从SecurityContext获取当前用户名
+        // 简化实现，实际项目中需要从JWT Token中解析
+        return "admin"; // 暂时返回固定值
+    }
+
+    /**
+     * 获取客户端IP地址
+     */
+    private String getClientIpAddress(HttpServletRequest request) {
+        String xForwardedFor = request.getHeader("X-Forwarded-For");
+        if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
+            return xForwardedFor.split(",")[0].trim();
+        }
+
+        String xRealIp = request.getHeader("X-Real-IP");
+        if (xRealIp != null && !xRealIp.isEmpty()) {
+            return xRealIp;
+        }
+
+        return request.getRemoteAddr();
     }
 }

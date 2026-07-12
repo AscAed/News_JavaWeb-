@@ -18,6 +18,8 @@ import com.zhouyi.entity.elasticsearch.HeadlineEsEntity;
 import com.zhouyi.service.OutboxService;
 import com.zhouyi.service.NewsSearchService;
 import com.zhouyi.dto.SearchResultDTO;
+import com.zhouyi.dto.UserProfileDTO;
+import lombok.extern.slf4j.Slf4j;
 import java.util.stream.Collectors;
 import com.zhouyi.common.result.ResultCode;
 import com.zhouyi.common.exception.BusinessException;
@@ -39,6 +41,7 @@ import org.springframework.data.redis.core.RedisTemplate;
  * 新闻头条服务实现类
  */
 @Service
+@Slf4j
 public class HeadlineServiceImpl implements HeadlineService {
 
     @Autowired
@@ -298,13 +301,24 @@ public class HeadlineServiceImpl implements HeadlineService {
                 }
             }
 
-            // 设置统计数据（默认值，实际应从统计表获取）
-            detailDTO.setLikeCount(0);
-            detailDTO.setCommentCount(0);
-            detailDTO.setShareCount(0);
+            // 设置统计数据（从实体获取）
+            detailDTO.setLikeCount(headline.getLikeCount() != null ? headline.getLikeCount() : 0);
+            detailDTO.setCommentCount(headline.getCommentCount() != null ? headline.getCommentCount() : 0);
+            detailDTO.setPageViews(headline.getPageViews() != null ? headline.getPageViews() : 0);
+            detailDTO.setShareCount(0); // 分享数暂未实现
 
-            // 设置作者头像（默认值，实际应从用户表获取）
-            detailDTO.setAuthorAvatar("https://example.com/avatars/default.jpg");
+            // 设置作者头像
+            detailDTO.setAuthorAvatar("https://example.com/avatars/default.jpg"); // 默认头像
+            if (headline.getPublisher() != null) {
+                try {
+                    Result<UserProfileDTO> userProfile = userService.getUserProfile(headline.getPublisher());
+                    if (userProfile.getCode() == 200 && userProfile.getData() != null) {
+                        detailDTO.setAuthorAvatar(userProfile.getData().getAvatar());
+                    }
+                } catch (Exception e) {
+                    log.error("Failed to fetch author avatar for user {}: {}", headline.getPublisher(), e.getMessage());
+                }
+            }
 
             return Result.successWithMessageAndData("查询成功", detailDTO);
 
@@ -321,10 +335,11 @@ public class HeadlineServiceImpl implements HeadlineService {
         String mongoDocumentId = null;
         try {
             // 获取发布者信息（使用JWT验证的用户ID）
-            var userResult = userService.getUserById(publisher);
-            if (userResult.getCode() != 200 || userResult.getData() == null) {
+            var profileResult = userService.getUserProfile(publisher);
+            if (profileResult.getCode() != 200 || profileResult.getData() == null) {
                 throw new BusinessException(ResultCode.USER_NOT_EXIST);
             }
+            UserProfileDTO profile = profileResult.getData();
 
             // 创建头条实体
             Headline headline = new Headline();
@@ -334,8 +349,15 @@ public class HeadlineServiceImpl implements HeadlineService {
             headline.setCoverImage(publishDTO.getCoverImage());
             headline.setTags(publishDTO.getTags());
             headline.setPublisher(publisher); // 使用JWT验证的用户ID
-            headline.setAuthor(userResult.getData().getUsername());
-            headline.setStatus(1); // 已发布
+            headline.setAuthor(profile.getUsername());
+
+            // 只有媒体用户需要审核 (status=0)
+            if ("media".equalsIgnoreCase(profile.getRole_name())) {
+                headline.setStatus(0); // 审核中
+            } else {
+                headline.setStatus(1); // 已发布
+            }
+
             headline.setIsTop(0); // 不置顶
             headline.setCreatedTime(LocalDateTime.now());
             headline.setUpdatedTime(LocalDateTime.now());
@@ -367,7 +389,7 @@ public class HeadlineServiceImpl implements HeadlineService {
             newsContent.setContent(publishDTO.getArticle());
             newsContent.setSummary(publishDTO.getSummary());
             newsContent.setCoverImage(publishDTO.getCoverImage());
-            newsContent.setAuthor(userResult.getData().getUsername());
+            newsContent.setAuthor(profile.getUsername());
 
             // Set source fields in MongoDB
             newsContent.setSourceType(com.zhouyi.common.enums.NewsSource.API);
@@ -508,15 +530,17 @@ public class HeadlineServiceImpl implements HeadlineService {
                 mongoTemplate.remove(newsContent);
             }
 
-            // 通过异步事件从 Elasticsearch 中删除 (改为 Outbox 模式)
-            outboxService.saveEsSyncMessage(hid, "DELETE");
+            // 从 Elasticsearch 中删除
+            try {
+                headlineEsRepository.deleteById(hid);
+            } catch (Exception e) {
+                System.err.println("Elasticsearch sync failed (delete): " + e.getMessage());
+            }
 
             return Result.success("删除成功");
 
-        } catch (BusinessException e) {
-            throw e;
         } catch (Exception e) {
-            throw new BusinessException(ResultCode.DATA_IS_WRONG, e);
+            return Result.error("删除失败：" + e.getMessage());
         }
     }
 
@@ -524,5 +548,61 @@ public class HeadlineServiceImpl implements HeadlineService {
     public void incrementViewCount(Integer hid) {
         if (hid == null) return;
         redisTemplate.opsForHash().increment("headline:page_views:hash", String.valueOf(hid), 1);
+    }
+
+    @Override
+    @Transactional
+    public Result<String> updateHeadlineStatus(Integer hid, Integer status, Integer adminId) {
+        try {
+            // 验证管理员权限（由Controller的PreAuthorize保证，这里简单记录）
+            log.info("Admin {} is updating headline {} status to {}", adminId, hid, status);
+
+            // 检查头条是否存在
+            Headline headline = headlineMapper.selectHeadlineById(hid);
+            if (headline == null) {
+                return Result.error("新闻不存在");
+            }
+
+            // 更新数据库
+            int rows = headlineMapper.updateStatus(hid, status);
+            if (rows <= 0) {
+                return Result.error("更新状态失败");
+            }
+
+            // 如果审核通过，同步到 ES
+            if (status == 1) {
+                try {
+                    // 获取完整内容
+                    Result<HeadlineDetailDTO> contentResult = getHeadlineById(hid);
+                    if (contentResult.getCode() == 200 && contentResult.getData() != null) {
+                        HeadlineDetailDTO detail = contentResult.getData();
+                        HeadlineEsEntity esEntity = new HeadlineEsEntity();
+                        esEntity.setHid(headline.getHid());
+                        esEntity.setTitle(headline.getTitle());
+                        esEntity.setArticle(detail.getContent());
+                        esEntity.setTypeName(headline.getTypeName());
+                        esEntity.setType(headline.getType());
+                        esEntity.setPageViews(headline.getPageViews());
+                        headlineEsRepository.save(esEntity);
+                        log.info("Headline {} published and synced to ES", hid);
+                    }
+                } catch (Exception e) {
+                    log.error("Sync to ES failed after approval: {}", e.getMessage());
+                }
+            } else if (status == 2) {
+                // 如果下线/拒绝，从 ES 删除
+                try {
+                    headlineEsRepository.deleteById(hid);
+                    log.info("Headline {} offlined and removed from ES", hid);
+                } catch (Exception e) {
+                    log.error("Remove from ES failed after offline: {}", e.getMessage());
+                }
+            }
+
+            return Result.success("状态更新成功");
+        } catch (Exception e) {
+            log.error("Update headline status failed", e);
+            return Result.error("更新失败：" + e.getMessage());
+        }
     }
 }

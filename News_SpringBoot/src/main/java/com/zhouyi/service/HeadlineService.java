@@ -57,9 +57,12 @@ public interface HeadlineService {
     Result<String> deleteHeadline(Integer hid, Integer userId);
 
     /**
-     * 增加浏览量 (Redis异步缓存版本)
+     * 更新新闻状态（审核）
      * 
-     * @param hid 头条ID
+     * @param hid    头条ID
+     * @param status 状态 (1: 通过, 2: 拒绝)
+     * @param userId 审核人ID
+     * @return 处理结果
      */
-    void incrementViewCount(Integer hid);
+    Result<String> updateHeadlineStatus(Integer hid, Integer status, Integer userId);
 }

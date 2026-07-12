@@ -101,9 +101,9 @@ custom:
     # MinIO服务地址
     endpoint: http://localhost:9000
     # Access Key
-    access-key: ${MINIO_ACCESS_KEY:minioadmin}
+    access-key: ${MINIO_ACCESS_KEY:${MINIO_ACCESS_KEY:admin}}
     # Secret Key
-    secret-key: ${MINIO_SECRET_KEY:minioadmin}
+    secret-key: ${MINIO_SECRET_KEY:${MINIO_SECRET_KEY:password123}}
     # 默认存储桶名称
     bucket-name: news-storage
     # 文件访问URL前缀
@@ -115,7 +115,7 @@ custom:
   # JWT配置
   jwt:
     # JWT密钥，使用512位安全密钥（Base64编码）
-    secret: ${JWT_SECRET:bXlfc2VjdXJlX2p3dF9zZWNyZXRfa2V5XzIwMjVfZm9yX25ld3Nfc3ByaW5nYm9vdF9hcHBsaWNhdGlvbl9tdXN0X2JlX2F0X2xlYXN0XzY0X2J5dGVzX2xvbmdfZW5vdWdoX2Zvcl9obWFjX3NoYV81MTI=}
+    secret: ${JWT_SECRET}
     # JWT过期时间，单位毫秒（24小时）
     expiration: ${JWT_EXPIRATION:86400000}
     # JWT刷新令牌过期时间，单位毫秒（7天）

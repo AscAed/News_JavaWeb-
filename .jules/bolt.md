@@ -1,0 +1,3 @@
+## 2024-05-20 - [Debouncing Search without Dependencies]
+**Learning:** Adding standard utility packages like `lodash` just for a single function like `debounce` can bloat the frontend bundle and violates the "do not add dependencies unless necessary" rule. Custom utility functions are often preferred for simple optimizations when external dependencies are constrained.
+**Action:** When a utility like `debounce` or `throttle` is needed for a single component or specific use-case, write a native Typescript implementation within the component or a local `utils` file to maintain a zero-dependency footprint. Always ensure proper cleanup (e.g., calling `cancel()` in `onUnmounted`) to prevent memory leaks or state updates on destroyed components.

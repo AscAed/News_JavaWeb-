@@ -3,10 +3,12 @@
     <!-- 卡片内容 (左侧) -->
     <div class="card-content">
       <!-- 标题 -->
-      <h3 class="card-title" @click="goToDetail" v-html="news.title"></h3>
+      <!-- Security: Sanitize user input before rendering with v-html to prevent XSS -->
+      <h3 class="card-title" @click="goToDetail" v-html="DOMPurify.sanitize(news.title)"></h3>
 
       <!-- 摘要 -->
-      <p v-if="news.summary" class="card-summary" @click="goToDetail" v-html="news.summary"></p>
+      <!-- Security: Sanitize user input before rendering with v-html to prevent XSS -->
+      <p v-if="news.summary" class="card-summary" @click="goToDetail" v-html="DOMPurify.sanitize(news.summary)"></p>
 
       <!-- 标签 & 分类 (合并显示在摘要下方) -->
       <div class="news-tags-group">
@@ -78,6 +80,7 @@ import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import type { News } from '@/types'
 import { Trophy } from '@element-plus/icons-vue'
+import DOMPurify from 'dompurify'
 
 interface Props {
   news: News

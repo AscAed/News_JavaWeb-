@@ -193,7 +193,8 @@ public class AuthController {
             }
             
             // 检查是否在 Redis 黑名单中
-            Boolean isBlacklisted = redisTemplate.hasKey("jwt:blacklist:" + refreshToken);
+            String jti = jwtUtil.getJtiFromToken(refreshToken);
+            Boolean isBlacklisted = jti != null && redisTemplate.hasKey("jwt:blacklist:" + jti);
             if (Boolean.TRUE.equals(isBlacklisted)) {
                 return Result.error("Refresh token 已失效，请重新登录", "/api/v1/auth/refresh");
             }
@@ -217,8 +218,8 @@ public class AuthController {
             try {
                 Date expirationDate = jwtUtil.getExpirationDateFromToken(refreshToken);
                 long ttl = expirationDate.getTime() - System.currentTimeMillis();
-                if (ttl > 0) {
-                    redisTemplate.opsForValue().set("jwt:blacklist:" + refreshToken, "true", ttl, TimeUnit.MILLISECONDS);
+                if (ttl > 0 && jti != null) {
+                    redisTemplate.opsForValue().set("jwt:blacklist:" + jti, "true", ttl, TimeUnit.MILLISECONDS);
                 }
             } catch (Exception e) {
                 // Ignore parsing errors for blacklist
@@ -333,10 +334,11 @@ public class AuthController {
             // 获取当前的 Access Token
             String token = jwtUtil.extractTokenFromRequest(request);
             if (token != null && jwtUtil.validateToken(token)) {
+                String jti = jwtUtil.getJtiFromToken(token);
                 Date expirationDate = jwtUtil.getExpirationDateFromToken(token);
                 long ttl = expirationDate.getTime() - System.currentTimeMillis();
-                if (ttl > 0) {
-                    redisTemplate.opsForValue().set("jwt:blacklist:" + token, "true", ttl, TimeUnit.MILLISECONDS);
+                if (ttl > 0 && jti != null) {
+                    redisTemplate.opsForValue().set("jwt:blacklist:" + jti, "true", ttl, TimeUnit.MILLISECONDS);
                 }
             }
             
@@ -344,10 +346,11 @@ public class AuthController {
             if (body != null && body.containsKey("refreshToken")) {
                 String refreshToken = body.get("refreshToken");
                 if (refreshToken != null && jwtUtil.validateToken(refreshToken)) {
+                    String refreshJti = jwtUtil.getJtiFromToken(refreshToken);
                     Date expirationDate = jwtUtil.getExpirationDateFromToken(refreshToken);
                     long ttl = expirationDate.getTime() - System.currentTimeMillis();
-                    if (ttl > 0) {
-                        redisTemplate.opsForValue().set("jwt:blacklist:" + refreshToken, "true", ttl, TimeUnit.MILLISECONDS);
+                    if (ttl > 0 && refreshJti != null) {
+                        redisTemplate.opsForValue().set("jwt:blacklist:" + refreshJti, "true", ttl, TimeUnit.MILLISECONDS);
                     }
                 }
             }

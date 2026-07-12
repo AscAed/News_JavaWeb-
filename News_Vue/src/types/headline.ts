@@ -68,10 +68,16 @@ export interface ApiResponse<T = any> {
 }
 
 // 评论相关类型定义
+export interface CommentAuthor {
+  username: string
+  avatarUrl?: string
+}
+
 export interface Comment {
   id: string
-  newsId: number
-  userId: number
+  headline_id: number
+  parent_id: string | null
+  author: CommentAuthor
   content: string
   parentId?: string
   likeCount: number

@@ -200,4 +200,23 @@
         </foreach>
     </update>
 
+    <!-- 增加评论数 -->
+    <update id="incrementCommentCount">
+        UPDATE headlines SET comment_count = comment_count + 1 WHERE hid = #{hid}
+    </update>
+
+    <!-- 减少评论数 -->
+    <update id="decrementCommentCount">
+        UPDATE headlines SET comment_count = comment_count - 1 WHERE hid = #{hid}
+    </update>
+
+    <!-- 增加点赞数 -->
+    <update id="incrementLikeCount">
+        UPDATE headlines SET like_count = like_count + 1 WHERE hid = #{hid}
+    </update>
+
+    <!-- 减少点赞数 -->
+    <update id="decrementLikeCount">
+        UPDATE headlines SET like_count = like_count - 1 WHERE hid = #{hid}
+    </update>
 </mapper>
