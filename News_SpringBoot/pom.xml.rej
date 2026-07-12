@@ -1,0 +1,14 @@
+--- News_SpringBoot/pom.xml
++++ News_SpringBoot/pom.xml
+@@ -10,8 +10,8 @@
+     <name>News_SpringBoot</name>
+     <description>News_SpringBoot</description>
+     <properties>
+-        <java.version>25</java.version>
+-        <maven.compiler.source>25</maven.compiler.source>
+-        <maven.compiler.target>25</maven.compiler.target>
++        <java.version>21</java.version>
++        <maven.compiler.source>21</maven.compiler.source>
++        <maven.compiler.target>21</maven.compiler.target>
+         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+     </properties>
