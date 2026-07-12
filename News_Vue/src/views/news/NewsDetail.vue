@@ -110,8 +110,10 @@
             :title="`回复 @${replyTo?.userInfo?.username}`"
             width="50%"
             destroy-on-close
+            @opened="focusReplyInput"
           >
             <el-input
+              ref="replyInputRef"
               v-model="replyContent"
               type="textarea"
               :rows="3"
@@ -163,6 +165,7 @@ const replyDialogVisible = ref(false)
 const replyTo = ref<Comment | null>(null)
 const replyContent = ref('')
 const submittingReply = ref(false)
+const replyInputRef = ref<any>(null)
 
 // 计算属性
 const isLoggedIn = computed(() => userStore.isLoggedIn)
@@ -285,6 +288,12 @@ const handleReply = (comment: Comment) => {
   replyTo.value = comment
   replyContent.value = ''
   replyDialogVisible.value = true
+}
+
+const focusReplyInput = () => {
+  if (replyInputRef.value) {
+    replyInputRef.value.focus()
+  }
 }
 
 const submitReply = async () => {
