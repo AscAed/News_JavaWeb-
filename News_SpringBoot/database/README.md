@@ -275,9 +275,9 @@ docker run -d \
 ```yaml
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/News_DB?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
-    username: news_app
-    password: your_password
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:3306/News_DB?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
+    username: ${MYSQL_USER} # Must be provided via environment variable
+    password: ${MYSQL_PASSWORD} # Must be provided via environment variable
     
   data:
     mongodb:
@@ -287,8 +287,8 @@ spring:
 custom:
   minio:
     endpoint: http://localhost:9000
-    access-key: minioadmin
-    secret-key: minioadmin
+    access-key: ${MINIO_ACCESS_KEY} # Must be provided via environment variable
+    secret-key: ${MINIO_SECRET_KEY} # Must be provided via environment variable
     bucket-name: news-storage
 ```
 
