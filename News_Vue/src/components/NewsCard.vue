@@ -4,11 +4,11 @@
     <div class="card-content">
       <!-- 标题 -->
       <!-- Security: Sanitize user input before rendering with v-html to prevent XSS -->
-      <h3 class="card-title" @click="goToDetail" v-html="DOMPurify.sanitize(news.title)"></h3>
+      <h3 class="card-title" @click="goToDetail" v-html="sanitizedTitle"></h3>
 
       <!-- 摘要 -->
       <!-- Security: Sanitize user input before rendering with v-html to prevent XSS -->
-      <p v-if="news.summary" class="card-summary" @click="goToDetail" v-html="DOMPurify.sanitize(news.summary)"></p>
+      <p v-if="news.summary" class="card-summary" @click="goToDetail" v-html="sanitizedSummary"></p>
 
       <!-- 标签 & 分类 (合并显示在摘要下方) -->
       <div class="news-tags-group">
@@ -23,9 +23,9 @@
         </el-tag>
         <template v-if="news.tags">
           <el-tag
-            v-for="tag in getTagList(news.tags)"
+            v-for="tag in tagList"
             :key="tag"
-            :type="getTagType(tag)"
+            :type="tagTypeMap[tag] || ''"
             class="news-tag"
             effect="plain"
             size="small"
@@ -42,7 +42,7 @@
             >来自: {{ (news as any).sourceName }}</span
           >
           <span v-if="news.author" class="author-name">· {{ news.author }}</span>
-          <span class="publish-time">· {{ formatTime(news.publishedTime) }}</span>
+          <span class="publish-time">· {{ formattedTime }}</span>
           <span v-if="(news as any).readingTime" class="reading-time">
             · {{ (news as any).readingTime }}分钟阅读
           </span>
@@ -103,49 +103,28 @@ const router = useRouter()
 const isFeatured = computed(() => props.featured || props.news.isTop)
 const cardSize = computed(() => `card-${props.size}`)
 
-// 方法
-const goToDetail = () => {
-  if (props.news.sourceUrl) {
-    window.open(props.news.sourceUrl, '_blank')
-    return
-  }
-  router.push(`/news/${props.news.hid}`)
-}
+// 性能优化: 缓存DOMPurify计算和日期格式化，避免在v-for列表重新渲染时被反复调用
+const sanitizedTitle = computed(() => DOMPurify.sanitize(props.news.title))
+const sanitizedSummary = computed(() => props.news.summary ? DOMPurify.sanitize(props.news.summary) : '')
 
-const handleImageError = (event: Event) => {
-  const img = event.target as HTMLImageElement
-  img.src = '/placeholder-news.jpg'
-}
-
-const getTagList = (tags: string): string[] => {
-  if (!tags) return []
-  return tags
+const tagList = computed(() => {
+  if (!props.news.tags) return []
+  return props.news.tags
     .split(',')
     .map((tag) => tag.trim())
     .filter(Boolean)
+})
+
+const tagTypeMap: Record<string, string> = {
+  热点: 'danger',
+  独家: 'warning',
+  推荐: 'success',
+  原创: 'primary',
+  精选: 'info',
 }
 
-const getTagType = (tag: string): string => {
-  const tagTypes: Record<string, string> = {
-    热点: 'danger',
-    独家: 'warning',
-    推荐: 'success',
-    原创: 'primary',
-    精选: 'info',
-  }
-  return tagTypes[tag] || ''
-}
-
-const formatNumber = (num: number): string => {
-  if (num >= 10000) {
-    return (num / 10000).toFixed(1) + '万'
-  } else if (num >= 1000) {
-    return (num / 1000).toFixed(1) + 'k'
-  }
-  return num.toString()
-}
-
-const formatTime = (time: string | undefined): string => {
+const formattedTime = computed(() => {
+  const time = props.news.publishedTime
   if (!time) return '未知时间'
 
   const date = new Date(time)
@@ -163,6 +142,29 @@ const formatTime = (time: string | undefined): string => {
   } else {
     return date.toLocaleDateString()
   }
+})
+
+// 方法
+const goToDetail = () => {
+  if (props.news.sourceUrl) {
+    window.open(props.news.sourceUrl, '_blank')
+    return
+  }
+  router.push(`/news/${props.news.hid}`)
+}
+
+const handleImageError = (event: Event) => {
+  const img = event.target as HTMLImageElement
+  img.src = '/placeholder-news.jpg'
+}
+
+const formatNumber = (num: number): string => {
+  if (num >= 10000) {
+    return (num / 10000).toFixed(1) + '万'
+  } else if (num >= 1000) {
+    return (num / 1000).toFixed(1) + 'k'
+  }
+  return num.toString()
 }
 </script>
 

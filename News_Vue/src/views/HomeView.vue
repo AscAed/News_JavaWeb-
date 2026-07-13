@@ -84,7 +84,7 @@ const filteredNewsList = computed(() => {
 // 统一的请求方法
 const fetchListFromBackend = async (page = 1) => {
   newsStore.currentPage = page
-  let params: any = { page, size: newsStore.pageSize }
+  const params: any = { page, size: newsStore.pageSize }
   if (selectedType.value !== null) {
     params.type = selectedType.value
   }
