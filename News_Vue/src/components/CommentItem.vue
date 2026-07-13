@@ -8,7 +8,7 @@
     <div class="comment-content">
       <div class="comment-header">
         <span class="username">{{ comment.author.username }}</span>
-        <span class="comment-time">{{ formatTime(comment.created_time) }}</span>
+        <span class="comment-time">{{ formattedTime }}</span>
       </div>
       <div class="comment-text">
         <span v-if="replyToUser" class="reply-target">回复 @{{ replyToUser }}: </span>
@@ -78,6 +78,9 @@ defineEmits<{
 const isAuthor = computed(() => {
   return props.currentUser && props.currentUser === props.comment.author.username
 })
+
+// ⚡ Bolt Performance: Memoize formatted time to avoid inline execution on template re-renders
+const formattedTime = computed(() => formatTime(props.comment.created_time))
 
 const formatTime = (time?: string) => {
   if (!time) return ''
