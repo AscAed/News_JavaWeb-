@@ -62,7 +62,7 @@
               <el-button type="danger" link @click="handleClearLogs">
                 <el-icon><Delete /></el-icon> 清空记录
               </el-button>
-              <el-button type="primary" link @click="fetchGovernanceData">
+              <el-button type="primary" link @click="fetchGovernanceData" title="刷新数据" aria-label="刷新数据">
                 <el-icon><Refresh /></el-icon>
               </el-button>
             </div>
@@ -108,6 +108,7 @@
                     icon="Lock" 
                     circle 
                     size="small"
+                    aria-label="一键封禁该会话"
                     @click="handleFastBlock(scope.row.jti)"
                   />
                 </el-tooltip>
