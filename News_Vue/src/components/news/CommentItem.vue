@@ -10,7 +10,7 @@
         <div class="comment-header">
           <span class="username">{{ comment.userInfo?.username }}</span>
           <span v-if="depth > 0" class="reply-label">回复了</span>
-          <span class="comment-time">{{ formatTime(comment.createdAt) }}</span>
+          <span class="comment-time">{{ formattedTime }}</span>
         </div>
         <div class="comment-text" v-text="comment.content"></div>
         <div class="comment-actions">
@@ -40,6 +40,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { Star } from '@element-plus/icons-vue'
 import type { Comment } from '@/types/headline'
 
@@ -49,6 +50,9 @@ const props = defineProps<{
 }>()
 
 defineEmits(['reply', 'like'])
+
+// ⚡ Bolt Performance: Memoize formatted time to prevent inline function calls in templates
+const formattedTime = computed(() => formatTime(props.comment.createdAt))
 
 const formatTime = (time?: string) => {
   if (!time) return ''

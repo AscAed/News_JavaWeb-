@@ -42,7 +42,7 @@
             <el-row :gutter="20" v-loading="loading">
               <el-col 
                 :span="8" 
-                v-for="news in newsList" 
+                v-for="news in formattedNewsList"
                 :key="news.hid"
                 style="margin-bottom: 20px"
               >
@@ -62,7 +62,7 @@
                     <p class="news-summary">{{ news.summary }}</p>
                     <div class="news-meta">
                       <span class="news-author">{{ news.author }}</span>
-                      <span class="news-time">{{ formatTime(news.publishedTime) }}</span>
+                      <span class="news-time">{{ news.formattedPublishTime }}</span>
                     </div>
                     <div class="news-stats">
                       <el-icon><View /></el-icon>
@@ -92,7 +92,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Search, View, Star } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
@@ -116,6 +116,15 @@ const selectedCategory = ref('')
 const currentPage = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
+
+// 计算属性
+// ⚡ Bolt Performance: Pre-format the publishedTime for the entire list using a computed property to avoid inline function execution in v-for loops during re-renders
+const formattedNewsList = computed(() => {
+  return newsList.value.map(news => ({
+    ...news,
+    formattedPublishTime: formatTime(news.publishedTime)
+  }))
+})
 
 // 方法
 const fetchNews = async () => {
