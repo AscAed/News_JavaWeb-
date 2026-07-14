@@ -1,14 +1,23 @@
 <template>
-  <div class="news-card" :class="[cardSize, { featured: isFeatured }]">
+  <div
+    class="news-card"
+    :class="[cardSize, { featured: isFeatured }]"
+    tabindex="0"
+    role="article"
+    :aria-label="'阅读新闻: ' + (news.title || '无标题')"
+    @click="goToDetail"
+    @keydown.enter="goToDetail"
+    @keydown.space.prevent="goToDetail"
+  >
     <!-- 卡片内容 (左侧) -->
     <div class="card-content">
       <!-- 标题 -->
       <!-- Security: Sanitize user input before rendering with v-html to prevent XSS -->
-      <h3 class="card-title" @click="goToDetail" v-html="sanitizedTitle"></h3>
+      <h3 class="card-title" v-html="sanitizedTitle"></h3>
 
       <!-- 摘要 -->
       <!-- Security: Sanitize user input before rendering with v-html to prevent XSS -->
-      <p v-if="news.summary" class="card-summary" @click="goToDetail" v-html="sanitizedSummary"></p>
+      <p v-if="news.summary" class="card-summary" v-html="sanitizedSummary"></p>
 
       <!-- 标签 & 分类 (合并显示在摘要下方) -->
       <div class="news-tags-group">
@@ -51,7 +60,7 @@
     </div>
 
     <!-- 封面图片 (右侧) -->
-    <div v-if="news.coverImageUrl" class="card-image-container" @click="goToDetail">
+    <div v-if="news.coverImageUrl" class="card-image-container">
       <img
         :alt="news.title"
         :src="news.coverImageUrl"
@@ -105,7 +114,9 @@ const cardSize = computed(() => `card-${props.size}`)
 
 // 性能优化: 缓存DOMPurify计算和日期格式化，避免在v-for列表重新渲染时被反复调用
 const sanitizedTitle = computed(() => DOMPurify.sanitize(props.news.title))
-const sanitizedSummary = computed(() => props.news.summary ? DOMPurify.sanitize(props.news.summary) : '')
+const sanitizedSummary = computed(() =>
+  props.news.summary ? DOMPurify.sanitize(props.news.summary) : '',
+)
 
 const tagList = computed(() => {
   if (!props.news.tags) return []
@@ -186,11 +197,13 @@ const formatNumber = (num: number): string => {
   align-items: flex-start;
 }
 
-.news-card:hover {
+.news-card:hover,
+.news-card:focus-visible {
   background: var(--bg-primary);
-  border-color: var(--border-primary);
+  border-color: var(--primary-color);
   box-shadow: var(--shadow-md);
   transform: translateY(-2px);
+  outline: none;
 }
 
 /* 覆盖组件的默认最大宽度以适应流式布局 */
@@ -254,7 +267,8 @@ const formatNumber = (num: number): string => {
   transition: var(--transition-normal);
 }
 
-.news-card:hover .card-image-overlay {
+.news-card:hover .card-image-overlay,
+.news-card:focus-visible .card-image-overlay {
   opacity: 1;
 }
 
@@ -318,7 +332,8 @@ const formatNumber = (num: number): string => {
   transition: color var(--transition-fast);
 }
 
-.news-card:hover .card-title {
+.news-card:hover .card-title,
+.news-card:focus-visible .card-title {
   color: var(--primary-color);
 }
 
