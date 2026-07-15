@@ -14,7 +14,7 @@
             <h1>{{ newsDetail.title }}</h1>
             <div class="article-meta">
               <span class="author">作者：{{ newsDetail.author }}</span>
-              <span class="publish-time">发布时间：{{ formatTime(newsDetail.publishedTime) }}</span>
+              <span class="publish-time">发布时间：{{ formattedPublishTime }}</span>
               <span class="category">分类：{{ newsDetail.typeName }}</span>
             </div>
             <div class="article-stats">
@@ -32,12 +32,12 @@
           </div>
 
           <!-- Security: Sanitize user input before rendering with v-html to prevent XSS -->
-          <div class="article-content" v-html="DOMPurify.sanitize(newsDetail.content || '')"></div>
+          <div class="article-content" v-html="sanitizedContent"></div>
 
           <footer class="article-footer">
-            <div class="article-tags" v-if="newsDetail.tags">
+            <div class="article-tags" v-if="parsedTags.length > 0">
               <el-tag
-                v-for="tag in (Array.isArray(newsDetail.tags) ? newsDetail.tags : String(newsDetail.tags).split(','))"
+                v-for="tag in parsedTags"
                 :key="tag"
                 size="small"
                 style="margin-right: 8px"
@@ -176,6 +176,22 @@ const submittingReply = ref(false)
 // 计算属性
 const isLoggedIn = computed(() => userStore.isLoggedIn)
 
+const sanitizedContent = computed(() => {
+  return DOMPurify.sanitize(newsDetail.value?.content || '')
+})
+
+const formattedPublishTime = computed(() => {
+  const time = newsDetail.value?.publishedTime
+  if (!time) return ''
+  return new Date(time).toLocaleString()
+})
+
+const parsedTags = computed(() => {
+  const tags = newsDetail.value?.tags
+  if (!tags) return []
+  return Array.isArray(tags) ? tags : String(tags).split(',')
+})
+
 // 方法
 const fetchNewsDetail = async () => {
   const hid = Number(route.params.hid)
@@ -214,11 +230,6 @@ const fetchComments = async () => {
 
 const goBack = () => {
   router.go(-1)
-}
-
-const formatTime = (time?: string) => {
-  if (!time) return ''
-  return new Date(time).toLocaleString()
 }
 
 const toggleLike = () => {
