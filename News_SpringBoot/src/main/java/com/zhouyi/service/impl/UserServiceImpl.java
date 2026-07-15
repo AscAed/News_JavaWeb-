@@ -23,7 +23,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Result<User> login(String phone, String password) {
-        System.out.println("尝试登录：手机号=" + phone + ", 密码=" + password);
+        System.out.println("尝试登录：手机号=" + phone + ", 密码=***");
         // 先根据手机号查询用户
         User user = userMapper.selectUserByPhone(phone);
         System.out.println("查询结果：user=" + (user != null ? user.getUsername() : "null"));
