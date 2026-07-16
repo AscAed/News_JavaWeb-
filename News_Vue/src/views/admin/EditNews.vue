@@ -105,7 +105,7 @@ const newsForm = ref({
   content: '',
   coverImage: '',
   tags: '',
-  status: 1
+  status: 1,
 })
 
 const newsTypes = ref<NewsType[]>([])
@@ -113,15 +113,13 @@ const newsTypes = ref<NewsType[]>([])
 const rules = {
   title: [
     { required: true, message: '请输入新闻标题', trigger: 'blur' },
-    { min: 5, max: 200, message: '标题长度在 5 到 200 个字符', trigger: 'blur' }
+    { min: 5, max: 200, message: '标题长度在 5 到 200 个字符', trigger: 'blur' },
   ],
-  type: [
-    { required: true, message: '请选择新闻分类', trigger: 'change' }
-  ],
+  type: [{ required: true, message: '请选择新闻分类', trigger: 'change' }],
   content: [
     { required: true, message: '请输入新闻内容', trigger: 'blur' },
-    { min: 10, message: '内容至少 10 个字符', trigger: 'blur' }
-  ]
+    { min: 10, message: '内容至少 10 个字符', trigger: 'blur' },
+  ],
 }
 
 const fetchNewsDetail = async () => {
@@ -147,9 +145,9 @@ const fetchNewsDetail = async () => {
       coverImageUrl: 'https://example.com/cover.jpg',
       tags: 'Vue,JavaScript,前端',
       createdTime: '2025-12-31 10:30:00',
-      updatedTime: '2025-12-31 10:30:00'
+      updatedTime: '2025-12-31 10:30:00',
     }
-    
+
     newsForm.value = {
       title: newsData.title,
       type: Number(newsData.type),
@@ -157,7 +155,7 @@ const fetchNewsDetail = async () => {
       content: newsData.content || '',
       coverImage: newsData.coverImageUrl || '',
       tags: newsData.tags || '',
-      status: Number(newsData.status)
+      status: Number(newsData.status),
     }
   } catch (error) {
     ElMessage.error('获取新闻详情失败')
@@ -171,7 +169,7 @@ const fetchNewsTypes = async () => {
     // 模拟数据
     newsTypes.value = [
       { tid: 1, tname: '技术', sortOrder: 1, status: 1, createdTime: '', updatedTime: '' },
-      { tid: 2, tname: '新闻', sortOrder: 2, status: 1, createdTime: '', updatedTime: '' }
+      { tid: 2, tname: '新闻', sortOrder: 2, status: 1, createdTime: '', updatedTime: '' },
     ]
   } catch (error) {
     ElMessage.error('获取分类列表失败')
@@ -207,10 +205,10 @@ const uploadCover = async (options: any) => {
 
 const updateNews = async () => {
   if (!formRef.value) return
-  
+
   try {
     await formRef.value.validate()
-    
+
     // 调用更新API
     ElMessage.success('新闻更新成功')
     router.push('/admin/news')

@@ -15,21 +15,11 @@
         {{ comment.content }}
       </div>
       <div class="comment-actions">
-        <el-button
-          type="text"
-          size="small"
-          @click="$emit('like', comment)"
-        >
+        <el-button type="text" size="small" @click="$emit('like', comment)">
           <el-icon><Star /></el-icon>
           {{ comment.like_count || 0 }}
         </el-button>
-        <el-button
-          type="text"
-          size="small"
-          @click="$emit('reply', comment)"
-        >
-          回复
-        </el-button>
+        <el-button type="text" size="small" @click="$emit('reply', comment)"> 回复 </el-button>
         <el-button
           v-if="isAuthor"
           type="text"

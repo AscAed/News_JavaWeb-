@@ -87,7 +87,7 @@ const newsForm = ref({
   summary: '',
   content: '',
   coverImage: '',
-  tags: ''
+  tags: '',
 })
 
 const newsTypes = ref<NewsType[]>([])
@@ -95,15 +95,13 @@ const newsTypes = ref<NewsType[]>([])
 const rules = {
   title: [
     { required: true, message: '请输入新闻标题', trigger: 'blur' },
-    { min: 5, max: 200, message: '标题长度在 5 到 200 个字符', trigger: 'blur' }
+    { min: 5, max: 200, message: '标题长度在 5 到 200 个字符', trigger: 'blur' },
   ],
-  type: [
-    { required: true, message: '请选择新闻分类', trigger: 'change' }
-  ],
+  type: [{ required: true, message: '请选择新闻分类', trigger: 'change' }],
   content: [
     { required: true, message: '请输入新闻内容', trigger: 'blur' },
-    { min: 10, message: '内容至少 10 个字符', trigger: 'blur' }
-  ]
+    { min: 10, message: '内容至少 10 个字符', trigger: 'blur' },
+  ],
 }
 
 const fetchNewsTypes = async () => {
@@ -111,7 +109,7 @@ const fetchNewsTypes = async () => {
     // 模拟数据
     newsTypes.value = [
       { tid: 1, tname: '技术', sortOrder: 1, status: 1, createdTime: '', updatedTime: '' },
-      { tid: 2, tname: '新闻', sortOrder: 2, status: 1, createdTime: '', updatedTime: '' }
+      { tid: 2, tname: '新闻', sortOrder: 2, status: 1, createdTime: '', updatedTime: '' },
     ]
   } catch (error) {
     ElMessage.error('获取分类列表失败')
@@ -156,10 +154,10 @@ const saveDraft = async () => {
 
 const publishNews = async () => {
   if (!formRef.value) return
-  
+
   try {
     await formRef.value.validate()
-    
+
     // 调用发布API
     ElMessage.success('新闻发布成功')
     router.push('/admin/news')

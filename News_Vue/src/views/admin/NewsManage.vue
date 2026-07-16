@@ -11,11 +11,7 @@
     <div class="filter-section">
       <el-row :gutter="20">
         <el-col :span="8">
-          <el-input
-            v-model="searchKeyword"
-            placeholder="搜索新闻标题..."
-            @keyup.enter="fetchNews"
-          >
+          <el-input v-model="searchKeyword" placeholder="搜索新闻标题..." @keyup.enter="fetchNews">
             <template #prefix>
               <el-icon><Search /></el-icon>
             </template>
@@ -55,13 +51,13 @@
             </div>
           </template>
         </el-table-column>
-        
+
         <el-table-column prop="typeName" label="分类" width="120" />
-        
+
         <el-table-column prop="author" label="作者" width="100" />
-        
+
         <el-table-column prop="pageViews" label="浏览量" width="100" />
-        
+
         <el-table-column prop="status" label="状态" width="100">
           <template #default="scope">
             <el-tag :type="getStatusType(scope.row.status)">
@@ -69,23 +65,25 @@
             </el-tag>
           </template>
         </el-table-column>
-        
+
         <el-table-column prop="createdTime" label="创建时间" width="180" />
-        
+
         <el-table-column label="操作" width="200" fixed="right">
           <template #default="scope">
-            <el-button 
-              v-if="scope.row.status === 0" 
-              size="small" 
-              type="success" 
+            <el-button
+              v-if="scope.row.status === 0"
+              size="small"
+              type="success"
               @click="handleReview(scope.row, 1)"
-            >通过</el-button>
-            <el-button 
-              v-if="scope.row.status === 0" 
-              size="small" 
-              type="warning" 
+              >通过</el-button
+            >
+            <el-button
+              v-if="scope.row.status === 0"
+              size="small"
+              type="warning"
               @click="handleReview(scope.row, 2)"
-            >拒绝</el-button>
+              >拒绝</el-button
+            >
             <el-button size="small" @click="editNews(scope.row)">编辑</el-button>
             <el-button size="small" type="danger" @click="deleteNews(scope.row)">删除</el-button>
           </template>
@@ -131,19 +129,27 @@ const newsTypes = ref<NewsType[]>([])
 
 const getStatusType = (status: number) => {
   switch (status) {
-    case 0: return 'info'
-    case 1: return 'success'
-    case 2: return 'warning'
-    default: return 'info'
+    case 0:
+      return 'info'
+    case 1:
+      return 'success'
+    case 2:
+      return 'warning'
+    default:
+      return 'info'
   }
 }
 
 const getStatusText = (status: number) => {
   switch (status) {
-    case 0: return '草稿'
-    case 1: return '已发布'
-    case 2: return '已下线'
-    default: return '未知'
+    case 0:
+      return '草稿'
+    case 1:
+      return '已发布'
+    case 2:
+      return '已下线'
+    default:
+      return '未知'
   }
 }
 
@@ -156,7 +162,7 @@ const fetchNews = async () => {
       type: selectedType.value || undefined,
       keyword: searchKeyword.value,
     }
-    const res = await getNewsList(params) as any
+    const res = (await getNewsList(params)) as any
     if (res.code === 200) {
       newsList.value = res.data.items || []
       total.value = res.data.total || 0
@@ -170,7 +176,7 @@ const fetchNews = async () => {
 
 const fetchNewsTypes = async () => {
   try {
-    const res = await getNewsTypes() as any
+    const res = (await getNewsTypes()) as any
     if (res.code === 200) {
       newsTypes.value = res.data
     }
@@ -185,10 +191,10 @@ const handleReview = async (news: News, status: number) => {
     await ElMessageBox.confirm(`确定要${action}这篇新闻吗？`, '提示', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
-      type: status === 1 ? 'success' : 'warning'
+      type: status === 1 ? 'success' : 'warning',
     })
-    
-    const res = await updateNewsStatus(news.hid, status) as any
+
+    const res = (await updateNewsStatus(news.hid, status)) as any
     if (res.code === 200) {
       ElMessage.success(`${action}操作成功`)
       fetchNews()
@@ -209,10 +215,10 @@ const deleteNews = async (news: News) => {
     await ElMessageBox.confirm('确定要删除这篇新闻吗？', '提示', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
-      type: 'warning'
+      type: 'warning',
     })
-    
-    const res = await deleteNewsApi(Number(news.hid)) as any
+
+    const res = (await deleteNewsApi(Number(news.hid))) as any
     if (res.code === 200) {
       ElMessage.success('刪除成功')
       fetchNews()

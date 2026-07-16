@@ -16,19 +16,16 @@
           </template>
         </el-input>
       </el-header>
-      
+
       <el-main>
         <el-row :gutter="20">
           <el-col :span="6">
             <el-card>
               <h3>分类筛选</h3>
-              <el-menu
-                :default-active="selectedCategory"
-                @select="handleCategorySelect"
-              >
+              <el-menu :default-active="selectedCategory" @select="handleCategorySelect">
                 <el-menu-item index="">全部新闻</el-menu-item>
-                <el-menu-item 
-                  v-for="category in categories" 
+                <el-menu-item
+                  v-for="category in categories"
                   :key="category.id"
                   :index="category.id.toString()"
                 >
@@ -37,23 +34,23 @@
               </el-menu>
             </el-card>
           </el-col>
-          
+
           <el-col :span="18">
             <el-row :gutter="20" v-loading="loading">
-              <el-col 
-                :span="8" 
-                v-for="news in newsList" 
+              <el-col
+                :span="8"
+                v-for="news in newsList"
                 :key="news.hid"
                 style="margin-bottom: 20px"
               >
-                <el-card 
+                <el-card
                   :body-style="{ padding: '0px' }"
                   shadow="hover"
                   @click="goToDetail(news.hid)"
                   class="news-card"
                 >
-                  <img 
-                    :src="news.coverImage || '/placeholder.jpg'" 
+                  <img
+                    :src="news.coverImage || '/placeholder.jpg'"
                     class="news-image"
                     :alt="news.title"
                   />
@@ -74,7 +71,7 @@
                 </el-card>
               </el-col>
             </el-row>
-            
+
             <el-pagination
               v-model:current-page="currentPage"
               v-model:page-size="pageSize"
@@ -109,7 +106,7 @@ const categories = ref([
   { id: 2, name: '体育' },
   { id: 3, name: '娱乐' },
   { id: 4, name: '财经' },
-  { id: 5, name: '教育' }
+  { id: 5, name: '教育' },
 ])
 const searchQuery = ref('')
 const selectedCategory = ref('')
@@ -125,9 +122,9 @@ const fetchNews = async () => {
       page: currentPage.value,
       pageSize: pageSize.value,
       keywords: searchQuery.value,
-      type: selectedCategory.value ? Number(selectedCategory.value) : undefined
+      type: selectedCategory.value ? Number(selectedCategory.value) : undefined,
     }
-    
+
     const response = await getHeadlines(params)
     if (response.code === 200) {
       newsList.value = response.data.items || []
@@ -192,7 +189,7 @@ onMounted(() => {
   height: 60px;
   padding: 0 20px;
   background: #fff;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .news-card {

@@ -65,13 +65,13 @@ const activeTab = ref('info')
 const profileForm = ref({
   username: '',
   email: '',
-  phone: ''
+  phone: '',
 })
 
 const passwordForm = ref({
   currentPassword: '',
   newPassword: '',
-  confirmPassword: ''
+  confirmPassword: '',
 })
 
 const updateProfile = async () => {
@@ -88,14 +88,14 @@ const changePassword = async () => {
     ElMessage.error('两次输入的密码不一致')
     return
   }
-  
+
   try {
     // 调用修改密码API
     ElMessage.success('密码修改成功')
     passwordForm.value = {
       currentPassword: '',
       newPassword: '',
-      confirmPassword: ''
+      confirmPassword: '',
     }
   } catch (error) {
     ElMessage.error('密码修改失败')
@@ -107,7 +107,7 @@ onMounted(() => {
     profileForm.value = {
       username: userStore.userInfo.username || '',
       email: userStore.userInfo.email || '',
-      phone: userStore.userInfo.phone || ''
+      phone: userStore.userInfo.phone || '',
     }
   }
 })

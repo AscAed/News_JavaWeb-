@@ -13,12 +13,12 @@
 
       <!-- 主应用副标题/分类条 -->
       <template #sub-header>
-        <CategoryNav v-if="route.path === '/'"/>
+        <CategoryNav v-if="route.path === '/'" />
       </template>
 
       <!-- 主应用侧边栏 -->
       <template #sidebar>
-        <SourceSidebar v-if="!route.path.startsWith('/admin')"/>
+        <SourceSidebar v-if="!route.path.startsWith('/admin')" />
       </template>
 
       <!-- 主应用页脚 -->
@@ -30,14 +30,14 @@
 </template>
 
 <script setup lang="ts">
-import {computed, onMounted} from 'vue'
-import {RouterView, useRoute} from 'vue-router'
+import { computed, onMounted } from 'vue'
+import { RouterView, useRoute } from 'vue-router'
 import AppLayout from '@/components/AppLayout.vue'
 import AppHeader from '@/components/AppHeader.vue'
 import AppFooter from '@/components/AppFooter.vue'
 import SourceSidebar from '@/components/SourceSidebar.vue'
 import CategoryNav from '@/components/CategoryNav.vue'
-import {useUserStore} from '@/stores/user'
+import { useUserStore } from '@/stores/user'
 
 const route = useRoute()
 const userStore = useUserStore()

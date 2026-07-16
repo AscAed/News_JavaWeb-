@@ -30,29 +30,34 @@ const selectCategory = (categoryId: number | string) => {
   window.dispatchEvent(
     new CustomEvent('typeChange', {
       detail: { type: categoryId },
-    })
+    }),
   )
 }
 
 // Reset selection when source changes (via HomeView resetting selectedType)
 // Watch the store changes and default selection to All (0) unless URL has a category
-watch(() => newsStore.newsTypes, () => {
-  if (newsStore.newsTypes && newsStore.newsTypes.length > 0) {
-    // 优先保留从 URL 解析出的分类，否则默认选第一个
-    const urlCategory = route.query.t || route.query.category
-    if (urlCategory) {
-      selectedCategory.value = isNaN(Number(urlCategory)) ? urlCategory as string : Number(urlCategory)
-    } else {
-      selectedCategory.value = newsStore.newsTypes[0]?.tid ?? 0
+watch(
+  () => newsStore.newsTypes,
+  () => {
+    if (newsStore.newsTypes && newsStore.newsTypes.length > 0) {
+      // 优先保留从 URL 解析出的分类，否则默认选第一个
+      const urlCategory = route.query.t || route.query.category
+      if (urlCategory) {
+        selectedCategory.value = isNaN(Number(urlCategory))
+          ? (urlCategory as string)
+          : Number(urlCategory)
+      } else {
+        selectedCategory.value = newsStore.newsTypes[0]?.tid ?? 0
+      }
     }
-  }
-})
+  },
+)
 
 onMounted(() => {
   const urlCategory = route.query.t || route.query.category
   if (urlCategory) {
     selectedCategory.value = isNaN(Number(urlCategory))
-      ? urlCategory as string
+      ? (urlCategory as string)
       : Number(urlCategory)
   }
 })

@@ -18,13 +18,11 @@
             <el-icon><Star /></el-icon>
             {{ comment.likeCount || 0 }}
           </el-button>
-          <el-button type="text" size="small" @click="$emit('reply', comment)">
-            回复
-          </el-button>
+          <el-button type="text" size="small" @click="$emit('reply', comment)"> 回复 </el-button>
         </div>
       </div>
     </div>
-    
+
     <!-- 递归渲染子评论 -->
     <div v-if="comment.children && comment.children.length > 0" class="comment-children">
       <CommentItem

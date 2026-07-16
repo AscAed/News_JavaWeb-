@@ -1,5 +1,5 @@
-import {createRouter, createWebHistory} from 'vue-router'
-import {useUserStore} from '@/stores/user'
+import { createRouter, createWebHistory } from 'vue-router'
+import { useUserStore } from '@/stores/user'
 
 // 路由守卫
 const requireAuth = (to: any, from: any, next: any) => {
@@ -145,7 +145,11 @@ router.beforeEach((to, from, next) => {
   }
 
   // 检查是否需要媒体权限
-  if (to.meta?.requiresMedia && userStore.userInfo?.role_name !== 'media' && userStore.userInfo?.id !== 1) {
+  if (
+    to.meta?.requiresMedia &&
+    userStore.userInfo?.role_name !== 'media' &&
+    userStore.userInfo?.id !== 1
+  ) {
     next('/')
     return
   }

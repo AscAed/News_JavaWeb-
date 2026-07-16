@@ -15,8 +15,8 @@ export const getAdminRecentNews = (limit: number = 5) => {
   return request.get('/headlines', {
     params: {
       pageSize: limit,
-      page: 1
-    }
+      page: 1,
+    },
   })
 }
 
@@ -27,7 +27,7 @@ export const getAdminRecentNews = (limit: number = 5) => {
  */
 export const updateNewsStatus = (id: number | string, status: number) => {
   return request.patch(`/admin/news/${id}/status`, null, {
-    params: { status }
+    params: { status },
   })
 }
 

@@ -102,7 +102,7 @@ const handleSearch = async (searchKeyword: string) => {
 
 const handleTypeChange = async (typeId: number | string | null) => {
   selectedType.value = typeId
-  
+
   // Sync to URL
   const query = { ...route.query }
   if (typeId !== null && typeId !== 0) {
@@ -111,9 +111,9 @@ const handleTypeChange = async (typeId: number | string | null) => {
     delete query.t
     delete query.category // 清理旧的参数名
   }
-  
+
   router.push({ query })
-  
+
   await fetchListFromBackend(1)
 }
 
@@ -166,7 +166,7 @@ const onRefreshFeed = async () => {
     await fetchListFromBackend(1)
     ElMessage.success({
       message: '新闻列表已更新',
-      duration: 2000
+      duration: 2000,
     })
   } catch (err) {
     console.error('Refresh failed:', err)

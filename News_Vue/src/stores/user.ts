@@ -1,15 +1,15 @@
-import {defineStore} from 'pinia'
-import {computed, ref} from 'vue'
-import {ElMessage} from 'element-plus'
-import {getUserInfo, login, logout, register as registerApi} from '@/api/modules/auth'
-import type {LoginForm, RegisterForm, User} from '@/types'
+import { defineStore } from 'pinia'
+import { computed, ref } from 'vue'
+import { ElMessage } from 'element-plus'
+import { getUserInfo, login, logout, register as registerApi } from '@/api/modules/auth'
+import type { LoginForm, RegisterForm, User } from '@/types'
 
 export const useUserStore = defineStore('user', () => {
   // 状态
   const token = ref<string>(localStorage.getItem('token') || '')
   const refreshToken = ref<string>(localStorage.getItem('refreshToken') || '')
   const userInfo = ref<User | null>(null)
-  
+
   // 初始化用户信息（同步尝试）
   try {
     const savedUserInfo = localStorage.getItem('userInfo')
@@ -38,7 +38,9 @@ export const useUserStore = defineStore('user', () => {
   const userLogin = async (loginForm: LoginForm) => {
     try {
       const response = await login(loginForm)
-      const { data: { token: newToken, refreshToken: newRefreshToken, user } } = response
+      const {
+        data: { token: newToken, refreshToken: newRefreshToken, user },
+      } = response
 
       // 保存token和用户信息
       token.value = newToken

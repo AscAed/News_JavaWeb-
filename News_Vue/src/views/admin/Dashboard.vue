@@ -62,7 +62,13 @@
               <el-button type="danger" link @click="handleClearLogs">
                 <el-icon><Delete /></el-icon> 清空记录
               </el-button>
-              <el-button type="primary" link @click="fetchGovernanceData" title="刷新数据" aria-label="刷新数据">
+              <el-button
+                type="primary"
+                link
+                @click="fetchGovernanceData"
+                title="刷新数据"
+                aria-label="刷新数据"
+              >
                 <el-icon><Refresh /></el-icon>
               </el-button>
             </div>
@@ -76,15 +82,17 @@
             <el-table-column label="来源 IP / 标识" width="180">
               <template #default="scope">
                 <div class="ip-ident">
-                   <el-tag size="small" type="info" effect="plain">{{ scope.row.ip }}</el-tag>
-                   <span v-if="scope.row.userId !== -1" class="user-id">UID: {{ scope.row.userId }}</span>
+                  <el-tag size="small" type="info" effect="plain">{{ scope.row.ip }}</el-tag>
+                  <span v-if="scope.row.userId !== -1" class="user-id"
+                    >UID: {{ scope.row.userId }}</span
+                  >
                 </div>
               </template>
             </el-table-column>
             <el-table-column prop="key" label="拦截资源" show-overflow-tooltip>
-               <template #default="scope">
-                 <code class="resource-code">{{ scope.row.key }}</code>
-               </template>
+              <template #default="scope">
+                <code class="resource-code">{{ scope.row.key }}</code>
+              </template>
             </el-table-column>
             <el-table-column label="限流阈值" width="120">
               <template #default="scope">
@@ -98,15 +106,11 @@
             </el-table-column>
             <el-table-column label="操作" width="100" align="center">
               <template #default="scope">
-                <el-tooltip
-                  v-if="scope.row.jti"
-                  content="一键封禁该会话"
-                  placement="top"
-                >
-                  <el-button 
-                    type="danger" 
-                    icon="Lock" 
-                    circle 
+                <el-tooltip v-if="scope.row.jti" content="一键封禁该会话" placement="top">
+                  <el-button
+                    type="danger"
+                    icon="Lock"
+                    circle
                     size="small"
                     aria-label="一键封禁该会话"
                     @click="handleFastBlock(scope.row.jti)"
@@ -149,18 +153,14 @@
           </div>
           <div class="control-form">
             <p class="control-desc">强制切断违规会话 (JWT Blacklist)</p>
-            <el-input 
-              v-model="targetJti" 
-              placeholder="输入 JTI 唯一识别码" 
-              class="jti-input"
-            >
+            <el-input v-model="targetJti" placeholder="输入 JTI 唯一识别码" class="jti-input">
               <template #prefix>
                 <el-icon><Key /></el-icon>
               </template>
             </el-input>
-            <el-button 
-              type="danger" 
-              class="w-full mt-4" 
+            <el-button
+              type="danger"
+              class="w-full mt-4"
               @click="handleBlacklistJti"
               :loading="blacklisting"
             >
@@ -227,17 +227,25 @@
 import { ref, onMounted } from 'vue'
 import { useUserStore } from '@/stores/user'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { 
-  Document, User, Lock, Warning, 
-  TrendCharts, Monitor, Refresh,
-  Delete, Key
+import {
+  Document,
+  User,
+  Lock,
+  Warning,
+  TrendCharts,
+  Monitor,
+  Refresh,
+  Delete,
+  Key,
 } from '@element-plus/icons-vue'
 import type { News } from '@/types'
 import { getOverviewStatistics, getTrendingKeywords } from '@/api/modules/statistics'
 import { getNewsList } from '@/api/modules/news'
-import { 
-  getGovernanceStats, getRateLimitLogs, 
-  clearRateLimitLogs, addToBlacklist 
+import {
+  getGovernanceStats,
+  getRateLimitLogs,
+  clearRateLimitLogs,
+  addToBlacklist,
 } from '@/api/modules/governance'
 import dayjs from 'dayjs'
 import { getStatisticsOverview, getAdminRecentNews } from '@/api/modules/admin'
@@ -251,17 +259,17 @@ const stats = ref({
   totalNews: 0,
   totalUsers: 0,
   totalViews: 0,
-  totalLikes: 0
+  totalLikes: 0,
 })
 
 const governanceStats = ref({
   rateLimitHits: 0,
   blacklistedSessions: 0,
-  systemStatus: 'Healthy'
+  systemStatus: 'Healthy',
 })
 
 const recentNews = ref<News[]>([])
-const trendingKeywords = ref<{ name: string, value: number }[]>([])
+const trendingKeywords = ref<{ name: string; value: number }[]>([])
 const rateLimitLogs = ref<any[]>([])
 
 // 格式化时间
@@ -294,14 +302,18 @@ const handleBlacklistJti = async () => {
   }
 
   try {
-    await ElMessageBox.confirm('确定要强制吊销该会话吗？被封禁后用户将瞬间失去访问权限。', '安全警告', {
-      confirmButtonText: '确定吊销',
-      cancelButtonText: '取消',
-      type: 'warning'
-    })
-    
+    await ElMessageBox.confirm(
+      '确定要强制吊销该会话吗？被封禁后用户将瞬间失去访问权限。',
+      '安全警告',
+      {
+        confirmButtonText: '确定吊销',
+        cancelButtonText: '取消',
+        type: 'warning',
+      },
+    )
+
     blacklisting.value = true
-    const res = await addToBlacklist({ jti: targetJti.value }) as any
+    const res = (await addToBlacklist({ jti: targetJti.value })) as any
     if (res.code === 200) {
       ElMessage.success('会话已成功撤回')
       targetJti.value = ''
@@ -316,12 +328,12 @@ const handleBlacklistJti = async () => {
 
 const fetchGovernanceData = async () => {
   try {
-    const statsRes = await getGovernanceStats() as any
+    const statsRes = (await getGovernanceStats()) as any
     if (statsRes.code === 200) {
       governanceStats.value = statsRes.data
     }
 
-    const logsRes = await getRateLimitLogs() as any
+    const logsRes = (await getRateLimitLogs()) as any
     if (logsRes.code === 200) {
       rateLimitLogs.value = (logsRes.data || []).map((item: string) => {
         try {
@@ -339,7 +351,7 @@ const fetchGovernanceData = async () => {
 const handleClearLogs = async () => {
   try {
     await ElMessageBox.confirm('确定要清空所有的限流审计日志吗？', '操作确认')
-    const res = await clearRateLimitLogs() as any
+    const res = (await clearRateLimitLogs()) as any
     if (res.code === 200) {
       ElMessage.success('日志已清空')
       rateLimitLogs.value = []
@@ -354,25 +366,25 @@ const fetchDashboardData = async () => {
   loading.value = true
   try {
     // 1. 获取统计概览
-    const statsRes = await getOverviewStatistics() as any
+    const statsRes = (await getOverviewStatistics()) as any
     if (statsRes.code === 200) {
       const data = statsRes.data
       stats.value = {
         totalNews: data.newsStatistics?.totalNews || 0,
         totalUsers: data.userStatistics?.totalUsers || 0,
         totalViews: data.newsStatistics?.totalViews || 0,
-        totalLikes: data.systemStatistics?.totalFavorites || 0
+        totalLikes: data.systemStatistics?.totalFavorites || 0,
       }
     }
 
     // 2. 获取最新新闻
-    const newsRes = await getNewsList({ page: 1, size: 5 }) as any
+    const newsRes = (await getNewsList({ page: 1, size: 5 })) as any
     if (newsRes.code === 200) {
       recentNews.value = newsRes.data.records || []
     }
 
     // 3. 获取热词趋势
-    const trendingRes = await getTrendingKeywords(15) as any
+    const trendingRes = (await getTrendingKeywords(15)) as any
     if (trendingRes.code === 200) {
       trendingKeywords.value = trendingRes.data || []
     }
@@ -437,7 +449,9 @@ onMounted(() => {
   position: relative;
   align-items: center;
   gap: 20px;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.05),
+    0 4px 6px -2px rgba(0, 0, 0, 0.02);
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
   border: 1px solid rgba(226, 232, 240, 0.8);
@@ -445,7 +459,9 @@ onMounted(() => {
 
 .stat-card:hover {
   transform: translateY(-8px);
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
   border-color: #409eff;
 }
 
@@ -461,10 +477,18 @@ onMounted(() => {
   flex-shrink: 0;
 }
 
-.stat-icon.news { background: linear-gradient(135deg, #3b82f6 0%, #2dd4bf 100%); }
-.stat-icon.user { background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); }
-.stat-icon.governance { background: linear-gradient(135deg, #f43f5e 0%, #fb923c 100%); }
-.stat-icon.security { background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%); }
+.stat-icon.news {
+  background: linear-gradient(135deg, #3b82f6 0%, #2dd4bf 100%);
+}
+.stat-icon.user {
+  background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+}
+.stat-icon.governance {
+  background: linear-gradient(135deg, #f43f5e 0%, #fb923c 100%);
+}
+.stat-icon.security {
+  background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+}
 
 .stat-content h3 {
   font-size: 2rem;
@@ -490,8 +514,14 @@ onMounted(() => {
   font-weight: 600;
   text-transform: uppercase;
 }
-.stat-badge.danger { background: #fee2e2; color: #ef4444; }
-.stat-badge.warning { background: #fef3c7; color: #d97706; }
+.stat-badge.danger {
+  background: #fee2e2;
+  color: #ef4444;
+}
+.stat-badge.warning {
+  background: #fef3c7;
+  color: #d97706;
+}
 
 /* Layout Blocks */
 .dashboard-content {
@@ -555,7 +585,7 @@ onMounted(() => {
   .dashboard-stats {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
   .dashboard-content {
     flex-direction: column;
   }

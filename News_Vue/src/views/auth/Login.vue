@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import {reactive, ref} from 'vue'
-import {useRouter} from 'vue-router'
-import {useUserStore} from '@/stores/user'
-import type {LoginForm} from '@/types'
+import { reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useUserStore } from '@/stores/user'
+import type { LoginForm } from '@/types'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -17,11 +17,11 @@ const loginForm = reactive<LoginForm>({
 const rules = {
   phone: [
     { required: true, message: '请输入手机号', trigger: 'blur' },
-    {pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur'},
+    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur' },
   ],
   password: [
     { required: true, message: '请输入密码', trigger: 'blur' },
-    {min: 6, max: 16, message: '密码长度为6-16位', trigger: 'blur'},
+    { min: 6, max: 16, message: '密码长度为6-16位', trigger: 'blur' },
   ],
 }
 
@@ -63,20 +63,18 @@ const goToRegister = () => {
       <div class="back-action">
         <el-button class="back-btn" link @click="router.push('/')">
           <el-icon>
-            <ArrowLeft/>
+            <ArrowLeft />
           </el-icon>
           返回首页
         </el-button>
       </div>
       <div class="auth-header">
-        <div class="brand-logo-container" style="justify-content: center; margin-bottom: 16px;">
+        <div class="brand-logo-container" style="justify-content: center; margin-bottom: 16px">
           <div class="brand-icon-box">易</div>
-          <h1 class="brand-text" style="font-size: 24px;">闻趣事</h1>
+          <h1 class="brand-text" style="font-size: 24px">闻趣事</h1>
         </div>
         <h2 class="auth-title">登录</h2>
-        <p class="auth-subtitle">
-          使用您的易闻趣事账号继续
-        </p>
+        <p class="auth-subtitle">使用您的易闻趣事账号继续</p>
       </div>
 
       <el-form
@@ -144,7 +142,9 @@ const goToRegister = () => {
   padding: 48px 40px 36px;
   box-sizing: border-box;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  transition: background-color 0.3s ease, border-color 0.3s ease;
+  transition:
+    background-color 0.3s ease,
+    border-color 0.3s ease;
 }
 
 @media (max-width: 600px) {

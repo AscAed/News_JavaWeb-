@@ -8,9 +8,11 @@
         新闻源
       </h3>
       <div class="source-list">
-        <div 
-          :class="{ active: !newsStore.currentSource || newsStore.currentSource.type === 'original' }" 
-          class="source-item" 
+        <div
+          :class="{
+            active: !newsStore.currentSource || newsStore.currentSource.type === 'original',
+          }"
+          class="source-item"
           @click="goToSource('')"
         >
           <div class="source-abbr">
@@ -21,7 +23,11 @@
         <div
           v-for="source in sources"
           :key="source.id"
-          :class="{ active: newsStore.currentSource?.type === 'rss' && String(newsStore.currentSource.id) === String(source.id) }"
+          :class="{
+            active:
+              newsStore.currentSource?.type === 'rss' &&
+              String(newsStore.currentSource.id) === String(source.id),
+          }"
           class="source-item"
           @click="goToSource(source.id)"
         >
@@ -52,7 +58,7 @@ const fetchSources = async () => {
     if (res.code === 200) {
       sources.value = res.data || []
 
-      // If we have sources now, and a query source_id, refine the currentSource in store 
+      // If we have sources now, and a query source_id, refine the currentSource in store
       // with full data (like name) if it was partially restored on mount
       if (route.query.source_id && route.query.source_type === 'rss') {
         const sourceObj = sources.value.find((s) => String(s.id) === String(route.query.source_id))
@@ -82,7 +88,7 @@ const goToSource = (sourceId: string | number) => {
     delete query.source_id
     delete query.source_type
   }
-  
+
   // Clean up category when switching source
   delete query.t
   delete query.category
@@ -100,10 +106,10 @@ onMounted(() => {
   if (route.query.source_id) {
     const sId = String(route.query.source_id)
     const sType = (route.query.source_type as string) || 'rss'
-    
+
     // Set a partial source in store immediately so HomeView can use it
     if (!newsStore.currentSource || String(newsStore.currentSource.id) !== sId) {
-       newsStore.setCurrentSource({ id: sId, type: sType, name: '加载中...' })
+      newsStore.setCurrentSource({ id: sId, type: sType, name: '加载中...' })
     }
   } else if (!newsStore.currentSource) {
     newsStore.setCurrentSource({ id: -1, name: '原创', type: 'original' })
