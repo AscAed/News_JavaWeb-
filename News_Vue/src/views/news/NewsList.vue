@@ -16,19 +16,16 @@
           </template>
         </el-input>
       </el-header>
-      
+
       <el-main>
         <el-row :gutter="20">
           <el-col :span="6">
             <el-card>
               <h3>分类筛选</h3>
-              <el-menu
-                :default-active="selectedCategory"
-                @select="handleCategorySelect"
-              >
+              <el-menu :default-active="selectedCategory" @select="handleCategorySelect">
                 <el-menu-item index="">全部新闻</el-menu-item>
-                <el-menu-item 
-                  v-for="category in categories" 
+                <el-menu-item
+                  v-for="category in categories"
                   :key="category.id"
                   :index="category.id.toString()"
                 >
@@ -37,23 +34,23 @@
               </el-menu>
             </el-card>
           </el-col>
-          
+
           <el-col :span="18">
             <el-row :gutter="20" v-loading="loading">
-              <el-col 
-                :span="8" 
-                v-for="news in newsList" 
+              <el-col
+                :span="8"
+                v-for="news in formattedNewsList"
                 :key="news.hid"
                 style="margin-bottom: 20px"
               >
-                <el-card 
+                <el-card
                   :body-style="{ padding: '0px' }"
                   shadow="hover"
                   @click="goToDetail(news.hid)"
                   class="news-card"
                 >
-                  <img 
-                    :src="news.coverImage || '/placeholder.jpg'" 
+                  <img
+                    :src="news.coverImage || '/placeholder.jpg'"
                     class="news-image"
                     :alt="news.title"
                   />
@@ -62,7 +59,7 @@
                     <p class="news-summary">{{ news.summary }}</p>
                     <div class="news-meta">
                       <span class="news-author">{{ news.author }}</span>
-                      <span class="news-time">{{ formatTime(news.publishedTime) }}</span>
+                      <span class="news-time">{{ news.formattedTime }}</span>
                     </div>
                     <div class="news-stats">
                       <el-icon><View /></el-icon>
@@ -74,7 +71,7 @@
                 </el-card>
               </el-col>
             </el-row>
-            
+
             <el-pagination
               v-model:current-page="currentPage"
               v-model:page-size="pageSize"
@@ -92,7 +89,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Search, View, Star } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
@@ -109,13 +106,21 @@ const categories = ref([
   { id: 2, name: '体育' },
   { id: 3, name: '娱乐' },
   { id: 4, name: '财经' },
-  { id: 5, name: '教育' }
+  { id: 5, name: '教育' },
 ])
 const searchQuery = ref('')
 const selectedCategory = ref('')
 const currentPage = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
+
+// 计算属性
+const formattedNewsList = computed(() => {
+  return newsList.value.map((news) => ({
+    ...news,
+    formattedTime: formatTime(news.publishedTime),
+  }))
+})
 
 // 方法
 const fetchNews = async () => {
@@ -125,9 +130,9 @@ const fetchNews = async () => {
       page: currentPage.value,
       pageSize: pageSize.value,
       keywords: searchQuery.value,
-      type: selectedCategory.value ? Number(selectedCategory.value) : undefined
+      type: selectedCategory.value ? Number(selectedCategory.value) : undefined,
     }
-    
+
     const response = await getHeadlines(params)
     if (response.code === 200) {
       newsList.value = response.data.items || []
@@ -192,7 +197,7 @@ onMounted(() => {
   height: 60px;
   padding: 0 20px;
   background: #fff;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .news-card {
