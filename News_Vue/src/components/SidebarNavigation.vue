@@ -121,16 +121,9 @@
       </h3>
       <div class="subscription-form">
         <p class="subscription-desc">订阅我们，获取最新资讯推送</p>
-        <el-input
-          v-model="email"
-          placeholder="请输入您的邮箱"
-          type="email"
-          size="small"
-        >
+        <el-input v-model="email" placeholder="请输入您的邮箱" type="email" size="small">
           <template #append>
-            <el-button type="primary" size="small" @click="handleSubscribe">
-              订阅
-            </el-button>
+            <el-button type="primary" size="small" @click="handleSubscribe"> 订阅 </el-button>
           </template>
         </el-input>
       </div>
@@ -143,8 +136,18 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import {
-  Menu, Star, Reading, CollectionTag, Bell, TrendCharts,
-  Document, Monitor, Trophy, VideoPlay, ChatDotRound, View
+  Menu,
+  Star,
+  Reading,
+  CollectionTag,
+  Bell,
+  TrendCharts,
+  Document,
+  Monitor,
+  Trophy,
+  VideoPlay,
+  ChatDotRound,
+  View,
 } from '@element-plus/icons-vue'
 
 const router = useRouter()
@@ -163,7 +166,7 @@ const categories = ref([
   { id: 5, name: '娱乐八卦', icon: 'VideoPlay', count: 21430, color: '#ef4444', trending: true },
   { id: 6, name: '教育文化', icon: 'Reading', count: 7650, color: '#06b6d4', trending: false },
   { id: 7, name: '健康生活', icon: 'Document', count: 8920, color: '#84cc16', trending: false },
-  { id: 8, name: '国际新闻', icon: 'Document', count: 11280, color: '#f97316', trending: false }
+  { id: 8, name: '国际新闻', icon: 'Document', count: 11280, color: '#f97316', trending: false },
 ])
 
 const hotTopics = ref([
@@ -172,7 +175,7 @@ const hotTopics = ref([
   { id: 3, title: '数字经济发展趋势', heat: 87630, comments: 523 },
   { id: 4, title: '健康生活方式指南', heat: 76540, comments: 412 },
   { id: 5, title: '教育改革新政策', heat: 65230, comments: 387 },
-  { id: 6, title: '环保科技新进展', heat: 54320, comments: 298 }
+  { id: 6, title: '环保科技新进展', heat: 54320, comments: 298 },
 ])
 
 const recommendations = ref([
@@ -181,29 +184,29 @@ const recommendations = ref([
     title: '深度解析：人工智能如何改变我们的生活',
     author: '张明',
     publishTime: '2025-01-15T10:30:00Z',
-    coverImage: '/images/ai-article.jpg'
+    coverImage: '/images/ai-article.jpg',
   },
   {
     id: 2,
     title: '专家观点：2025年经济发展预测',
     author: '李华',
     publishTime: '2025-01-14T15:45:00Z',
-    coverImage: '/images/economy-article.jpg'
+    coverImage: '/images/economy-article.jpg',
   },
   {
     id: 3,
     title: '健康生活：科学饮食与运动指南',
     author: '王芳',
     publishTime: '2025-01-13T09:20:00Z',
-    coverImage: '/images/health-article.jpg'
+    coverImage: '/images/health-article.jpg',
   },
   {
     id: 4,
     title: '教育前沿：数字化教学新模式',
     author: '赵强',
     publishTime: '2025-01-12T14:15:00Z',
-    coverImage: '/images/education-article.jpg'
-  }
+    coverImage: '/images/education-article.jpg',
+  },
 ])
 
 const tags = ref([
@@ -216,7 +219,7 @@ const tags = ref([
   { name: '文化传承', count: 432 },
   { name: '体育竞技', count: 398 },
   { name: '娱乐资讯', count: 376 },
-  { name: '国际关系', count: 321 }
+  { name: '国际关系', count: 321 },
 ])
 
 // 方法
@@ -227,7 +230,7 @@ const selectCategory = (categoryId: number) => {
 const goToTopic = (topic: any) => {
   router.push({
     path: '/news',
-    query: { topic: topic.id }
+    query: { topic: topic.id },
   })
 }
 
@@ -240,12 +243,12 @@ const handleSubscribe = () => {
     ElMessage.warning('请输入邮箱地址')
     return
   }
-  
+
   if (!isValidEmail(email.value)) {
     ElMessage.warning('请输入有效的邮箱地址')
     return
   }
-  
+
   // 模拟订阅API调用
   ElMessage.success('订阅成功！感谢您的关注')
   email.value = ''
@@ -268,7 +271,7 @@ const formatTime = (time: string): string => {
   const now = new Date()
   const diff = now.getTime() - date.getTime()
   const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-  
+
   if (days === 0) {
     return '今天'
   } else if (days === 1) {
@@ -288,8 +291,16 @@ const getTagSize = (count: number): string => {
 
 const getTagColor = (count: number): string => {
   const colors = [
-    '#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
-    '#06b6d4', '#84cc16', '#f97316', '#ec4899', '#6366f1'
+    '#2563eb',
+    '#10b981',
+    '#f59e0b',
+    '#ef4444',
+    '#8b5cf6',
+    '#06b6d4',
+    '#84cc16',
+    '#f97316',
+    '#ec4899',
+    '#6366f1',
   ]
   return colors[count % colors.length] || '#2563eb'
 }
@@ -346,14 +357,18 @@ onMounted(() => {
 }
 
 /* 分类列表 */
-.category-list, .trending-list, .recommendation-list {
+.category-list,
+.trending-list,
+.recommendation-list {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
 /* 统一列表项为药丸交互风格 */
-.category-item, .trending-item, .recommendation-item {
+.category-item,
+.trending-item,
+.recommendation-item {
   display: flex;
   align-items: center;
   gap: 16px;
@@ -365,7 +380,9 @@ onMounted(() => {
   cursor: pointer;
 }
 
-.category-item:hover, .trending-item:hover, .recommendation-item:hover {
+.category-item:hover,
+.trending-item:hover,
+.recommendation-item:hover {
   background: var(--bg-tertiary);
   color: var(--text-primary);
 }
@@ -386,20 +403,26 @@ onMounted(() => {
   border-radius: 0;
 }
 
-.category-info, .trending-content, .recommendation-content {
+.category-info,
+.trending-content,
+.recommendation-content {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.category-name, .trending-title, .recommendation-title {
+.category-name,
+.trending-title,
+.recommendation-title {
   font-size: var(--text-sm);
   font-weight: 500;
   line-height: var(--leading-tight);
 }
 
-.category-count, .trending-stats, .recommendation-meta {
+.category-count,
+.trending-stats,
+.recommendation-meta {
   font-size: var(--text-xs);
   color: var(--text-muted);
   line-height: var(--leading-tight);
@@ -472,9 +495,15 @@ onMounted(() => {
   box-shadow: var(--shadow-sm);
 }
 
-.tag-small { font-size: var(--text-xs); }
-.tag-medium { font-size: var(--text-sm); }
-.tag-large { font-size: var(--text-base); }
+.tag-small {
+  font-size: var(--text-xs);
+}
+.tag-medium {
+  font-size: var(--text-sm);
+}
+.tag-large {
+  font-size: var(--text-base);
+}
 
 /* 订阅表单 */
 .subscription-form {

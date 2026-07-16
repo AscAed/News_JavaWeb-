@@ -1,7 +1,7 @@
-import {defineStore} from 'pinia'
-import {computed, ref} from 'vue'
-import {getNewsList, getNewsTypes, getSources} from '@/api/modules/news'
-import type {News, NewsType} from '@/types'
+import { defineStore } from 'pinia'
+import { computed, ref } from 'vue'
+import { getNewsList, getNewsTypes, getSources } from '@/api/modules/news'
+import type { News, NewsType } from '@/types'
 
 export const useNewsStore = defineStore('news', () => {
   // 状态
@@ -30,38 +30,44 @@ export const useNewsStore = defineStore('news', () => {
     if (newsTypes.value.length === 0) return null
 
     // 优先查找"推荐"分类
-    const recommendedCategory = newsTypes.value.find(type => type.tname === '推荐')
+    const recommendedCategory = newsTypes.value.find((type) => type.tname === '推荐')
     if (recommendedCategory) return recommendedCategory.tid
 
     // 如果没有"推荐"分类，返回第一个分类
     return newsTypes.value[0]?.tid || null
   })
 
-  const fetchNewsList = async (params: {
-    page?: number
-    size?: number
-    type?: number | string
-    keyword?: string
-  } = {}) => {
+  const fetchNewsList = async (
+    params: {
+      page?: number
+      size?: number
+      type?: number | string
+      keyword?: string
+    } = {},
+  ) => {
     loading.value = true
     try {
       const mergedParams: any = {
         page: params.page || currentPage.value,
         size: params.size || pageSize.value,
-        ...params
+        ...params,
       }
 
       // 处理 '全部' 分类 (type为0) 的情况，以及字符串的情况
       if (mergedParams.type === 0 || mergedParams.type === '0') {
-        delete mergedParams.type; // 不传type参数，查询该源下的所有新闻
+        delete mergedParams.type // 不传type参数，查询该源下的所有新闻
       } else if (typeof mergedParams.type === 'string') {
-        mergedParams.section = mergedParams.type;
-        delete mergedParams.type;
+        mergedParams.section = mergedParams.type
+        delete mergedParams.type
       }
 
       // 全局搜索：如果有 keyword，则不限制 sourceType 和 sourceId
       if (!mergedParams.keyword) {
-        if (currentSource.value && currentSource.value.type !== 'original' && currentSource.value.id !== -1) {
+        if (
+          currentSource.value &&
+          currentSource.value.type !== 'original' &&
+          currentSource.value.id !== -1
+        ) {
           mergedParams.sourceType = currentSource.value.type
           mergedParams.sourceId = String(currentSource.value.id)
         } else {
@@ -76,10 +82,14 @@ export const useNewsStore = defineStore('news', () => {
       newsList.value = (data.items || []).map((item: any) => {
         let mappedSourceName = '原创频道'
         if (item.sourceType && item.sourceType !== 'original') {
-          const foundSource = sources.value.find(s => String(s.id) === String(item.sourceId) && s.type === item.sourceType)
+          const foundSource = sources.value.find(
+            (s) => String(s.id) === String(item.sourceId) && s.type === item.sourceType,
+          )
           if (foundSource) mappedSourceName = foundSource.name
         } else if (item.source_type && item.source_type !== 'original') {
-          const foundSource = sources.value.find(s => String(s.id) === String(item.source_id) && s.type === item.source_type)
+          const foundSource = sources.value.find(
+            (s) => String(s.id) === String(item.source_id) && s.type === item.source_type,
+          )
           if (foundSource) mappedSourceName = foundSource.name
         }
 
@@ -97,7 +107,7 @@ export const useNewsStore = defineStore('news', () => {
           isTop: item.is_top === 1 || item.is_top === true || item.isTop === true,
           publishedTime: item.published_time || item.publishedTime,
           createdTime: item.created_time || item.createdTime,
-          updatedTime: item.updated_time || item.updatedTime
+          updatedTime: item.updated_time || item.updatedTime,
         }
       })
       total.value = data.total || 0
@@ -112,7 +122,11 @@ export const useNewsStore = defineStore('news', () => {
   const fetchNewsTypes = async () => {
     try {
       const params: any = {}
-      if (currentSource.value && currentSource.value.type !== 'original' && currentSource.value.id !== -1) {
+      if (
+        currentSource.value &&
+        currentSource.value.type !== 'original' &&
+        currentSource.value.id !== -1
+      ) {
         params.sourceType = currentSource.value.type
         params.sourceId = String(currentSource.value.id)
       } else {
@@ -120,9 +134,9 @@ export const useNewsStore = defineStore('news', () => {
       }
       const response = await getNewsTypes(params as any)
       const categoriesData = response.data
-      const backendCategories = (Array.isArray(categoriesData)
+      const backendCategories = Array.isArray(categoriesData)
         ? categoriesData
-        : (categoriesData as any)?.items || (Array.isArray(response.data) ? response.data : []))
+        : (categoriesData as any)?.items || (Array.isArray(response.data) ? response.data : [])
 
       // Map backend fields to frontend interface (id -> tid, typeName -> tname)
       const mappedCategories = backendCategories.map((item: any) => ({
@@ -133,14 +147,11 @@ export const useNewsStore = defineStore('news', () => {
         sortOrder: item.sortOrder,
         status: item.status,
         createdTime: item.createdTime,
-        updatedTime: item.updatedTime
+        updatedTime: item.updatedTime,
       }))
-      
+
       // 始终在最前面插入"全部新闻"选项
-      newsTypes.value = [
-        { tid: 0, tname: '全部', sortOrder: 0 } as any,
-        ...mappedCategories
-      ]
+      newsTypes.value = [{ tid: 0, tname: '全部', sortOrder: 0 } as any, ...mappedCategories]
     } catch (error) {
       console.error('获取新闻分类失败:', error)
     }
@@ -153,7 +164,9 @@ export const useNewsStore = defineStore('news', () => {
       sources.value = response.data || []
 
       if (sources.value.length > 0 && !currentSource.value) {
-        const originalSource = sources.value.find((s: any) => s.type === 'original' || s.name === '原创' || s.id === -1)
+        const originalSource = sources.value.find(
+          (s: any) => s.type === 'original' || s.name === '原创' || s.id === -1,
+        )
         currentSource.value = originalSource || sources.value[0]
       }
     } catch (error) {

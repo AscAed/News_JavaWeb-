@@ -105,7 +105,9 @@ const cardSize = computed(() => `card-${props.size}`)
 
 // 性能优化: 缓存DOMPurify计算和日期格式化，避免在v-for列表重新渲染时被反复调用
 const sanitizedTitle = computed(() => DOMPurify.sanitize(props.news.title))
-const sanitizedSummary = computed(() => props.news.summary ? DOMPurify.sanitize(props.news.summary) : '')
+const sanitizedSummary = computed(() =>
+  props.news.summary ? DOMPurify.sanitize(props.news.summary) : '',
+)
 
 const tagList = computed(() => {
   if (!props.news.tags) return []

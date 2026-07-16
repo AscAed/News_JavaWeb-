@@ -6,7 +6,7 @@ export const login = (data: { phone: string; password: string }) => {
 }
 
 // 用户注册
-export const register = (data: { 
+export const register = (data: {
   username: string
   phone: string
   password: string
@@ -31,7 +31,6 @@ export const verifyCaptcha = (data: { captchaKey: string; sliderX: number }) => 
   return request.post('/auth/captcha/verify', data)
 }
 
-
 // 刷新token
 export const refreshToken = (refreshTokenStr: string) => {
   return request.post('/auth/refresh', { refreshToken: refreshTokenStr })
@@ -39,7 +38,10 @@ export const refreshToken = (refreshTokenStr: string) => {
 
 // 用户登出
 export const logout = (refreshTokenStr?: string) => {
-  return request.post('/auth/logout', refreshTokenStr ? { refreshToken: refreshTokenStr } : undefined)
+  return request.post(
+    '/auth/logout',
+    refreshTokenStr ? { refreshToken: refreshTokenStr } : undefined,
+  )
 }
 
 // 获取用户信息
@@ -53,9 +55,6 @@ export const updateUserInfo = (data: any) => {
 }
 
 // 修改密码
-export const changePassword = (data: { 
-  oldPassword: string
-  newPassword: string 
-}) => {
+export const changePassword = (data: { oldPassword: string; newPassword: string }) => {
   return request.put('/users/password', data)
 }

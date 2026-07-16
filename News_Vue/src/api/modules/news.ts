@@ -32,9 +32,9 @@ export const getNewsList = (params: {
     lang: params.lang,
     sourceType: params.sourceType,
     sourceId: params.sourceId,
-    section: params.section
+    section: params.section,
   }
-  return request.get('/headlines', {params: backendParams})
+  return request.get('/headlines', { params: backendParams })
 }
 
 // 获取新闻详情
@@ -58,10 +58,11 @@ export const deleteNews = (hid: number) => {
 }
 
 // 获取新闻分类
-export const getNewsTypes = (
-  params?: { sourceType?: string, sourceId?: string }
-): Promise<ApiResponse<NewsType[] | { items?: BackendNewsType[] }>> => {
-  return request.get('/categories', {params})
+export const getNewsTypes = (params?: {
+  sourceType?: string
+  sourceId?: string
+}): Promise<ApiResponse<NewsType[] | { items?: BackendNewsType[] }>> => {
+  return request.get('/categories', { params })
 }
 
 // 获取新闻来源
@@ -70,7 +71,7 @@ export const getSources = () => {
 }
 
 // 创建新闻来源 (RSS)
-export const createRssSubscription = (data: { name: string, url: string }) => {
+export const createRssSubscription = (data: { name: string; url: string }) => {
   return request.post('/rss-subscriptions', data)
 }
 

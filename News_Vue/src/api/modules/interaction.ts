@@ -10,15 +10,15 @@ export const getComments = (params: {
   sortBy?: string
   sortOrder?: string
   status?: number
-}): Promise<ApiResponse<{ items: Comment[], total: number }>> => {
-  return request.get(`/headlines/${params.headlineId}/comments`, { 
+}): Promise<ApiResponse<{ items: Comment[]; total: number }>> => {
+  return request.get(`/headlines/${params.headlineId}/comments`, {
     params: {
       page: params.page,
       page_size: params.pageSize,
       sort_by: params.sortBy,
       sort_order: params.sortOrder,
-      status: params.status
-    }
+      status: params.status,
+    },
   })
 }
 
@@ -32,7 +32,10 @@ export const addComment = (data: {
 }
 
 // 点赞评论
-export const likeComment = (commentId: string, action: 'like' | 'unlike' = 'like'): Promise<ApiResponse<any>> => {
+export const likeComment = (
+  commentId: string,
+  action: 'like' | 'unlike' = 'like',
+): Promise<ApiResponse<any>> => {
   return request.post(`/comments/${commentId}/like`, { action })
 }
 
@@ -52,9 +55,6 @@ export const unfavoriteNews = (newsId: number) => {
 }
 
 // 获取收藏列表
-export const getFavorites = (params: {
-  page?: number
-  size?: number
-}) => {
+export const getFavorites = (params: { page?: number; size?: number }) => {
   return request.get('/favorites', { params })
 }

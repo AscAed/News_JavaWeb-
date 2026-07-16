@@ -12,14 +12,14 @@
       <div class="canvas-area" :style="{ width: bgWidth + 'px', height: bgHeight + 'px' }">
         <!-- 背景图 -->
         <img :src="bgBase64" class="bg-img" v-if="bgBase64" />
-        
+
         <!-- 滑块图 -->
-        <div 
+        <div
           class="slider-piece"
-          :style="{ 
-            left: sliderX + 'px', 
+          :style="{
+            left: sliderX + 'px',
             top: sliderY + 'px',
-            backgroundImage: `url(${sliderBase64})`
+            backgroundImage: `url(${sliderBase64})`,
           }"
           v-if="sliderBase64"
         ></div>
@@ -27,9 +27,11 @@
 
       <div class="slider-track-container">
         <div class="slider-track">
-          <div class="slider-text" v-show="!isDragging && !verifySuccess">{{ "向右滑动完成验证" }}</div>
-          <div 
-            class="slider-button" 
+          <div class="slider-text" v-show="!isDragging && !verifySuccess">
+            {{ '向右滑动完成验证' }}
+          </div>
+          <div
+            class="slider-button"
             :style="{ left: sliderX + 'px' }"
             @mousedown="onDragStart"
             @touchstart="onDragStart"
@@ -38,7 +40,7 @@
           </div>
         </div>
       </div>
-      
+
       <div class="status-tip" :class="{ error: verifyError, success: verifySuccess }">
         {{ statusMsg }}
       </div>
@@ -75,18 +77,21 @@ const statusMsg = ref('')
 const verifyError = ref(false)
 const verifySuccess = ref(false)
 
-watch(() => props.modelValue, (newVal) => {
-  visible.value = newVal
-  if (newVal) {
-    reset()
-    loadCaptcha()
-  }
-})
+watch(
+  () => props.modelValue,
+  (newVal) => {
+    visible.value = newVal
+    if (newVal) {
+      reset()
+      loadCaptcha()
+    }
+  },
+)
 
 const loadCaptcha = async () => {
   loading.value = true
   try {
-    const res = await getCaptcha() as any
+    const res = (await getCaptcha()) as any
     if (res.code === 200) {
       bgBase64.value = res.data.backgroundBase64
       sliderBase64.value = res.data.sliderBase64
@@ -120,7 +125,7 @@ const onDragStart = (e: MouseEvent | TouchEvent) => {
   } else if (e.touches && e.touches[0]) {
     startX.value = e.touches[0].clientX
   }
-  
+
   window.addEventListener('mousemove', onDragging)
   window.addEventListener('touchmove', onDragging)
   window.addEventListener('mouseup', onDragEnd)
@@ -137,32 +142,32 @@ const onDragging = (e: MouseEvent | TouchEvent) => {
   } else {
     return
   }
-  
+
   let moveX = currentX - startX.value
-  
+
   // 限制范围
   if (moveX < 0) moveX = 0
   if (moveX > bgWidth - 50) moveX = bgWidth - 50 // 50是滑块宽度
-  
+
   sliderX.value = moveX
 }
 
 const onDragEnd = async () => {
   if (!isDragging.value) return
   isDragging.value = false
-  
+
   window.removeEventListener('mousemove', onDragging)
   window.removeEventListener('touchmove', onDragging)
   window.removeEventListener('mouseup', onDragEnd)
   window.removeEventListener('touchend', onDragEnd)
-  
+
   // 发送验证
   try {
-    const res = await verifyCaptcha({
+    const res = (await verifyCaptcha({
       captchaKey: captchaKey.value,
-      sliderX: Math.round(sliderX.value)
-    }) as any
-    
+      sliderX: Math.round(sliderX.value),
+    })) as any
+
     if (res.code === 200) {
       verifySuccess.value = true
       statusMsg.value = '验证通过'
@@ -204,7 +209,7 @@ onUnmounted(() => {
   border-radius: 4px;
   overflow: hidden;
   margin-bottom: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 .bg-img {
   width: 100%;
@@ -217,7 +222,7 @@ onUnmounted(() => {
   height: 50px;
   background-size: 50px 50px;
   z-index: 2;
-  box-shadow: 0 0 10px rgba(0,0,0,0.3);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
 }
 .slider-track-container {
   position: relative;
@@ -252,13 +257,13 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 0 5px rgba(0,0,0,0.1);
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
   z-index: 3;
   transition: box-shadow 0.2s;
 }
 .slider-button:hover {
   background: #f4f4f4;
-  box-shadow: 0 0 8px rgba(0,0,0,0.2);
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.2);
 }
 .status-tip {
   margin-top: 10px;

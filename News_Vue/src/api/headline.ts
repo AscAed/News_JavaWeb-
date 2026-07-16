@@ -50,12 +50,12 @@ request.interceptors.response.use(
 export const getHeadlines = async (
   params: HeadlineQueryDTO,
 ): Promise<ApiResponse<PageResult<Headline>>> => {
-  const backendParams: any = {...params}
+  const backendParams: any = { ...params }
   if (params.type) {
     backendParams.typeId = params.type
     delete backendParams.type
   }
-  const res: ApiResponse<any> = await request.get('/headlines', {params: backendParams})
+  const res: ApiResponse<any> = await request.get('/headlines', { params: backendParams })
   if (res.data && res.data.items) {
     res.data.items = res.data.items.map((item: any) => ({
       ...item,
@@ -71,7 +71,7 @@ export const getHeadlines = async (
       publishedTime: item.published_time || item.publishedTime,
       createdTime: item.created_time || item.createdTime,
       updatedTime: item.updated_time || item.updatedTime,
-      pastHours: item.past_hours || item.pastHours
+      pastHours: item.past_hours || item.pastHours,
     }))
   }
   return res
@@ -95,7 +95,7 @@ export const getHeadlineById = async (hid: number): Promise<ApiResponse<Headline
       publishedTime: item.published_time || item.publishedTime,
       createdTime: item.created_time || item.createdTime,
       updatedTime: item.updated_time || item.updatedTime,
-      pastHours: item.past_hours || item.pastHours
+      pastHours: item.past_hours || item.pastHours,
     }
   }
   return res

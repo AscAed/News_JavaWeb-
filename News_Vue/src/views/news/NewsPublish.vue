@@ -5,7 +5,9 @@
         <h1 class="page-title">发布新闻</h1>
         <div class="header-actions">
           <el-button @click="handleCancel">取消</el-button>
-          <el-button type="primary" :loading="submitting" @click="handlePublish">发布新闻</el-button>
+          <el-button type="primary" :loading="submitting" @click="handlePublish"
+            >发布新闻</el-button
+          >
         </div>
       </div>
 
@@ -91,10 +93,7 @@
         </el-form-item>
 
         <el-form-item label="新闻标签" prop="tags">
-          <el-input
-            v-model="publishForm.tags"
-            placeholder="添加标签，多个标签用英文逗号分隔"
-          />
+          <el-input v-model="publishForm.tags" placeholder="添加标签，多个标签用英文逗号分隔" />
         </el-form-item>
       </el-form>
     </div>
@@ -129,7 +128,10 @@ const editorConfig = {
         try {
           const res = await uploadFile(file)
           if (res.code === 200) {
-            const url = typeof res.data === 'string' ? res.data : (res.data as any).url || (res.data as any).accessUrl
+            const url =
+              typeof res.data === 'string'
+                ? res.data
+                : (res.data as any).url || (res.data as any).accessUrl
             if (url) {
               insertFn(url, file.name, url)
             } else {
@@ -139,9 +141,9 @@ const editorConfig = {
         } catch (error) {
           ElMessage.error('图片上传失败')
         }
-      }
-    }
-  }
+      },
+    },
+  },
 }
 
 const publishForm = reactive({
@@ -150,17 +152,15 @@ const publishForm = reactive({
   summary: '',
   article: '',
   coverImage: '',
-  tags: ''
+  tags: '',
 })
 
 const rules = {
   title: [
     { required: true, message: '请输入新闻标题', trigger: 'blur' },
-    { min: 5, max: 200, message: '标题长度在 5 到 200 个字符', trigger: 'blur' }
+    { min: 5, max: 200, message: '标题长度在 5 到 200 个字符', trigger: 'blur' },
   ],
-  type: [
-    { required: true, message: '请选择新闻分类', trigger: 'change' }
-  ],
+  type: [{ required: true, message: '请选择新闻分类', trigger: 'change' }],
   article: [
     { required: true, message: '请输入新闻内容', trigger: 'blur' },
     {
@@ -171,9 +171,9 @@ const rules = {
           callback()
         }
       },
-      trigger: 'blur'
-    }
-  ]
+      trigger: 'blur',
+    },
+  ],
 }
 
 const handleCreated = (editor: any) => {
@@ -187,7 +187,7 @@ const fetchCategories = async () => {
       const categoriesData = res.data
       const backendCategories = Array.isArray(categoriesData)
         ? categoriesData
-        : (categoriesData?.items || [])
+        : categoriesData?.items || []
 
       categories.value = backendCategories.map((item: any) => ({
         tid: item.tid ?? item.id,
@@ -197,7 +197,7 @@ const fetchCategories = async () => {
         sortOrder: item.sortOrder ?? 0,
         status: item.status ?? 1,
         createdTime: item.createdTime ?? '',
-        updatedTime: item.updatedTime ?? ''
+        updatedTime: item.updatedTime ?? '',
       }))
     }
   } catch (error) {
@@ -224,7 +224,10 @@ const uploadCover = async (options: any) => {
   try {
     const res = await uploadFile(options.file)
     if (res.code === 200) {
-      const url = typeof res.data === 'string' ? res.data : (res.data as any).url || (res.data as any).accessUrl
+      const url =
+        typeof res.data === 'string'
+          ? res.data
+          : (res.data as any).url || (res.data as any).accessUrl
       publishForm.coverImage = url
       ElMessage.success('封面上传成功')
     }
@@ -235,16 +238,16 @@ const uploadCover = async (options: any) => {
 
 const handlePublish = async () => {
   if (!formRef.value) return
-  
+
   try {
     await formRef.value.validate()
     submitting.value = true
-    
+
     const submitData = {
       ...publishForm,
-      type: publishForm.type as number // 确保是数字
+      type: publishForm.type as number, // 确保是数字
     }
-    
+
     const res = await publishNews(submitData)
     if (res.code === 200) {
       ElMessage.success('新闻发布成功，正在跳转...')
@@ -265,10 +268,12 @@ const handleCancel = () => {
   ElMessageBox.confirm('确定要放弃当前的编辑内容吗？', '提示', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
-    type: 'warning'
-  }).then(() => {
-    router.back()
-  }).catch(() => {})
+    type: 'warning',
+  })
+    .then(() => {
+      router.back()
+    })
+    .catch(() => {})
 }
 
 onMounted(() => {
@@ -335,9 +340,15 @@ onBeforeUnmount(() => {
   gap: var(--spacing-lg);
 }
 
-.flex-2 { flex: 2; }
-.flex-1 { flex: 1; }
-.w-full { width: 100%; }
+.flex-2 {
+  flex: 2;
+}
+.flex-1 {
+  flex: 1;
+}
+.w-full {
+  width: 100%;
+}
 
 .cover-uploader {
   border: 1px dashed var(--border-primary);
@@ -434,8 +445,9 @@ onBeforeUnmount(() => {
     flex-direction: column;
     gap: 0;
   }
-  
-  .upload-placeholder, .cover-preview {
+
+  .upload-placeholder,
+  .cover-preview {
     width: 100%;
     aspect-ratio: 16/9;
   }

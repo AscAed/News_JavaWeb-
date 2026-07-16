@@ -15,14 +15,12 @@ const goHome = () => {
       <div class="mb-8">
         <el-icon class="text-6xl text-gray-300"><WarningFilled /></el-icon>
       </div>
-      
+
       <div class="space-y-4">
         <h1 class="text-3xl font-bold text-gray-900">404</h1>
         <p class="text-gray-600">抱歉，您访问的页面不存在</p>
-        
-        <el-button type="primary" @click="goHome">
-          返回首页
-        </el-button>
+
+        <el-button type="primary" @click="goHome"> 返回首页 </el-button>
       </div>
     </div>
   </div>

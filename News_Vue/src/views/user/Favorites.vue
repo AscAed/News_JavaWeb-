@@ -10,7 +10,7 @@
         v-model="searchKeyword"
         placeholder="搜索收藏的新闻..."
         @keyup.enter="fetchFavorites"
-        style="max-width: 400px;"
+        style="max-width: 400px"
       >
         <template #prefix>
           <el-icon><Search /></el-icon>
@@ -49,11 +49,7 @@
             </div>
             <div class="meta-right">
               <span class="favorite-time">{{ formatTime(favorite.favoriteTime) }}</span>
-              <el-button
-                size="small"
-                type="danger"
-                @click.stop="removeFavorite(favorite)"
-              >
+              <el-button size="small" type="danger" @click.stop="removeFavorite(favorite)">
                 取消收藏
               </el-button>
             </div>
@@ -64,9 +60,7 @@
       <div v-if="!loading && favoritesList.length === 0" class="empty-state">
         <el-icon class="empty-icon"><Star /></el-icon>
         <p>暂无收藏的新闻</p>
-        <el-button type="primary" @click="$router.push('/news')">
-          去浏览新闻
-        </el-button>
+        <el-button type="primary" @click="$router.push('/news')"> 去浏览新闻 </el-button>
       </div>
     </div>
 
@@ -106,7 +100,7 @@ const formatTime = (time: string) => {
   const now = new Date()
   const diff = now.getTime() - date.getTime()
   const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-  
+
   if (days === 0) {
     return '今天'
   } else if (days === 1) {
@@ -140,7 +134,7 @@ const fetchFavorites = async () => {
       coverImageUrl: 'https://example.com/cover.jpg',
       tags: 'Vue,JavaScript,前端',
       createdTime: '2025-12-31 10:30:00',
-      updatedTime: '2025-12-31 10:30:00'
+      updatedTime: '2025-12-31 10:30:00',
     }
 
     favoritesList.value = [
@@ -149,7 +143,7 @@ const fetchFavorites = async () => {
         hid: 1,
         userId: 1,
         favoriteTime: '2025-12-30 15:30:00',
-        news: mockNews
+        news: mockNews,
       },
       {
         id: 2,
@@ -160,9 +154,9 @@ const fetchFavorites = async () => {
           ...mockNews,
           hid: 2,
           title: 'Spring Boot 最佳实践指南',
-          summary: '深入探讨Spring Boot开发中的最佳实践和常见陷阱'
-        }
-      }
+          summary: '深入探讨Spring Boot开发中的最佳实践和常见陷阱',
+        },
+      },
     ]
     total.value = 2
   } catch (error) {
@@ -181,9 +175,9 @@ const removeFavorite = async (favorite: Favorite) => {
     await ElMessageBox.confirm('确定要取消收藏这篇新闻吗？', '提示', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
-      type: 'warning'
+      type: 'warning',
     })
-    
+
     // 调用取消收藏API
     ElMessage.success('已取消收藏')
     fetchFavorites()
@@ -302,7 +296,8 @@ onMounted(() => {
   gap: var(--spacing-md);
 }
 
-.author, .type {
+.author,
+.type {
   color: var(--text-secondary);
 }
 
@@ -337,12 +332,12 @@ onMounted(() => {
   .favorite-item {
     flex-direction: column;
   }
-  
+
   .item-image {
     width: 100%;
     height: 200px;
   }
-  
+
   .item-meta {
     flex-direction: column;
     align-items: flex-start;
