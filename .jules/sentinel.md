@@ -9,3 +9,8 @@
 **Prevention:**
 1. Always specify the explicit `HttpMethod` (e.g., `HttpMethod.GET`) when whitelisting public endpoints in `SecurityConfig`.
 2. Implement defense-in-depth by always annotating modification endpoints (POST, PUT, DELETE, PATCH) with method-level authorization (like `@PreAuthorize("hasRole('ADMIN')")`), even if you believe global configuration restricts them.
+
+## 2024-05-27 - [Path Traversal in API Controller endpoints]
+**Vulnerability:** Found lack of directory traversal protection (e.g. `..`) in `FileController` endpoints which accept a `fileId` (which acts as a path/key in MinIO). MinIO client handles objects without native path traversal via standard paths, but it's important to provide a defense in depth and explicit API validation in Spring controllers to prevent unexpected behaviour with `..` manipulation in the key format.
+**Learning:** Endpoints that operate directly on keys or paths passed via user input should always do basic sanitization to reject `..` directory traversal patterns.
+**Prevention:** Implement a standard validation method for any API controllers handling file/object paths to reject traversal characters before invoking underlying storage services.

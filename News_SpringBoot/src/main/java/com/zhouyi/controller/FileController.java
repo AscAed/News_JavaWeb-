@@ -41,6 +41,13 @@ public class FileController {
     }
 
     /**
+     * 校验 fileId，防止路径穿越攻击 (Path Traversal)
+     */
+    private boolean isInvalidFileId(String fileId) {
+        return fileId == null || fileId.contains("..");
+    }
+
+    /**
      * 文件删除
      */
     @DeleteMapping("/{fileId}")
@@ -48,6 +55,9 @@ public class FileController {
     public Result<String> deleteFile(
             @Parameter(description = "文件唯一标识", required = true) @PathVariable String fileId) {
 
+        if (isInvalidFileId(fileId)) {
+            return Result.error("无效的文件标识");
+        }
         return minioFileService.deleteFile(fileId);
     }
 
@@ -59,6 +69,9 @@ public class FileController {
     public Result<Map<String, Object>> getFileInfo(
             @Parameter(description = "文件唯一标识", required = true) @PathVariable String fileId) {
 
+        if (isInvalidFileId(fileId)) {
+            return Result.error("无效的文件标识");
+        }
         return minioFileService.getFileInfo(fileId);
     }
 
@@ -69,6 +82,10 @@ public class FileController {
     @Operation(summary = "文件下载", description = "下载指定文件")
     public ResponseEntity<byte[]> downloadFile(
             @Parameter(description = "文件唯一标识", required = true) @PathVariable String fileId) {
+
+        if (isInvalidFileId(fileId)) {
+            return ResponseEntity.badRequest().build();
+        }
 
         try {
             byte[] fileData = minioFileService.downloadFile(fileId);
@@ -96,6 +113,10 @@ public class FileController {
     public Result<String> getFileUrl(
             @Parameter(description = "文件唯一标识", required = true) @PathVariable String fileId) {
 
+        if (isInvalidFileId(fileId)) {
+            return Result.error("无效的文件标识");
+        }
+
         if (!minioFileService.fileExists(fileId)) {
             return Result.error("文件不存在");
         }
@@ -111,6 +132,10 @@ public class FileController {
     @Operation(summary = "检查文件存在", description = "检查指定文件是否存在")
     public Result<Boolean> checkFileExists(
             @Parameter(description = "文件唯一标识", required = true) @PathVariable String fileId) {
+
+        if (isInvalidFileId(fileId)) {
+            return Result.error("无效的文件标识");
+        }
 
         boolean exists = minioFileService.fileExists(fileId);
         return Result.successWithMessageAndData("检查完成", exists);
