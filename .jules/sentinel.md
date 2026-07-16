@@ -9,3 +9,7 @@
 **Prevention:**
 1. Always specify the explicit `HttpMethod` (e.g., `HttpMethod.GET`) when whitelisting public endpoints in `SecurityConfig`.
 2. Implement defense-in-depth by always annotating modification endpoints (POST, PUT, DELETE, PATCH) with method-level authorization (like `@PreAuthorize("hasRole('ADMIN')")`), even if you believe global configuration restricts them.
+## 2026-07-16 - Fix Improper Authentication Attribution in AdminController
+**Vulnerability:** Hardcoded user identity in `AdminController`. The `getCurrentUserId()` and `getCurrentUsername()` methods returned a static user ID `1` and username `"admin"` for every request, circumventing proper audit logging and attributing all admin actions to a single identity.
+**Learning:** Relying on hardcoded identity placeholders in critical admin or auditing functionality completely undermines traceability and security.
+**Prevention:** Always dynamically retrieve the authenticated user`s details from the security context (e.g., `SecurityContextHolder` in Spring Security) rather than using static constants for user identity attribution.
