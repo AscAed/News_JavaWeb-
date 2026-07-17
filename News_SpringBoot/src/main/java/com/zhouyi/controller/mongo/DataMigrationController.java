@@ -4,6 +4,7 @@ import com.zhouyi.service.mongo.DataMigrationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -24,6 +25,7 @@ public class DataMigrationController {
      * 迁移RSS数据从MySQL到MongoDB
      */
     @PostMapping("/rss-to-mongo")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, Object>> migrateRssToMongo() {
         try {
             log.info("开始执行RSS数据迁移");
