@@ -9,3 +9,13 @@
 **Prevention:**
 1. Always specify the explicit `HttpMethod` (e.g., `HttpMethod.GET`) when whitelisting public endpoints in `SecurityConfig`.
 2. Implement defense-in-depth by always annotating modification endpoints (POST, PUT, DELETE, PATCH) with method-level authorization (like `@PreAuthorize("hasRole('ADMIN')")`), even if you believe global configuration restricts them.
+
+## 2026-07-17 - Fix Authorization Bypass in Admin Endpoints
+**Vulnerability:** Several administrative endpoints (, , and ) lacked method-level authorization. While some paths might be protected by global , relying solely on path-based configuration without defense-in-depth is risky and prone to configuration errors or bypasses.
+**Learning:** Always implement defense-in-depth. Method-level  annotations on controllers provide a second layer of security, ensuring that even if global security rules are misconfigured or paths change, sensitive endpoints remain protected.
+**Prevention:** Apply  annotations directly to sensitive controller methods, particularly those that modify state, perform administrative tasks, or trigger resource-intensive operations.
+
+## 2024-07-16 - Fix Authorization Bypass in Admin Endpoints
+**Vulnerability:** Several administrative endpoints (`/api/v1/migration/rss-to-mongo`, `/api/v1/mongo/rss-subscriptions/{id}/fetch`, and `/api/v1/mongo/articles/cleanup`) lacked method-level authorization. While some paths might be protected by global `SecurityConfig`, relying solely on path-based configuration without defense-in-depth is risky and prone to configuration errors or bypasses.
+**Learning:** Always implement defense-in-depth. Method-level `@PreAuthorize("hasRole('ADMIN')")` annotations on controllers provide a second layer of security, ensuring that even if global security rules are misconfigured or paths change, sensitive endpoints remain protected.
+**Prevention:** Apply `@PreAuthorize` annotations directly to sensitive controller methods, particularly those that modify state, perform administrative tasks, or trigger resource-intensive operations.

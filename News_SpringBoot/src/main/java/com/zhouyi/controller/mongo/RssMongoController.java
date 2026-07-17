@@ -12,6 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -34,6 +35,7 @@ public class RssMongoController {
      * 手动触发RSS内容采集到MongoDB
      */
     @PostMapping("/rss-subscriptions/{id}/fetch")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, Object>> fetchRssToMongo(@PathVariable String id) {
         try {
             Map<String, Object> result = rssMongoService.fetchAndSaveToMongo(id);
@@ -236,6 +238,7 @@ public class RssMongoController {
      * 清理过期文章
      */
     @DeleteMapping("/articles/cleanup")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, Object>> cleanupOldArticles(
             @RequestParam String beforeDate) {
         try {
