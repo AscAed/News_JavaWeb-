@@ -52,15 +52,16 @@
 
     <!-- 悬浮刷新按钮 (圆角方形 Fab) -->
     <Transition name="fab-fade">
-      <div 
-        v-show="showRefreshFab" 
-        class="refresh-fab" 
+      <button
+        v-show="showRefreshFab"
+        class="refresh-fab"
         :class="{ 'is-refreshing': isRefreshing }"
         @click="refreshFeed"
         title="刷新新闻并回顶"
+        aria-label="刷新新闻并回顶"
       >
         <el-icon><Refresh /></el-icon>
-      </div>
+      </button>
     </Transition>
   </div>
 </template>
@@ -188,18 +189,18 @@ const handleScroll = () => {
 
 const refreshFeed = () => {
   if (isRefreshing.value) return
-  
+
   isRefreshing.value = true
-  
+
   // 1. 平滑回顶
   window.scrollTo({
     top: 0,
-    behavior: 'smooth'
+    behavior: 'smooth',
   })
-  
+
   // 2. 派发全局刷新事件
   window.dispatchEvent(new CustomEvent('refreshFeed'))
-  
+
   // 3. 动画延迟后结束加载状态
   setTimeout(() => {
     isRefreshing.value = false
@@ -474,6 +475,11 @@ onUnmounted(() => {
   color: var(--primary-hover);
 }
 
+.refresh-fab:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
 .refresh-fab:active {
   transform: scale(0.95);
 }
@@ -483,8 +489,12 @@ onUnmounted(() => {
 }
 
 @keyframes fab-spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* 动画过渡 */
