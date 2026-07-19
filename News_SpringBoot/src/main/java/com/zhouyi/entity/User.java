@@ -14,7 +14,10 @@ import java.util.Date;
 public class User {
     private Integer id; // 用户ID
     private String phone; // 手机号
+
+    @com.fasterxml.jackson.annotation.JsonProperty(access = com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY)
     private String password; // 密码
+
     private String username; // 用户名
     private String email; // 邮箱
     private String avatarUrl; // 头像URL

@@ -9,3 +9,15 @@
 **Prevention:**
 1. Always specify the explicit `HttpMethod` (e.g., `HttpMethod.GET`) when whitelisting public endpoints in `SecurityConfig`.
 2. Implement defense-in-depth by always annotating modification endpoints (POST, PUT, DELETE, PATCH) with method-level authorization (like `@PreAuthorize("hasRole('ADMIN')")`), even if you believe global configuration restricts them.
+
+## 2024-05-24 - [Broken Access Control and Sensitive Data Exposure in User APIs]
+**Vulnerability:**
+1. Broken Access Control: `getUsers` and `createUser` in `UserController.java` were lacking authorization checks, allowing any authenticated user to create or fetch list of users.
+2. Sensitive Data Exposure: The `password` field in the `User` entity was missing proper serialization constraints, potentially exposing hashed passwords in API responses.
+
+**Learning:**
+1. API endpoints handling user listing and creation must strictly enforce admin-level authorization using `@PreAuthorize("hasRole('ADMIN')")`.
+2. Sensitive entity fields, especially authentication credentials, require explicit Jackson `@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)` annotations to prevent accidental serialization into JSON responses while allowing deserialization from requests.
+
+**Prevention:**
+Always review controller endpoints for proper `@PreAuthorize` role validations and verify that sensitive entity fields use `WRITE_ONLY` Jackson annotations.
