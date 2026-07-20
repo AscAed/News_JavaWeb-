@@ -14,7 +14,7 @@
             <h1>{{ newsDetail.title }}</h1>
             <div class="article-meta">
               <span class="author">作者：{{ newsDetail.author }}</span>
-              <span class="publish-time">发布时间：{{ formatTime(newsDetail.publishedTime) }}</span>
+              <span class="publish-time">发布时间：{{ formattedPublishTime }}</span>
               <span class="category">分类：{{ newsDetail.typeName }}</span>
             </div>
             <div class="article-stats">
@@ -32,16 +32,11 @@
           </div>
 
           <!-- Security: Sanitize user input before rendering with v-html to prevent XSS -->
-          <div class="article-content" v-html="DOMPurify.sanitize(newsDetail.content || '')"></div>
+          <div class="article-content" v-html="sanitizedContent"></div>
 
           <footer class="article-footer">
             <div class="article-tags" v-if="newsDetail.tags">
-              <el-tag
-                v-for="tag in (Array.isArray(newsDetail.tags) ? newsDetail.tags : String(newsDetail.tags).split(','))"
-                :key="tag"
-                size="small"
-                style="margin-right: 8px"
-              >
+              <el-tag v-for="tag in newsTags" :key="tag" size="small" style="margin-right: 8px">
                 {{ tag }}
               </el-tag>
             </div>
@@ -141,15 +136,20 @@
 </template>
 
 <script setup lang="ts">
-import {computed, onMounted, ref, nextTick} from 'vue'
-import {useRoute, useRouter} from 'vue-router'
-import {ArrowLeft, ChatDotRound, Collection, Share, Star, View} from '@element-plus/icons-vue'
-import {ElMessage, ElMessageBox} from 'element-plus'
-import type {Comment, Headline} from '@/types/headline'
-import {getHeadlineById} from '@/api/headline'
-import {useUserStore} from '@/stores/user'
+import { computed, onMounted, ref, nextTick } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { ArrowLeft, ChatDotRound, Collection, Share, Star, View } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import type { Comment, Headline } from '@/types/headline'
+import { getHeadlineById } from '@/api/headline'
+import { useUserStore } from '@/stores/user'
 import CommentItem from '@/components/CommentItem.vue'
-import {getComments, addComment, likeComment as likeCommentApi, deleteComment as deleteCommentApi} from '@/api/modules/interaction'
+import {
+  getComments,
+  addComment,
+  likeComment as likeCommentApi,
+  deleteComment as deleteCommentApi,
+} from '@/api/modules/interaction'
 import DOMPurify from 'dompurify'
 
 const route = useRoute()
@@ -173,10 +173,29 @@ const replyTo = ref<Comment | null>(null)
 const replyContent = ref('')
 const submittingReply = ref(false)
 
+// 方法
+const formatTime = (time?: string) => {
+  if (!time) return ''
+  return new Date(time).toLocaleString()
+}
+
 // 计算属性
 const isLoggedIn = computed(() => userStore.isLoggedIn)
 
-// 方法
+const sanitizedContent = computed(() => {
+  return DOMPurify.sanitize(newsDetail.value?.content || '')
+})
+
+const formattedPublishTime = computed(() => {
+  return formatTime(newsDetail.value?.publishedTime)
+})
+
+const newsTags = computed(() => {
+  const tags = newsDetail.value?.tags
+  if (!tags) return []
+  return Array.isArray(tags) ? tags : String(tags).split(',')
+})
+
 const fetchNewsDetail = async () => {
   const hid = Number(route.params.hid)
   if (!hid) {
@@ -216,11 +235,6 @@ const goBack = () => {
   router.go(-1)
 }
 
-const formatTime = (time?: string) => {
-  if (!time) return ''
-  return new Date(time).toLocaleString()
-}
-
 const toggleLike = () => {
   if (!isLoggedIn.value) {
     ElMessage.warning('请先登录')
@@ -252,7 +266,7 @@ const shareNews = () => {
     navigator.share({
       title: newsDetail.value?.title,
       text: newsDetail.value?.summary,
-      url: url
+      url: url,
     })
   } else {
     navigator.clipboard.writeText(url)
@@ -291,7 +305,7 @@ const submitComment = async () => {
     const res = await addComment({
       headlineId: hid,
       content: newComment.value.trim(),
-      parentId: replyingTo.value ? replyingTo.value.id : undefined
+      parentId: replyingTo.value ? replyingTo.value.id : undefined,
     })
 
     if (res.code === 200) {
@@ -335,7 +349,7 @@ const submitReply = async () => {
     const response = await addComment({
       headlineId: hid,
       content: replyContent.value,
-      parentId: replyTo.value.id
+      parentId: replyTo.value.id,
     })
 
     if (response.code === 200) {
@@ -407,7 +421,7 @@ onMounted(() => {
   background: #fff;
   border-radius: 8px;
   padding: 30px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   margin-bottom: 30px;
 }
 
@@ -481,7 +495,7 @@ onMounted(() => {
   background: #fff;
   border-radius: 8px;
   padding: 30px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .comments-section h3 {
