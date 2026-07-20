@@ -1,14 +1,23 @@
 <template>
-  <div class="news-card" :class="[cardSize, { featured: isFeatured }]">
+  <div
+    class="news-card"
+    :class="[cardSize, { featured: isFeatured }]"
+    @click="goToDetail"
+    @keydown.enter.prevent="goToDetail"
+    @keydown.space.prevent="goToDetail"
+    tabindex="0"
+    role="link"
+    :aria-label="news.title"
+  >
     <!-- 卡片内容 (左侧) -->
     <div class="card-content">
       <!-- 标题 -->
       <!-- Security: Sanitize user input before rendering with v-html to prevent XSS -->
-      <h3 class="card-title" @click="goToDetail" v-html="sanitizedTitle"></h3>
+      <h3 class="card-title" v-html="sanitizedTitle"></h3>
 
       <!-- 摘要 -->
       <!-- Security: Sanitize user input before rendering with v-html to prevent XSS -->
-      <p v-if="news.summary" class="card-summary" @click="goToDetail" v-html="sanitizedSummary"></p>
+      <p v-if="news.summary" class="card-summary" v-html="sanitizedSummary"></p>
 
       <!-- 标签 & 分类 (合并显示在摘要下方) -->
       <div class="news-tags-group">
@@ -51,7 +60,7 @@
     </div>
 
     <!-- 封面图片 (右侧) -->
-    <div v-if="news.coverImageUrl" class="card-image-container" @click="goToDetail">
+    <div v-if="news.coverImageUrl" class="card-image-container">
       <img
         :alt="news.title"
         :src="news.coverImageUrl"
@@ -105,7 +114,9 @@ const cardSize = computed(() => `card-${props.size}`)
 
 // 性能优化: 缓存DOMPurify计算和日期格式化，避免在v-for列表重新渲染时被反复调用
 const sanitizedTitle = computed(() => DOMPurify.sanitize(props.news.title))
-const sanitizedSummary = computed(() => props.news.summary ? DOMPurify.sanitize(props.news.summary) : '')
+const sanitizedSummary = computed(() =>
+  props.news.summary ? DOMPurify.sanitize(props.news.summary) : '',
+)
 
 const tagList = computed(() => {
   if (!props.news.tags) return []
@@ -187,6 +198,15 @@ const formatNumber = (num: number): string => {
 }
 
 .news-card:hover {
+  background: var(--bg-primary);
+  border-color: var(--border-primary);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.news-card:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
   background: var(--bg-primary);
   border-color: var(--border-primary);
   box-shadow: var(--shadow-md);
