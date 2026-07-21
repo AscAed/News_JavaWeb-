@@ -9,3 +9,10 @@
 **Prevention:**
 1. Always specify the explicit `HttpMethod` (e.g., `HttpMethod.GET`) when whitelisting public endpoints in `SecurityConfig`.
 2. Implement defense-in-depth by always annotating modification endpoints (POST, PUT, DELETE, PATCH) with method-level authorization (like `@PreAuthorize("hasRole('ADMIN')")`), even if you believe global configuration restricts them.
+
+## 2026-07-21 - Fix Unauthenticated File Upload in SecurityConfig
+**Vulnerability:** Unauthenticated file upload via `/api/v1/common/upload`. The endpoint was globally permitted in `SecurityConfig.java` (`.requestMatchers("/api/v1/common/upload").permitAll()`) and lacked method-level authorization. This could allow unauthenticated users to upload arbitrary files, potentially leading to server resource exhaustion, hosting malicious files, or exploiting upload-related vulnerabilities.
+**Learning:** Endpoints dealing with file uploads or resource-intensive operations should never be left globally unauthenticated ("Allow upload for now") unless explicitly required by the business logic and protected by other means (like rate limiting or strict validation).
+**Prevention:**
+1. Remove such endpoints from the global `permitAll()` list in `SecurityConfig`.
+2. Implement defense-in-depth by adding method-level authorization (e.g., `@PreAuthorize("isAuthenticated()")`) to controller methods handling file uploads or modifications.
