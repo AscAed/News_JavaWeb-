@@ -9,3 +9,8 @@
 **Prevention:**
 1. Always specify the explicit `HttpMethod` (e.g., `HttpMethod.GET`) when whitelisting public endpoints in `SecurityConfig`.
 2. Implement defense-in-depth by always annotating modification endpoints (POST, PUT, DELETE, PATCH) with method-level authorization (like `@PreAuthorize("hasRole('ADMIN')")`), even if you believe global configuration restricts them.
+
+## 2026-07-11 - Prevent Information Exposure via JSON Serialization in Spring Boot Entities
+**Vulnerability:** The `User` entity exposed sensitive fields (specifically the `password` hash) when returned in API responses via `Result<User>` since it lacked Jackson `@JsonProperty` configuration to omit it.
+**Learning:** By default, Jackson serializes all entity properties. For sensitive fields like passwords, returning an entity directly in an API response will inadvertently leak that data to the client, leading to information exposure.
+**Prevention:** Apply `@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)` to sensitive fields in entities so that Jackson can map them on incoming requests (deserialization) but will omit them in outgoing responses (serialization).

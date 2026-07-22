@@ -1,5 +1,6 @@
 package com.zhouyi.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
@@ -14,6 +15,7 @@ import java.util.Date;
 public class User {
     private Integer id; // 用户ID
     private String phone; // 手机号
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password; // 密码
     private String username; // 用户名
     private String email; // 邮箱
