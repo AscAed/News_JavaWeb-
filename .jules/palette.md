@@ -5,3 +5,6 @@
 ## 2025-07-12 - Adding ARIA labels to buttons inside tooltips
 **Learning:** Found an icon-only button wrapped inside an `el-tooltip` that lacked an `aria-label`. While the tooltip provides visual context on hover, it does not provide accessible names for screen readers natively in this implementation.
 **Action:** Always ensure icon-only buttons have an `aria-label`, even if they are wrapped in a tooltip component.
+## $(date +%Y-%m-%d) - Add aria-label to search button
+**Learning:** Found an icon-only button without an `aria-label` attribute in the Vue components (`NewsList.vue`), which causes accessibility issues as screen readers won't announce its purpose correctly.
+**Action:** Added `aria-label="搜索"` to improve accessibility for screen readers on icon-only interactive elements.
