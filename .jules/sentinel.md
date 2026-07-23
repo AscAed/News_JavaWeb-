@@ -9,3 +9,8 @@
 **Prevention:**
 1. Always specify the explicit `HttpMethod` (e.g., `HttpMethod.GET`) when whitelisting public endpoints in `SecurityConfig`.
 2. Implement defense-in-depth by always annotating modification endpoints (POST, PUT, DELETE, PATCH) with method-level authorization (like `@PreAuthorize("hasRole('ADMIN')")`), even if you believe global configuration restricts them.
+
+## 2026-07-11 - Add authentication to file upload endpoint
+**Vulnerability:** Unauthenticated File Upload (/api/v1/common/upload was in permitAll in SecurityConfig)
+**Learning:** Permitting unauthenticated access to resource-intensive endpoints like file uploads can lead to storage exhaustion, malicious file hosting, and increased costs.
+**Prevention:** Ensure that modification endpoints, especially file uploads, require authentication in SecurityConfig and are protected with defense-in-depth method-level @PreAuthorize("isAuthenticated()") annotations.
