@@ -1,5 +1,13 @@
 <template>
-  <div class="news-card" :class="[cardSize, { featured: isFeatured }]">
+  <div
+    class="news-card"
+    :class="[cardSize, { featured: isFeatured }]"
+    tabindex="0"
+    role="article"
+    :aria-label="'阅读新闻: ' + news.title"
+    @keydown.enter="goToDetail"
+    @keydown.space.prevent="goToDetail"
+  >
     <!-- 卡片内容 (左侧) -->
     <div class="card-content">
       <!-- 标题 -->
@@ -105,7 +113,9 @@ const cardSize = computed(() => `card-${props.size}`)
 
 // 性能优化: 缓存DOMPurify计算和日期格式化，避免在v-for列表重新渲染时被反复调用
 const sanitizedTitle = computed(() => DOMPurify.sanitize(props.news.title))
-const sanitizedSummary = computed(() => props.news.summary ? DOMPurify.sanitize(props.news.summary) : '')
+const sanitizedSummary = computed(() =>
+  props.news.summary ? DOMPurify.sanitize(props.news.summary) : '',
+)
 
 const tagList = computed(() => {
   if (!props.news.tags) return []
@@ -191,6 +201,11 @@ const formatNumber = (num: number): string => {
   border-color: var(--border-primary);
   box-shadow: var(--shadow-md);
   transform: translateY(-2px);
+}
+
+.news-card:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 4px;
 }
 
 /* 覆盖组件的默认最大宽度以适应流式布局 */
