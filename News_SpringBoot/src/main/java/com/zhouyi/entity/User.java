@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import java.util.Date;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * 用户实体类，对应users表
@@ -14,7 +15,10 @@ import java.util.Date;
 public class User {
     private Integer id; // 用户ID
     private String phone; // 手机号
+
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password; // 密码
+
     private String username; // 用户名
     private String email; // 邮箱
     private String avatarUrl; // 头像URL

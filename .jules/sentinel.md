@@ -9,3 +9,8 @@
 **Prevention:**
 1. Always specify the explicit `HttpMethod` (e.g., `HttpMethod.GET`) when whitelisting public endpoints in `SecurityConfig`.
 2. Implement defense-in-depth by always annotating modification endpoints (POST, PUT, DELETE, PATCH) with method-level authorization (like `@PreAuthorize("hasRole('ADMIN')")`), even if you believe global configuration restricts them.
+
+## 2026-07-25 - Fix Sensitive Data Exposure in User Entity
+**Vulnerability:** The `User` entity exposed the hashed `password` field in JSON API responses because the field was not properly excluded during Jackson serialization.
+**Learning:** Default Jackson serialization includes all standard fields unless explicitly configured otherwise. Returning raw entity objects directly from controllers (instead of DTOs) without appropriate annotations can inadvertently leak sensitive data like passwords or tokens.
+**Prevention:** Apply `@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)` to sensitive fields (like passwords) on entities to ensure they can be deserialized from incoming requests but never serialized into outgoing JSON responses. Alternatively, always use Data Transfer Objects (DTOs) that do not contain sensitive fields for API responses.
