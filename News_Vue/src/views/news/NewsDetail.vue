@@ -14,7 +14,7 @@
             <h1>{{ newsDetail.title }}</h1>
             <div class="article-meta">
               <span class="author">作者：{{ newsDetail.author }}</span>
-              <span class="publish-time">发布时间：{{ formatTime(newsDetail.publishedTime) }}</span>
+              <span class="publish-time">发布时间：{{ formattedPublishTime }}</span>
               <span class="category">分类：{{ newsDetail.typeName }}</span>
             </div>
             <div class="article-stats">
@@ -32,12 +32,13 @@
           </div>
 
           <!-- Security: Sanitize user input before rendering with v-html to prevent XSS -->
-          <div class="article-content" v-html="DOMPurify.sanitize(newsDetail.content || '')"></div>
+          <!-- 性能优化: 缓存DOMPurify计算，避免在输入评论时被反复调用 -->
+          <div class="article-content" v-html="sanitizedContent"></div>
 
           <footer class="article-footer">
             <div class="article-tags" v-if="newsDetail.tags">
               <el-tag
-                v-for="tag in (Array.isArray(newsDetail.tags) ? newsDetail.tags : String(newsDetail.tags).split(','))"
+                v-for="tag in tagList"
                 :key="tag"
                 size="small"
                 style="margin-right: 8px"
@@ -156,6 +157,12 @@ const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
 
+// 方法定义 (需要放在 computed 前面，因为 computed 会依赖它们)
+const formatTime = (time?: string) => {
+  if (!time) return ''
+  return new Date(time).toLocaleString()
+}
+
 // 响应式数据
 const loading = ref(false)
 const newsDetail = ref<Headline | null>(null)
@@ -175,6 +182,16 @@ const submittingReply = ref(false)
 
 // 计算属性
 const isLoggedIn = computed(() => userStore.isLoggedIn)
+
+// 性能优化: 缓存DOMPurify计算和日期格式化，避免响应式状态改变（如输入评论）时被反复重新计算
+const sanitizedContent = computed(() => DOMPurify.sanitize(newsDetail.value?.content || ''))
+const tagList = computed(() => {
+  if (!newsDetail.value?.tags) return []
+  return Array.isArray(newsDetail.value.tags)
+    ? newsDetail.value.tags
+    : String(newsDetail.value.tags).split(',')
+})
+const formattedPublishTime = computed(() => formatTime(newsDetail.value?.publishedTime))
 
 // 方法
 const fetchNewsDetail = async () => {
@@ -214,11 +231,6 @@ const fetchComments = async () => {
 
 const goBack = () => {
   router.go(-1)
-}
-
-const formatTime = (time?: string) => {
-  if (!time) return ''
-  return new Date(time).toLocaleString()
 }
 
 const toggleLike = () => {
