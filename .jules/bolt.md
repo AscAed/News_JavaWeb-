@@ -5,3 +5,7 @@
 ## 2024-05-23 - [Vue Template Function Calls in List Rendering]
 **Learning:** Avoid using functions like `DOMPurify.sanitize()` or date formatters directly inside the Vue template bindings (e.g. `v-html="DOMPurify.sanitize(news.title)"` or within `v-for="tag in getTagList(news.tags)"`). In a list-rendering context like a news feed where a component might re-render, inline function calls evaluate on every render cycle which multiplies the performance cost and forces Vue to unnecessarily recalculate and recreate virtual DOM diffs.
 **Action:** When working with list items in Vue (or React), memoize expensive formatting and data manipulation logic using `computed` properties (or `useMemo` in React). Ensure that properties like arrays returned by strings (`tagList`) and date parsing strings (`formattedTime`) are cached at the component instance level.
+
+## 2024-07-26 - [ESLint Context when Linting Frontend Files]
+**Learning:** Running `npx eslint` on frontend Vue files from the root of the project might trigger missing dependency errors (like the `jiti` library) if the global Node.js context is used instead of the project's specific context.
+**Action:** When linting frontend files, always execute eslint from within the frontend directory (e.g., `cd News_Vue && npx eslint src/...`) to ensure it uses the local project configuration and dependencies.
