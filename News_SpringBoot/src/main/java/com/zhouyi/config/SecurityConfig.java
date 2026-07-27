@@ -63,7 +63,6 @@ public class SecurityConfig {
                                 "/*.css",
                                 "/*.map",
                                 "/api/v1/auth/**", // Auth endpoints
-                                "/api/v1/common/upload", // Allow upload for now
                                 "/files/**", // File access
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
