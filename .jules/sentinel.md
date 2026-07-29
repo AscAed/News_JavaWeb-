@@ -9,3 +9,8 @@
 **Prevention:**
 1. Always specify the explicit `HttpMethod` (e.g., `HttpMethod.GET`) when whitelisting public endpoints in `SecurityConfig`.
 2. Implement defense-in-depth by always annotating modification endpoints (POST, PUT, DELETE, PATCH) with method-level authorization (like `@PreAuthorize("hasRole('ADMIN')")`), even if you believe global configuration restricts them.
+
+## 2026-07-29 - Prevent Sensitive Data Exposure in API Responses
+**Vulnerability:** The `User` entity exposed the `password` field in API JSON responses because it lacked proper serialization constraints. When endpoints returned `User` objects, the password hash (or plaintext) could be inadvertently sent to the client.
+**Learning:** Returning entity objects directly from controllers without proper filtering can lead to sensitive data exposure. In Spring Boot/Jackson, fields that should not be serialized into JSON responses must be explicitly marked.
+**Prevention:** Apply the `@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)` annotation to sensitive fields like `password` in entity classes. This ensures the field can be deserialized when receiving data (e.g., in request bodies if the entity is used directly, though DTOs are preferred) but is never serialized into response JSON.
