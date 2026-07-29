@@ -14,7 +14,7 @@
             <h1>{{ newsDetail.title }}</h1>
             <div class="article-meta">
               <span class="author">作者：{{ newsDetail.author }}</span>
-              <span class="publish-time">发布时间：{{ formatTime(newsDetail.publishedTime) }}</span>
+              <span class="publish-time">发布时间：{{ formattedPublishTime }}</span>
               <span class="category">分类：{{ newsDetail.typeName }}</span>
             </div>
             <div class="article-stats">
@@ -32,12 +32,12 @@
           </div>
 
           <!-- Security: Sanitize user input before rendering with v-html to prevent XSS -->
-          <div class="article-content" v-html="DOMPurify.sanitize(newsDetail.content || '')"></div>
+          <div class="article-content" v-html="sanitizedContent"></div>
 
           <footer class="article-footer">
-            <div class="article-tags" v-if="newsDetail.tags">
+            <div class="article-tags" v-if="tagList.length > 0">
               <el-tag
-                v-for="tag in (Array.isArray(newsDetail.tags) ? newsDetail.tags : String(newsDetail.tags).split(','))"
+                v-for="tag in tagList"
                 :key="tag"
                 size="small"
                 style="margin-right: 8px"
@@ -141,15 +141,15 @@
 </template>
 
 <script setup lang="ts">
-import {computed, onMounted, ref, nextTick} from 'vue'
+import {computed, onMounted, ref} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 import {ArrowLeft, ChatDotRound, Collection, Share, Star, View} from '@element-plus/icons-vue'
-import {ElMessage, ElMessageBox} from 'element-plus'
+import {ElMessage} from 'element-plus'
 import type {Comment, Headline} from '@/types/headline'
 import {getHeadlineById} from '@/api/headline'
 import {useUserStore} from '@/stores/user'
 import CommentItem from '@/components/CommentItem.vue'
-import {getComments, addComment, likeComment as likeCommentApi, deleteComment as deleteCommentApi} from '@/api/modules/interaction'
+import {getComments, addComment, likeComment as likeCommentApi} from '@/api/modules/interaction'
 import DOMPurify from 'dompurify'
 
 const route = useRoute()
@@ -175,6 +175,24 @@ const submittingReply = ref(false)
 
 // 计算属性
 const isLoggedIn = computed(() => userStore.isLoggedIn)
+
+// 性能优化: 缓存DOMPurify计算和日期格式化，避免在组件重新渲染（如输入评论）时被反复调用
+const sanitizedContent = computed(() => {
+  return newsDetail.value?.content ? DOMPurify.sanitize(newsDetail.value.content) : ''
+})
+
+const formattedPublishTime = computed(() => {
+  const time = newsDetail.value?.publishedTime
+  if (!time) return ''
+  return new Date(time).toLocaleString()
+})
+
+const tagList = computed(() => {
+  if (!newsDetail.value?.tags) return []
+  return Array.isArray(newsDetail.value.tags)
+    ? newsDetail.value.tags
+    : String(newsDetail.value.tags).split(',').filter(t => t.trim())
+})
 
 // 方法
 const fetchNewsDetail = async () => {
@@ -214,11 +232,6 @@ const fetchComments = async () => {
 
 const goBack = () => {
   router.go(-1)
-}
-
-const formatTime = (time?: string) => {
-  if (!time) return ''
-  return new Date(time).toLocaleString()
 }
 
 const toggleLike = () => {
@@ -306,7 +319,7 @@ const submitComment = async () => {
     } else {
       ElMessage.error(res.message || '评论失败')
     }
-  } catch (error) {
+  } catch {
     ElMessage.error('评论发表失败')
   } finally {
     submittingComment.value = false
@@ -344,7 +357,7 @@ const submitReply = async () => {
       replyContent.value = ''
       await fetchComments()
     }
-  } catch (error) {
+  } catch {
     ElMessage.error('回复失败')
   } finally {
     submittingReply.value = false
@@ -363,7 +376,7 @@ const handleLike = async (commentId: string) => {
       // 局部更新点赞数
       updateLikeInTree(comments.value, commentId)
     }
-  } catch (error) {
+  } catch {
     // 错误已由拦截器处理
   }
 }
