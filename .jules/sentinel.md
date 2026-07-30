@@ -9,3 +9,8 @@
 **Prevention:**
 1. Always specify the explicit `HttpMethod` (e.g., `HttpMethod.GET`) when whitelisting public endpoints in `SecurityConfig`.
 2. Implement defense-in-depth by always annotating modification endpoints (POST, PUT, DELETE, PATCH) with method-level authorization (like `@PreAuthorize("hasRole('ADMIN')")`), even if you believe global configuration restricts them.
+
+## 2026-07-11 - Fix Unauthenticated File Upload Vulnerability
+**Vulnerability:** Unauthenticated users could upload files via the `/api/v1/common/upload` endpoint. The endpoint was exposed globally in `SecurityConfig.java` under `permitAll()`, and lacked method-level authorization in the controller.
+**Learning:** Resource-intensive endpoints, such as file uploads, should never be globally permitted (`permitAll()`) as they allow anonymous users to potentially exhaust server storage and resources. This is particularly dangerous for file uploads since they consume disk space and bandwidth.
+**Prevention:** Avoid using `.permitAll()` in Spring Security configuration for resource-intensive endpoints like file uploads. Always secure these endpoints, and add method-level `@PreAuthorize` annotations (e.g., `@PreAuthorize("isAuthenticated()")`) for defense-in-depth to ensure only authenticated users can access them.
