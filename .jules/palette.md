@@ -5,3 +5,7 @@
 ## 2025-07-12 - Adding ARIA labels to buttons inside tooltips
 **Learning:** Found an icon-only button wrapped inside an `el-tooltip` that lacked an `aria-label`. While the tooltip provides visual context on hover, it does not provide accessible names for screen readers natively in this implementation.
 **Action:** Always ensure icon-only buttons have an `aria-label`, even if they are wrapped in a tooltip component.
+
+## 2026-07-31 - Adding aria-labels to Element Plus forms
+**Learning:** When using Element Plus forms (`el-form-item`) that omit the visual `label` prop in favor of placeholders for a cleaner design, screen readers are left without context for the inputs.
+**Action:** Always add explicit `aria-label` attributes to `el-input` components in these situations to ensure forms remain accessible to all users.
