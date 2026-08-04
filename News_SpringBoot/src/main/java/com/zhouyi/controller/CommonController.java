@@ -28,6 +28,7 @@ public class CommonController {
      * @return 文件访问路径
      */
     @PostMapping("/upload")
+    @org.springframework.security.access.prepost.PreAuthorize("isAuthenticated()")
     public Result<String> uploadFile(@RequestParam("file") MultipartFile file) {
         try {
             // 使用 MinioFileService 进行上传，指定分类为 images
