@@ -9,3 +9,8 @@
 **Prevention:**
 1. Always specify the explicit `HttpMethod` (e.g., `HttpMethod.GET`) when whitelisting public endpoints in `SecurityConfig`.
 2. Implement defense-in-depth by always annotating modification endpoints (POST, PUT, DELETE, PATCH) with method-level authorization (like `@PreAuthorize("hasRole('ADMIN')")`), even if you believe global configuration restricts them.
+
+## 2024-05-24 - Prevent Password Leakage
+**Vulnerability:** Potential password leakage via JSON serialization in `User.java`.
+**Learning:** Exposing password fields in API responses is a critical security risk. Adding `@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)` prevents Jackson from including the field during JSON serialization. Removing default values from Spring Boot `application.yml` placeholders without a proper strategy breaks application startup, so those should not be removed indiscriminately.
+**Prevention:** Ensure sensitive fields in entities use `@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)`.
