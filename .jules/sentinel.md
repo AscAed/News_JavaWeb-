@@ -9,3 +9,8 @@
 **Prevention:**
 1. Always specify the explicit `HttpMethod` (e.g., `HttpMethod.GET`) when whitelisting public endpoints in `SecurityConfig`.
 2. Implement defense-in-depth by always annotating modification endpoints (POST, PUT, DELETE, PATCH) with method-level authorization (like `@PreAuthorize("hasRole('ADMIN')")`), even if you believe global configuration restricts them.
+
+## 2026-08-06 - Remove Plaintext Password Logging
+**Vulnerability:** Plaintext password logged to standard output during login attempts in UserServiceImpl.
+**Learning:** Printing sensitive data like passwords using System.out.println during authentication exposes user credentials in server logs.
+**Prevention:** Never log plaintext passwords or sensitive tokens. Always use proper logging frameworks (like SLF4J) and omit sensitive fields from log messages.
