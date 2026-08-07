@@ -9,3 +9,8 @@
 **Prevention:**
 1. Always specify the explicit `HttpMethod` (e.g., `HttpMethod.GET`) when whitelisting public endpoints in `SecurityConfig`.
 2. Implement defense-in-depth by always annotating modification endpoints (POST, PUT, DELETE, PATCH) with method-level authorization (like `@PreAuthorize("hasRole('ADMIN')")`), even if you believe global configuration restricts them.
+
+## 2026-07-11 - Fix Unauthenticated File Upload and IDOR in File Management
+**Vulnerability:** Unauthenticated users could upload files due to `/api/v1/common/upload` being in the `permitAll()` list in `SecurityConfig`. Furthermore, `FileController`'s delete endpoint lacked ownership checks, leading to IDOR (Insecure Direct Object Reference) allowing anyone to delete any file.
+**Learning:** Adding endpoints to `permitAll()` without strict review can lead to severe resource exhaustion and malware hosting risks. Relying solely on global config without endpoint-specific checks is dangerous.
+**Prevention:** Never add modification endpoints (upload, update, delete) to `permitAll()`. Always use defense-in-depth by annotating sensitive operations with `@PreAuthorize("isAuthenticated()")` or `@PreAuthorize("hasRole('ADMIN')")`.
