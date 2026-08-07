@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -29,6 +30,7 @@ public class FileController {
      * 文件上传
      */
     @PostMapping("/upload")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "文件上传", description = "上传文件到MinIO对象存储")
     public Result<Map<String, Object>> uploadFile(
             @Parameter(description = "上传的文件", required = true) @RequestParam("file") MultipartFile file,
@@ -44,6 +46,7 @@ public class FileController {
      * 文件删除
      */
     @DeleteMapping("/{fileId}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "文件删除", description = "从MinIO删除指定文件")
     public Result<String> deleteFile(
             @Parameter(description = "文件唯一标识", required = true) @PathVariable String fileId) {
