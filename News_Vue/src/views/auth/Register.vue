@@ -4,20 +4,18 @@
       <div class="back-action">
         <el-button class="back-btn" link @click="router.push('/')">
           <el-icon>
-            <ArrowLeft/>
+            <ArrowLeft />
           </el-icon>
           返回首页
         </el-button>
       </div>
       <div class="auth-header">
-        <div class="brand-logo-container" style="justify-content: center; margin-bottom: 16px;">
+        <div class="brand-logo-container" style="justify-content: center; margin-bottom: 16px">
           <div class="brand-icon-box">易</div>
-          <h1 class="brand-text" style="font-size: 24px;">闻趣事</h1>
+          <h1 class="brand-text" style="font-size: 24px">闻趣事</h1>
         </div>
         <h2 class="auth-title">创建账号</h2>
-        <p class="auth-subtitle">
-          欢迎加入易闻趣事
-        </p>
+        <p class="auth-subtitle">欢迎加入易闻趣事</p>
       </div>
 
       <el-form
@@ -31,6 +29,7 @@
         <el-form-item prop="username">
           <el-input
             v-model="registerForm.username"
+            aria-label="用户名"
             class="google-input"
             maxlength="20"
             placeholder="用户名"
@@ -41,6 +40,7 @@
         <el-form-item prop="phone">
           <el-input
             v-model="registerForm.phone"
+            aria-label="手机号"
             class="google-input"
             maxlength="11"
             placeholder="手机号"
@@ -51,6 +51,7 @@
         <el-form-item prop="email">
           <el-input
             v-model="registerForm.email"
+            aria-label="邮箱"
             class="google-input"
             placeholder="邮箱"
             size="large"
@@ -61,6 +62,7 @@
           <div class="code-container">
             <el-input
               v-model="registerForm.code"
+              aria-label="验证码"
               class="google-input"
               maxlength="6"
               placeholder="6位验证码"
@@ -81,6 +83,7 @@
         <el-form-item prop="password">
           <el-input
             v-model="registerForm.password"
+            aria-label="密码"
             type="password"
             class="google-input"
             show-password
@@ -92,6 +95,7 @@
         <el-form-item prop="confirmPassword">
           <el-input
             v-model="registerForm.confirmPassword"
+            aria-label="确认密码"
             type="password"
             class="google-input"
             show-password
@@ -127,18 +131,15 @@
     </div>
   </div>
   <!-- 滑块验证码组件 -->
-  <SliderCaptcha 
-    v-model="captchaVisible"
-    @success="onCaptchaSuccess"
-  />
+  <SliderCaptcha v-model="captchaVisible" @success="onCaptchaSuccess" />
 </template>
 
 <script setup lang="ts">
-import {onUnmounted, reactive, ref} from 'vue'
-import {useRouter} from 'vue-router'
-import {ElMessage, ElMessageBox, type FormInstance, type FormRules} from 'element-plus'
-import {useUserStore} from '@/stores/user'
-import {sendCode} from '@/api/modules/auth'
+import { onUnmounted, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
+import { useUserStore } from '@/stores/user'
+import { sendCode } from '@/api/modules/auth'
 import SliderCaptcha from '@/components/SliderCaptcha.vue'
 
 const router = useRouter()
@@ -183,11 +184,11 @@ const registerRules: FormRules = {
   ],
   phone: [
     { required: true, message: '请输入手机号', trigger: 'blur' },
-    {pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur'},
+    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur' },
   ],
   email: [
     { required: true, message: '请输入邮箱', trigger: 'blur' },
-    {type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur'},
+    { type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' },
   ],
   password: [
     { required: true, message: '请输入密码', trigger: 'blur' },
@@ -200,7 +201,7 @@ const registerRules: FormRules = {
   ],
   confirmPassword: [
     { required: true, message: '请确认密码', trigger: 'blur' },
-    {validator: validateConfirmPassword, trigger: 'blur'},
+    { validator: validateConfirmPassword, trigger: 'blur' },
   ],
   code: [
     { required: true, message: '请输入验证码', trigger: 'blur' },
@@ -332,7 +333,9 @@ onUnmounted(() => {
   padding: 48px 40px 36px;
   box-sizing: border-box;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  transition: background-color 0.3s ease, border-color 0.3s ease;
+  transition:
+    background-color 0.3s ease,
+    border-color 0.3s ease;
 }
 
 @media (max-width: 600px) {
