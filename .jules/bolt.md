@@ -5,3 +5,7 @@
 ## 2024-05-23 - [Vue Template Function Calls in List Rendering]
 **Learning:** Avoid using functions like `DOMPurify.sanitize()` or date formatters directly inside the Vue template bindings (e.g. `v-html="DOMPurify.sanitize(news.title)"` or within `v-for="tag in getTagList(news.tags)"`). In a list-rendering context like a news feed where a component might re-render, inline function calls evaluate on every render cycle which multiplies the performance cost and forces Vue to unnecessarily recalculate and recreate virtual DOM diffs.
 **Action:** When working with list items in Vue (or React), memoize expensive formatting and data manipulation logic using `computed` properties (or `useMemo` in React). Ensure that properties like arrays returned by strings (`tagList`) and date parsing strings (`formattedTime`) are cached at the component instance level.
+
+## 2024-05-24 - [Vue Template Function Calls During User Interaction]
+**Learning:** Using inline function calls like `DOMPurify.sanitize` in Vue templates causes severe performance degradation when user interactions (like typing in a text input) trigger component re-renders, as these expensive functions are re-evaluated on every keystroke.
+**Action:** Always extract expensive computations and utility function calls in templates into memoized `computed` properties, especially in components with reactive state linked to user inputs.
