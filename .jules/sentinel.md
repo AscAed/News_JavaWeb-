@@ -9,3 +9,10 @@
 **Prevention:**
 1. Always specify the explicit `HttpMethod` (e.g., `HttpMethod.GET`) when whitelisting public endpoints in `SecurityConfig`.
 2. Implement defense-in-depth by always annotating modification endpoints (POST, PUT, DELETE, PATCH) with method-level authorization (like `@PreAuthorize("hasRole('ADMIN')")`), even if you believe global configuration restricts them.
+
+## 2026-08-08 - Prevent Password Exposure in Logs and API Responses
+**Vulnerability:** Plaintext passwords were logged to the console using `System.out.println` during login attempts in `UserServiceImpl.java`. Additionally, the `User.java` entity exposed the password hash in JSON responses from API endpoints returning user profiles.
+**Learning:** Hardcoded print statements can easily expose sensitive PII and authentication credentials in server logs. Default JSON serialization (like Jackson in Spring Boot) will serialize all entity fields unless explicitly told not to, leading to unintentional exposure of password hashes.
+**Prevention:**
+1. Never use `System.out.println` for application logging, especially in authentication logic. Use properly configured logging frameworks (like SLF4J/Logback) and ensure sensitive fields are obfuscated or excluded.
+2. Always add `@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)` (or equivalent) to password fields in entity classes and DTOs that interact with the web layer.
