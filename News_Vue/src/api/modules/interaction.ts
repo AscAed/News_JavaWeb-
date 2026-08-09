@@ -1,6 +1,5 @@
 import request from '../request'
 import type { ApiResponse, Comment } from '@/types/headline'
-import type { ApiResponse } from '@/types/headline'
 
 // 获取评论列表
 export const getComments = (params: {
@@ -32,7 +31,7 @@ export const addComment = (data: {
 }
 
 // 点赞评论
-export const likeComment = (commentId: string, action: 'like' | 'unlike' = 'like'): Promise<ApiResponse<any>> => {
+export const likeComment = (commentId: string, action: 'like' | 'unlike' = 'like'): Promise<ApiResponse<unknown>> => {
   return request.post(`/comments/${commentId}/like`, { action })
 }
 
