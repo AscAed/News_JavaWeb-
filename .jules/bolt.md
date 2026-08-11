@@ -5,3 +5,7 @@
 ## 2024-05-23 - [Vue Template Function Calls in List Rendering]
 **Learning:** Avoid using functions like `DOMPurify.sanitize()` or date formatters directly inside the Vue template bindings (e.g. `v-html="DOMPurify.sanitize(news.title)"` or within `v-for="tag in getTagList(news.tags)"`). In a list-rendering context like a news feed where a component might re-render, inline function calls evaluate on every render cycle which multiplies the performance cost and forces Vue to unnecessarily recalculate and recreate virtual DOM diffs.
 **Action:** When working with list items in Vue (or React), memoize expensive formatting and data manipulation logic using `computed` properties (or `useMemo` in React). Ensure that properties like arrays returned by strings (`tagList`) and date parsing strings (`formattedTime`) are cached at the component instance level.
+
+## 2024-05-25 - [Vue Computed Mapping for Formatted Lists]
+**Learning:** In Vue, iterating over an array in `v-for` and invoking a formatting function inline (e.g., `{{ formatTime(item.time) }}`) forces the format function to run on every element whenever the list or the component state triggers a re-render. If the component contains reactive inputs (like a search bar), the re-render fires frequently, causing performance overhead.
+**Action:** Always pre-process list data using a `computed` property (e.g., mapping the array to include a `formattedTime` field) so formatting operations are evaluated once when the source data changes, rather than continuously during render cycles.
