@@ -8,28 +8,19 @@
     <div class="comment-content">
       <div class="comment-header">
         <span class="username">{{ comment.author.username }}</span>
-        <span class="comment-time">{{ formatTime(comment.created_time) }}</span>
+        <!-- 性能优化: 使用 computed 缓存时间格式化结果，避免在列表渲染中反复计算 -->
+        <span class="comment-time">{{ formattedTime }}</span>
       </div>
       <div class="comment-text">
         <span v-if="replyToUser" class="reply-target">回复 @{{ replyToUser }}: </span>
         {{ comment.content }}
       </div>
       <div class="comment-actions">
-        <el-button
-          type="text"
-          size="small"
-          @click="$emit('like', comment)"
-        >
+        <el-button type="text" size="small" @click="$emit('like', comment)">
           <el-icon><Star /></el-icon>
           {{ comment.like_count || 0 }}
         </el-button>
-        <el-button
-          type="text"
-          size="small"
-          @click="$emit('reply', comment)"
-        >
-          回复
-        </el-button>
+        <el-button type="text" size="small" @click="$emit('reply', comment)"> 回复 </el-button>
         <el-button
           v-if="isAuthor"
           type="text"
@@ -79,10 +70,12 @@ const isAuthor = computed(() => {
   return props.currentUser && props.currentUser === props.comment.author.username
 })
 
-const formatTime = (time?: string) => {
+// 性能优化: 缓存时间格式化结果
+const formattedTime = computed(() => {
+  const time = props.comment.created_time
   if (!time) return ''
   return new Date(time).toLocaleString()
-}
+})
 </script>
 
 <style scoped>
