@@ -11,7 +11,11 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import com.zhouyi.common.security.CustomUserDetails;
+import org.springframework.security.access.AccessDeniedException;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Map;
@@ -146,18 +150,26 @@ public class AdminController {
      * 获取当前用户ID
      */
     private Integer getCurrentUserId() {
-        // 这里应该从SecurityContext获取当前用户ID
-        // 简化实现，实际项目中需要从JWT Token中解析
-        return 1; // 暂时返回固定值
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
+            throw new AccessDeniedException("User not authenticated");
+        }
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof CustomUserDetails) {
+            return ((CustomUserDetails) principal).getUserId();
+        }
+        throw new AccessDeniedException("User details not found");
     }
 
     /**
      * 获取当前用户名
      */
     private String getCurrentUsername() {
-        // 这里应该从SecurityContext获取当前用户名
-        // 简化实现，实际项目中需要从JWT Token中解析
-        return "admin"; // 暂时返回固定值
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
+            throw new AccessDeniedException("User not authenticated");
+        }
+        return authentication.getName();
     }
 
     /**
