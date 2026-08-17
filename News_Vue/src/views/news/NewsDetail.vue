@@ -14,7 +14,7 @@
             <h1>{{ newsDetail.title }}</h1>
             <div class="article-meta">
               <span class="author">作者：{{ newsDetail.author }}</span>
-              <span class="publish-time">发布时间：{{ formatTime(newsDetail.publishedTime) }}</span>
+              <span class="publish-time">发布时间：{{ formattedPublishTime }}</span>
               <span class="category">分类：{{ newsDetail.typeName }}</span>
             </div>
             <div class="article-stats">
@@ -32,12 +32,12 @@
           </div>
 
           <!-- Security: Sanitize user input before rendering with v-html to prevent XSS -->
-          <div class="article-content" v-html="DOMPurify.sanitize(newsDetail.content || '')"></div>
+          <div class="article-content" v-html="sanitizedContent"></div>
 
           <footer class="article-footer">
             <div class="article-tags" v-if="newsDetail.tags">
               <el-tag
-                v-for="tag in (Array.isArray(newsDetail.tags) ? newsDetail.tags : String(newsDetail.tags).split(','))"
+                v-for="tag in parsedTags"
                 :key="tag"
                 size="small"
                 style="margin-right: 8px"
@@ -141,15 +141,15 @@
 </template>
 
 <script setup lang="ts">
-import {computed, onMounted, ref, nextTick} from 'vue'
+import {computed, onMounted, ref} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 import {ArrowLeft, ChatDotRound, Collection, Share, Star, View} from '@element-plus/icons-vue'
-import {ElMessage, ElMessageBox} from 'element-plus'
+import {ElMessage} from 'element-plus'
 import type {Comment, Headline} from '@/types/headline'
 import {getHeadlineById} from '@/api/headline'
 import {useUserStore} from '@/stores/user'
 import CommentItem from '@/components/CommentItem.vue'
-import {getComments, addComment, likeComment as likeCommentApi, deleteComment as deleteCommentApi} from '@/api/modules/interaction'
+import {getComments, addComment, likeComment as likeCommentApi} from '@/api/modules/interaction'
 import DOMPurify from 'dompurify'
 
 const route = useRoute()
@@ -176,6 +176,23 @@ const submittingReply = ref(false)
 // 计算属性
 const isLoggedIn = computed(() => userStore.isLoggedIn)
 
+const sanitizedContent = computed(() => {
+  if (!newsDetail.value || !newsDetail.value.content) return ''
+  return DOMPurify.sanitize(newsDetail.value.content)
+})
+
+const parsedTags = computed(() => {
+  if (!newsDetail.value || !newsDetail.value.tags) return []
+  return Array.isArray(newsDetail.value.tags)
+    ? newsDetail.value.tags
+    : String(newsDetail.value.tags).split(',').filter(Boolean)
+})
+
+const formattedPublishTime = computed(() => {
+  if (!newsDetail.value || !newsDetail.value.publishedTime) return ''
+  return formatTime(newsDetail.value.publishedTime)
+})
+
 // 方法
 const fetchNewsDetail = async () => {
   const hid = Number(route.params.hid)
@@ -192,8 +209,7 @@ const fetchNewsDetail = async () => {
     } else {
       ElMessage.error(response.message || '获取新闻详情失败')
     }
-  } catch (error) {
-    console.error('获取新闻详情失败:', error)
+  } catch {
     ElMessage.error('获取新闻详情失败')
   } finally {
     loading.value = false
@@ -207,8 +223,8 @@ const fetchComments = async () => {
     if (response.code === 200) {
       comments.value = response.data.items || []
     }
-  } catch (error) {
-    console.error('获取评论失败:', error)
+  } catch {
+    // empty catch
   }
 }
 
@@ -269,8 +285,8 @@ const fetchCommentsList = async () => {
       comments.value = res.data.items || []
       totalComments.value = res.data.total || comments.value.length
     }
-  } catch (err) {
-    console.error('获取评论失败', err)
+  } catch {
+    // empty catch
   }
 }
 
@@ -306,7 +322,7 @@ const submitComment = async () => {
     } else {
       ElMessage.error(res.message || '评论失败')
     }
-  } catch (error) {
+  } catch {
     ElMessage.error('评论发表失败')
   } finally {
     submittingComment.value = false
@@ -344,7 +360,7 @@ const submitReply = async () => {
       replyContent.value = ''
       await fetchComments()
     }
-  } catch (error) {
+  } catch {
     ElMessage.error('回复失败')
   } finally {
     submittingReply.value = false
@@ -363,7 +379,7 @@ const handleLike = async (commentId: string) => {
       // 局部更新点赞数
       updateLikeInTree(comments.value, commentId)
     }
-  } catch (error) {
+  } catch {
     // 错误已由拦截器处理
   }
 }
