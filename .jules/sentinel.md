@@ -9,3 +9,8 @@
 **Prevention:**
 1. Always specify the explicit `HttpMethod` (e.g., `HttpMethod.GET`) when whitelisting public endpoints in `SecurityConfig`.
 2. Implement defense-in-depth by always annotating modification endpoints (POST, PUT, DELETE, PATCH) with method-level authorization (like `@PreAuthorize("hasRole('ADMIN')")`), even if you believe global configuration restricts them.
+
+## 2026-07-11 - Fix Sensitive Data Exposure in Logs
+**Vulnerability:** User passwords were being logged in plaintext using System.out.println during the login process in UserServiceImpl.java.
+**Learning:** Passwords, tokens, and PII should never be printed to standard output or logs. Doing so can expose sensitive user data in application logs.
+**Prevention:** Always use secure logging frameworks (like SLF4J) and explicitly exclude sensitive information from log messages.
