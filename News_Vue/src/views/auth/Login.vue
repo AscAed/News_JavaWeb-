@@ -1,3 +1,4 @@
+<!-- eslint-disable vue/multi-word-component-names -->
 <script setup lang="ts">
 import {reactive, ref} from 'vue'
 import {useRouter} from 'vue-router'
@@ -51,10 +52,6 @@ const handleLogin = async () => {
     loading.value = false
   }
 }
-
-const goToRegister = () => {
-  router.push('/register')
-}
 </script>
 
 <template>
@@ -92,6 +89,7 @@ const goToRegister = () => {
             v-model="loginForm.phone"
             class="google-input"
             placeholder="手机号"
+            aria-label="手机号"
             size="large"
           />
         </el-form-item>
@@ -101,6 +99,7 @@ const goToRegister = () => {
             v-model="loginForm.password"
             class="google-input"
             placeholder="密码"
+            aria-label="密码"
             show-password
             size="large"
             type="password"

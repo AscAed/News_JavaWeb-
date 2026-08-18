@@ -1,3 +1,4 @@
+<!-- eslint-disable vue/multi-word-component-names -->
 <template>
   <div class="auth-container register-page">
     <div class="auth-card">
@@ -34,6 +35,7 @@
             class="google-input"
             maxlength="20"
             placeholder="用户名"
+            aria-label="用户名"
             size="large"
           />
         </el-form-item>
@@ -44,6 +46,7 @@
             class="google-input"
             maxlength="11"
             placeholder="手机号"
+            aria-label="手机号"
             size="large"
           />
         </el-form-item>
@@ -53,6 +56,7 @@
             v-model="registerForm.email"
             class="google-input"
             placeholder="邮箱"
+            aria-label="邮箱"
             size="large"
           />
         </el-form-item>
@@ -64,6 +68,7 @@
               class="google-input"
               maxlength="6"
               placeholder="6位验证码"
+              aria-label="6位验证码"
               size="large"
             />
             <el-button
@@ -85,6 +90,7 @@
             class="google-input"
             show-password
             placeholder="密码"
+            aria-label="密码"
             size="large"
           />
         </el-form-item>
@@ -96,6 +102,7 @@
             class="google-input"
             show-password
             placeholder="确认密码"
+            aria-label="确认密码"
             size="large"
             @keyup.enter="handleRegister"
           />
@@ -152,7 +159,7 @@ const countdown = ref(0)
 const agreeTerms = ref(false)
 const captchaVisible = ref(false)
 const captchaToken = ref('')
-let timer: any = null
+let timer: ReturnType<typeof setInterval> | null = null
 
 const registerForm = reactive({
   username: '',
@@ -163,7 +170,7 @@ const registerForm = reactive({
   code: '',
 })
 
-const validateConfirmPassword = (rule: any, value: string, callback: any) => {
+const validateConfirmPassword = (rule: unknown, value: string, callback: (error?: Error) => void) => {
   if (value !== registerForm.password) {
     callback(new Error('两次输入的密码不一致'))
   } else {
@@ -235,9 +242,9 @@ const handleRegister = async () => {
 
     // 跳转到登录页
     router.push('/login')
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('注册失败:', error)
-    ElMessage.error(error.message || '注册失败')
+    ElMessage.error((error as Error).message || '注册失败')
   } finally {
     loading.value = false
   }
@@ -297,10 +304,11 @@ const executeSendCode = async () => {
         if (timer) clearInterval(timer)
       }
     }, 1000)
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('发送验证码失败:', error)
     // 如果是后端验证码校验失败
-    if (error.response?.data?.message?.includes('人机验证')) {
+    const err = error as { response?: { data?: { message?: string } } }
+    if (err.response?.data?.message?.includes('人机验证')) {
       captchaToken.value = ''
     }
   } finally {
