@@ -32,7 +32,7 @@
           </div>
 
           <!-- Security: Sanitize user input before rendering with v-html to prevent XSS -->
-          <div class="article-content" v-html="DOMPurify.sanitize(newsDetail.content || '')"></div>
+          <div class="article-content" v-html="sanitizedContent"></div>
 
           <footer class="article-footer">
             <div class="article-tags" v-if="newsDetail.tags">
@@ -175,6 +175,11 @@ const submittingReply = ref(false)
 
 // 计算属性
 const isLoggedIn = computed(() => userStore.isLoggedIn)
+
+// 性能优化: 缓存DOMPurify计算，避免在输入评论导致组件重新渲染时被反复调用
+const sanitizedContent = computed(() => {
+  return DOMPurify.sanitize(newsDetail.value?.content || '')
+})
 
 // 方法
 const fetchNewsDetail = async () => {
