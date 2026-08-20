@@ -7,6 +7,7 @@ import com.zhouyi.mapper.UserMapper;
 import com.zhouyi.service.UserService;
 import com.zhouyi.dto.PasswordUpdateDTO;
 import com.zhouyi.dto.UserProfileDTO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +16,7 @@ import java.util.List;
 /**
  * 用户服务实现类
  */
+@Slf4j
 @Service
 public class UserServiceImpl implements UserService {
 
@@ -23,10 +25,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Result<User> login(String phone, String password) {
-        System.out.println("尝试登录：手机号=" + phone + ", 密码=" + password);
+        log.info("尝试登录：手机号={}", phone);
         // 先根据手机号查询用户
         User user = userMapper.selectUserByPhone(phone);
-        System.out.println("查询结果：user=" + (user != null ? user.getUsername() : "null"));
+        log.info("查询结果：user={}", (user != null ? user.getUsername() : "null"));
         if (user != null) {
             String storedPassword = user.getPassword();
 
