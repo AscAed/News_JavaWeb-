@@ -1,6 +1,6 @@
 import request from '../request'
 import type { ApiResponse, Comment } from '@/types/headline'
-import type { ApiResponse } from '@/types/headline'
+
 
 // 获取评论列表
 export const getComments = (params: {
