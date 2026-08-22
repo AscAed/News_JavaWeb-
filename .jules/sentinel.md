@@ -9,3 +9,8 @@
 **Prevention:**
 1. Always specify the explicit `HttpMethod` (e.g., `HttpMethod.GET`) when whitelisting public endpoints in `SecurityConfig`.
 2. Implement defense-in-depth by always annotating modification endpoints (POST, PUT, DELETE, PATCH) with method-level authorization (like `@PreAuthorize("hasRole('ADMIN')")`), even if you believe global configuration restricts them.
+
+## 2024-03-22 - Fix Hardcoded Identities in AdminController
+**Vulnerability:** Hardcoded user identity in `AdminController.java`. The `getCurrentUserId()` and `getCurrentUsername()` methods were hardcoded to return `1` and `"admin"`, allowing any user who bypasses auth or triggers admin routes to implicitly execute actions as the root admin and falsify audit logs.
+**Learning:** Never hardcode user identities in controllers. Doing so severely breaks attribution in audit logs (Operation Log) and creates authorization bypasses where actions are executed as an unintended user.
+**Prevention:** Always extract identity dynamically from the authenticated principal via `SecurityContextHolder.getContext().getAuthentication()` and cast to `CustomUserDetails` to safely obtain the `userId`. If the context is missing or invalid, throw a `org.springframework.security.access.AccessDeniedException`.
