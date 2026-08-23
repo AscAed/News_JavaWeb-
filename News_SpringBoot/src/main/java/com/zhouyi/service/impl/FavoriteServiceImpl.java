@@ -50,13 +50,27 @@ public class FavoriteServiceImpl implements FavoriteService {
             // 统计总数
             long total = favoriteMapper.countByUserId(userId);
             
+            // 批量获取新闻详情以避免 N+1 查询问题
+            Map<Integer, Headline> headlineMap = new HashMap<>();
+            if (!favorites.isEmpty()) {
+                List<Integer> newsIds = new ArrayList<>();
+                for (Favorite fav : favorites) {
+                    newsIds.add(fav.getNewsId());
+                }
+
+                List<Headline> headlines = headlineMapper.selectHeadlinesByIds(newsIds);
+                for (Headline h : headlines) {
+                    headlineMap.put(h.getHid(), h);
+                }
+            }
+
             // 构建收藏详情列表
             List<Map<String, Object>> favoriteItems = new ArrayList<>();
             for (Favorite favorite : favorites) {
                 Map<String, Object> favoriteItem = new HashMap<>();
                 
-                // 获取新闻详情
-                Headline headline = headlineMapper.selectById(favorite.getNewsId());
+                // 从缓存的 Map 中获取新闻详情
+                Headline headline = headlineMap.get(favorite.getNewsId());
                 if (headline != null) {
                     Map<String, Object> headlineInfo = new HashMap<>();
                     headlineInfo.put("id", headline.getHid());
