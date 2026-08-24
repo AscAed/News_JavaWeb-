@@ -6,11 +6,12 @@
         <el-input
           v-model="searchQuery"
           placeholder="搜索新闻..."
+        aria-label="搜索新闻"
           style="width: 300px"
           @keyup.enter="searchNews"
         >
           <template #append>
-            <el-button @click="searchNews">
+          <el-button @click="searchNews" aria-label="执行搜索">
               <el-icon><Search /></el-icon>
             </el-button>
           </template>
