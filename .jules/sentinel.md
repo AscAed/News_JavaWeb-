@@ -9,3 +9,8 @@
 **Prevention:**
 1. Always specify the explicit `HttpMethod` (e.g., `HttpMethod.GET`) when whitelisting public endpoints in `SecurityConfig`.
 2. Implement defense-in-depth by always annotating modification endpoints (POST, PUT, DELETE, PATCH) with method-level authorization (like `@PreAuthorize("hasRole('ADMIN')")`), even if you believe global configuration restricts them.
+
+## 2026-07-11 - Remove hardcoded identities and plaintext password logging
+**Vulnerability:** 1. Hardcoded identity (ID and username) in `AdminController.java`, breaking audit trail. 2. Plaintext password exposure in `UserServiceImpl.java` via standard output logs.
+**Learning:** Hardcoded identities in backend controllers defeat the purpose of audit logs, making it impossible to trace the actual user who performed sensitive actions like approving news. Logging sensitive data such as plaintext passwords violates security best practices and compliance.
+**Prevention:** Always extract user identity dynamically from the authenticated principal via `SecurityContextHolder` and throw `AccessDeniedException` if missing. Never log sensitive information (like passwords) using `System.out.println` or standard logging.
