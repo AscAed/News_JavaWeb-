@@ -52,15 +52,16 @@
 
     <!-- 悬浮刷新按钮 (圆角方形 Fab) -->
     <Transition name="fab-fade">
-      <div 
+      <button
         v-show="showRefreshFab" 
         class="refresh-fab" 
         :class="{ 'is-refreshing': isRefreshing }"
         @click="refreshFeed"
         title="刷新新闻并回顶"
+        aria-label="刷新新闻并回顶"
       >
         <el-icon><Refresh /></el-icon>
-      </div>
+      </button>
     </Transition>
   </div>
 </template>
@@ -476,6 +477,11 @@ onUnmounted(() => {
 
 .refresh-fab:active {
   transform: scale(0.95);
+}
+
+.refresh-fab:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
 }
 
 .refresh-fab.is-refreshing .el-icon {

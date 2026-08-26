@@ -19,16 +19,16 @@
               新闻头条致力于为用户提供及时、准确、全面的新闻资讯服务。我们汇聚了全球各地的优质新闻内容，通过智能推荐算法，为每位用户呈现最感兴趣的新闻报道。
             </p>
             <div class="social-links">
-              <a href="#" class="social-link" title="微信">
+              <a href="#" class="social-link" title="微信" aria-label="微信">
                 <el-icon><ChatDotRound /></el-icon>
               </a>
-              <a href="#" class="social-link" title="微博">
+              <a href="#" class="social-link" title="微博" aria-label="微博">
                 <el-icon><Share /></el-icon>
               </a>
-              <a href="#" class="social-link" title="Twitter">
+              <a href="#" class="social-link" title="Twitter" aria-label="Twitter">
                 <el-icon><Position /></el-icon>
               </a>
-              <a href="#" class="social-link" title="Facebook">
+              <a href="#" class="social-link" title="Facebook" aria-label="Facebook">
                 <el-icon><Connection /></el-icon>
               </a>
             </div>
