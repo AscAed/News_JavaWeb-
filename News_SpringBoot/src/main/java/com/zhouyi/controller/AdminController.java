@@ -13,6 +13,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.access.AccessDeniedException;
+import com.zhouyi.common.security.CustomUserDetails;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Map;
 
@@ -146,18 +150,24 @@ public class AdminController {
      * 获取当前用户ID
      */
     private Integer getCurrentUserId() {
-        // 这里应该从SecurityContext获取当前用户ID
-        // 简化实现，实际项目中需要从JWT Token中解析
-        return 1; // 暂时返回固定值
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof CustomUserDetails)) {
+            throw new AccessDeniedException("请先登录");
+        }
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        return userDetails.getUserId();
     }
 
     /**
      * 获取当前用户名
      */
     private String getCurrentUsername() {
-        // 这里应该从SecurityContext获取当前用户名
-        // 简化实现，实际项目中需要从JWT Token中解析
-        return "admin"; // 暂时返回固定值
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof CustomUserDetails)) {
+            throw new AccessDeniedException("请先登录");
+        }
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        return userDetails.getUsername();
     }
 
     /**
