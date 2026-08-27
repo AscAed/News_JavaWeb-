@@ -9,3 +9,8 @@
 **Prevention:**
 1. Always specify the explicit `HttpMethod` (e.g., `HttpMethod.GET`) when whitelisting public endpoints in `SecurityConfig`.
 2. Implement defense-in-depth by always annotating modification endpoints (POST, PUT, DELETE, PATCH) with method-level authorization (like `@PreAuthorize("hasRole('ADMIN')")`), even if you believe global configuration restricts them.
+
+## 2024-11-13 - Fix Hardcoded Mock Identity in AdminController
+**Vulnerability:** Admin actions were being logged and executed using hardcoded mock user identities (`userId=1`, `username="admin"`), bypassing actual authenticated identity.
+**Learning:** Mock identity data from early development phases was inadvertently left in production controller endpoints, leading to broken auditability and accountability.
+**Prevention:** Always extract user identity dynamically from the authenticated principal (`SecurityContextHolder`) and never hardcode fallback identities for sensitive endpoints.
