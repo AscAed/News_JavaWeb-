@@ -32,12 +32,12 @@
           </div>
 
           <!-- Security: Sanitize user input before rendering with v-html to prevent XSS -->
-          <div class="article-content" v-html="DOMPurify.sanitize(newsDetail.content || '')"></div>
+          <div class="article-content" v-html="sanitizedContent"></div>
 
           <footer class="article-footer">
             <div class="article-tags" v-if="newsDetail.tags">
               <el-tag
-                v-for="tag in (Array.isArray(newsDetail.tags) ? newsDetail.tags : String(newsDetail.tags).split(','))"
+                v-for="tag in tagList"
                 :key="tag"
                 size="small"
                 style="margin-right: 8px"
@@ -160,6 +160,21 @@ const userStore = useUserStore()
 const loading = ref(false)
 const newsDetail = ref<Headline | null>(null)
 const comments = ref<Comment[]>([])
+
+// ⚡ Bolt: Cache DOMPurify results to prevent main thread blocking
+// during reactive re-renders triggered by unrelated state changes (like typing a comment)
+const sanitizedContent = computed(() => {
+  return newsDetail.value?.content ? DOMPurify.sanitize(newsDetail.value.content) : ''
+})
+
+// ⚡ Bolt: Memoize array allocation and string splitting to prevent
+// generating new array references on every template re-render
+const tagList = computed(() => {
+  if (!newsDetail.value?.tags) return []
+  return Array.isArray(newsDetail.value.tags)
+    ? newsDetail.value.tags
+    : String(newsDetail.value.tags).split(',')
+})
 const submittingComment = ref(false)
 const isLiked = ref(false)
 const isFavorited = ref(false)
