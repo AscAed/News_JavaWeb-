@@ -5,3 +5,6 @@
 ## 2025-07-12 - Adding ARIA labels to buttons inside tooltips
 **Learning:** Found an icon-only button wrapped inside an `el-tooltip` that lacked an `aria-label`. While the tooltip provides visual context on hover, it does not provide accessible names for screen readers natively in this implementation.
 **Action:** Always ensure icon-only buttons have an `aria-label`, even if they are wrapped in a tooltip component.
+## 2026-08-27 - Adding ARIA labels to append slot icon buttons
+**Learning:** Found an icon-only button inside an `el-input`'s append slot that lacked an `aria-label` attribute. Because it was visually contextualized by the input, it was easy to miss, but screen reader users would only hear "button" without context.
+**Action:** Always check `el-button` components inside template slots (like `#append` or `#prepend`) to ensure they have an appropriate `aria-label` if they lack text content.
