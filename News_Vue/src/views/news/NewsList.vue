@@ -10,7 +10,7 @@
           @keyup.enter="searchNews"
         >
           <template #append>
-            <el-button @click="searchNews">
+            <el-button @click="searchNews" aria-label="搜索新闻" title="搜索新闻">
               <el-icon><Search /></el-icon>
             </el-button>
           </template>
