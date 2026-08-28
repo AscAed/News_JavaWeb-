@@ -14,7 +14,7 @@
             <h1>{{ newsDetail.title }}</h1>
             <div class="article-meta">
               <span class="author">作者：{{ newsDetail.author }}</span>
-              <span class="publish-time">发布时间：{{ formatTime(newsDetail.publishedTime) }}</span>
+              <span class="publish-time">发布时间：{{ formattedPublishTime }}</span>
               <span class="category">分类：{{ newsDetail.typeName }}</span>
             </div>
             <div class="article-stats">
@@ -32,12 +32,12 @@
           </div>
 
           <!-- Security: Sanitize user input before rendering with v-html to prevent XSS -->
-          <div class="article-content" v-html="DOMPurify.sanitize(newsDetail.content || '')"></div>
+          <div class="article-content" v-html="sanitizedContent"></div>
 
           <footer class="article-footer">
             <div class="article-tags" v-if="newsDetail.tags">
               <el-tag
-                v-for="tag in (Array.isArray(newsDetail.tags) ? newsDetail.tags : String(newsDetail.tags).split(','))"
+                v-for="tag in tagList"
                 :key="tag"
                 size="small"
                 style="margin-right: 8px"
@@ -176,6 +176,14 @@ const submittingReply = ref(false)
 // 计算属性
 const isLoggedIn = computed(() => userStore.isLoggedIn)
 
+// ⚡ Bolt: Memoize expensive template operations to avoid re-evaluation on unrelated reactivity changes
+const sanitizedContent = computed(() => DOMPurify.sanitize(newsDetail.value?.content || ''))
+const formattedPublishTime = computed(() => formatTime(newsDetail.value?.publishedTime))
+const tagList = computed(() => {
+  if (!newsDetail.value?.tags) return []
+  return Array.isArray(newsDetail.value.tags) ? newsDetail.value.tags : String(newsDetail.value.tags).split(',')
+})
+
 // 方法
 const fetchNewsDetail = async () => {
   const hid = Number(route.params.hid)
@@ -306,7 +314,7 @@ const submitComment = async () => {
     } else {
       ElMessage.error(res.message || '评论失败')
     }
-  } catch (error) {
+  } catch {
     ElMessage.error('评论发表失败')
   } finally {
     submittingComment.value = false
@@ -344,7 +352,7 @@ const submitReply = async () => {
       replyContent.value = ''
       await fetchComments()
     }
-  } catch (error) {
+  } catch {
     ElMessage.error('回复失败')
   } finally {
     submittingReply.value = false
@@ -363,7 +371,7 @@ const handleLike = async (commentId: string) => {
       // 局部更新点赞数
       updateLikeInTree(comments.value, commentId)
     }
-  } catch (error) {
+  } catch {
     // 错误已由拦截器处理
   }
 }
