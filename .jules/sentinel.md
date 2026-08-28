@@ -9,3 +9,9 @@
 **Prevention:**
 1. Always specify the explicit `HttpMethod` (e.g., `HttpMethod.GET`) when whitelisting public endpoints in `SecurityConfig`.
 2. Implement defense-in-depth by always annotating modification endpoints (POST, PUT, DELETE, PATCH) with method-level authorization (like `@PreAuthorize("hasRole('ADMIN')")`), even if you believe global configuration restricts them.
+
+## 2026-08-28 - Fix hardcoded user identities in AdminController
+
+**Vulnerability:** Hardcoded user identities (ID: 1, username: "admin") were used in `AdminController.java` to perform and audit administrative actions (like approving/rejecting news), which could lead to unauthorized actions being attributed to an admin, or bypass intended audit trails.
+**Learning:** Hardcoding user identities or roles instead of dynamically extracting them from the authenticated security context allows authorization bypass and creates a false audit trail.
+**Prevention:** Always extract identity dynamically from the authenticated principal via `SecurityContextHolder.getContext().getAuthentication()` and cast to `CustomUserDetails` to safely obtain the user details, throwing `AccessDeniedException` if the context is missing or invalid.
