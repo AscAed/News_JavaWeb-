@@ -32,12 +32,12 @@
           </div>
 
           <!-- Security: Sanitize user input before rendering with v-html to prevent XSS -->
-          <div class="article-content" v-html="DOMPurify.sanitize(newsDetail.content || '')"></div>
+          <div class="article-content" v-html="sanitizedContent"></div>
 
           <footer class="article-footer">
             <div class="article-tags" v-if="newsDetail.tags">
               <el-tag
-                v-for="tag in (Array.isArray(newsDetail.tags) ? newsDetail.tags : String(newsDetail.tags).split(','))"
+                v-for="tag in articleTags"
                 :key="tag"
                 size="small"
                 style="margin-right: 8px"
@@ -175,6 +175,15 @@ const submittingReply = ref(false)
 
 // 计算属性
 const isLoggedIn = computed(() => userStore.isLoggedIn)
+
+// ⚡ Bolt: Cache DOMPurify computation and tag splitting to prevent unnecessary re-evaluations during re-renders (like typing comments)
+const sanitizedContent = computed(() => DOMPurify.sanitize(newsDetail.value?.content || ''))
+const articleTags = computed(() => {
+  if (!newsDetail.value?.tags) return []
+  return Array.isArray(newsDetail.value.tags)
+    ? newsDetail.value.tags
+    : String(newsDetail.value.tags).split(',')
+})
 
 // 方法
 const fetchNewsDetail = async () => {
