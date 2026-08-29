@@ -146,18 +146,24 @@ public class AdminController {
      * 获取当前用户ID
      */
     private Integer getCurrentUserId() {
-        // 这里应该从SecurityContext获取当前用户ID
-        // 简化实现，实际项目中需要从JWT Token中解析
-        return 1; // 暂时返回固定值
+        org.springframework.security.core.Authentication authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof com.zhouyi.common.security.CustomUserDetails)) {
+            throw new org.springframework.security.access.AccessDeniedException("无权访问");
+        }
+        com.zhouyi.common.security.CustomUserDetails userDetails = (com.zhouyi.common.security.CustomUserDetails) authentication.getPrincipal();
+        return userDetails.getUserId();
     }
 
     /**
      * 获取当前用户名
      */
     private String getCurrentUsername() {
-        // 这里应该从SecurityContext获取当前用户名
-        // 简化实现，实际项目中需要从JWT Token中解析
-        return "admin"; // 暂时返回固定值
+        org.springframework.security.core.Authentication authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof com.zhouyi.common.security.CustomUserDetails)) {
+            throw new org.springframework.security.access.AccessDeniedException("无权访问");
+        }
+        com.zhouyi.common.security.CustomUserDetails userDetails = (com.zhouyi.common.security.CustomUserDetails) authentication.getPrincipal();
+        return userDetails.getUsername();
     }
 
     /**
