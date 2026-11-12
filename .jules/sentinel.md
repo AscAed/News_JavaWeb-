@@ -3,20 +3,13 @@
 **Learning:** MyBatis string interpolation `${}` is dangerous and allows SQL injection. While parameters can usually use `#{}` to be parameterized, `ORDER BY` clauses cannot.
 **Prevention:** Avoid `${}` for dynamic sorting. Instead, use a `<choose>` block inside a `<script>` tag in the MyBatis mapper to enforce an allowlist for column names and sort directions.
 
+## 2026-07-17 - Protect migration and RSS maintenance endpoints
+**Learning:** Data migrations, manual RSS fetches, and cleanup operations change or rebuild persistent data. They require explicit administrator authorization at the controller method, even when route-level security currently restricts the path.
+**Action:** Keep `@PreAuthorize("hasRole('ADMIN')")` on each migration, fetch, and cleanup endpoint, and retain the global rule as defense in depth.
+
 ## 2026-07-10 - Fix Authorization Bypass in SecurityConfig and NewsTypeController
 **Vulnerability:** Authorization bypass via overly permissive `SecurityConfig` configuration. Endpoints like `/api/v1/categories/**` were globally permitted for all HTTP methods in `SecurityConfig.java`. Furthermore, modification endpoints (POST, PUT, DELETE, PATCH) in `NewsTypeController` lacked method-level `@PreAuthorize` protections.
 **Learning:** In Spring Security, using `requestMatchers("...")` without specifying an `HttpMethod` permits *all* HTTP methods for that path. Additionally, relying solely on path-based security configuration without defense-in-depth (method-level `@PreAuthorize` annotations on controllers) can lead to critical bypasses if the global configuration is flawed.
 **Prevention:**
 1. Always specify the explicit `HttpMethod` (e.g., `HttpMethod.GET`) when whitelisting public endpoints in `SecurityConfig`.
 2. Implement defense-in-depth by always annotating modification endpoints (POST, PUT, DELETE, PATCH) with method-level authorization (like `@PreAuthorize("hasRole('ADMIN')")`), even if you believe global configuration restricts them.
-
-## 2026-07-16 - Fix Authorization Bypass for File Management
-**Vulnerability:** Authorization bypass via overly permissive global `SecurityConfig` configuration. Endpoints like `/api/v1/common/upload` and `/files/**` were globally permitted for all HTTP methods. This could allow unauthenticated file uploads and deletions.
-**Learning:** In Spring Security, using `requestMatchers("...")` without specifying an `HttpMethod` permits *all* HTTP methods for that path. Relying solely on path-based security configuration without defense-in-depth (method-level `@PreAuthorize` annotations on controllers) can lead to critical bypasses if the global configuration is flawed. Specifically, missing `@PreAuthorize` on file upload and deletion endpoints exposed the application to arbitrary file manipulation.
-**Prevention:**
-1. Always specify the explicit `HttpMethod` (e.g., `HttpMethod.GET`) when whitelisting public endpoints in `SecurityConfig`.
-2. Implement defense-in-depth by always annotating modification endpoints (POST, PUT, DELETE, PATCH) with method-level authorization (like `@PreAuthorize("hasRole('ADMIN')")` or `@PreAuthorize("isAuthenticated()")`), even if you believe global configuration restricts them.
-
-## 2026-07-17 - Protect migration and RSS maintenance endpoints
-**Learning:** Data migrations, manual RSS fetches, and cleanup operations change or rebuild persistent data. They require explicit administrator authorization at the controller method, even when route-level security currently restricts the path.
-**Action:** Keep `@PreAuthorize("hasRole('ADMIN')")` on each migration, fetch, and cleanup endpoint, and retain the global rule as defense in depth.
