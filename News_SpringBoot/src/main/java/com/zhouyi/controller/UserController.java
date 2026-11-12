@@ -60,6 +60,7 @@ public class UserController {
      * @return 用户列表
      */
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public Result<?> getUsers(
             @RequestParam(required = false) String keywords,
             @RequestParam(required = false) Integer status,
@@ -75,6 +76,7 @@ public class UserController {
      * @return 创建结果
      */
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public Result<String> createUser(@RequestBody User user) {
         return userService.addUser(user);
     }
