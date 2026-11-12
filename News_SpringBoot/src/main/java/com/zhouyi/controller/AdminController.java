@@ -11,6 +11,10 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.access.AccessDeniedException;
+import com.zhouyi.common.security.CustomUserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -143,21 +147,28 @@ public class AdminController {
     }
 
     /**
+     * 获取当前认证的用户详情
+     */
+    private CustomUserDetails getCurrentUserDetails() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof CustomUserDetails)) {
+            throw new AccessDeniedException("未登录或获取用户信息失败");
+        }
+        return (CustomUserDetails) authentication.getPrincipal();
+    }
+
+    /**
      * 获取当前用户ID
      */
     private Integer getCurrentUserId() {
-        // 这里应该从SecurityContext获取当前用户ID
-        // 简化实现，实际项目中需要从JWT Token中解析
-        return 1; // 暂时返回固定值
+        return getCurrentUserDetails().getUserId();
     }
 
     /**
      * 获取当前用户名
      */
     private String getCurrentUsername() {
-        // 这里应该从SecurityContext获取当前用户名
-        // 简化实现，实际项目中需要从JWT Token中解析
-        return "admin"; // 暂时返回固定值
+        return getCurrentUserDetails().getUsername();
     }
 
     /**
