@@ -10,12 +10,13 @@
 1. Always specify the explicit `HttpMethod` (e.g., `HttpMethod.GET`) when whitelisting public endpoints in `SecurityConfig`.
 2. Implement defense-in-depth by always annotating modification endpoints (POST, PUT, DELETE, PATCH) with method-level authorization (like `@PreAuthorize("hasRole('ADMIN')")`), even if you believe global configuration restricts them.
 
-## 2026-07-17 - Fix Authorization Bypass in Admin Endpoints
-**Vulnerability:** Several administrative endpoints (, , and ) lacked method-level authorization. While some paths might be protected by global , relying solely on path-based configuration without defense-in-depth is risky and prone to configuration errors or bypasses.
-**Learning:** Always implement defense-in-depth. Method-level  annotations on controllers provide a second layer of security, ensuring that even if global security rules are misconfigured or paths change, sensitive endpoints remain protected.
-**Prevention:** Apply  annotations directly to sensitive controller methods, particularly those that modify state, perform administrative tasks, or trigger resource-intensive operations.
+## 2026-07-16 - Fix Authorization Bypass for File Management
+**Vulnerability:** Authorization bypass via overly permissive global `SecurityConfig` configuration. Endpoints like `/api/v1/common/upload` and `/files/**` were globally permitted for all HTTP methods. This could allow unauthenticated file uploads and deletions.
+**Learning:** In Spring Security, using `requestMatchers("...")` without specifying an `HttpMethod` permits *all* HTTP methods for that path. Relying solely on path-based security configuration without defense-in-depth (method-level `@PreAuthorize` annotations on controllers) can lead to critical bypasses if the global configuration is flawed. Specifically, missing `@PreAuthorize` on file upload and deletion endpoints exposed the application to arbitrary file manipulation.
+**Prevention:**
+1. Always specify the explicit `HttpMethod` (e.g., `HttpMethod.GET`) when whitelisting public endpoints in `SecurityConfig`.
+2. Implement defense-in-depth by always annotating modification endpoints (POST, PUT, DELETE, PATCH) with method-level authorization (like `@PreAuthorize("hasRole('ADMIN')")` or `@PreAuthorize("isAuthenticated()")`), even if you believe global configuration restricts them.
 
-## 2024-07-16 - Fix Authorization Bypass in Admin Endpoints
-**Vulnerability:** Several administrative endpoints (`/api/v1/migration/rss-to-mongo`, `/api/v1/mongo/rss-subscriptions/{id}/fetch`, and `/api/v1/mongo/articles/cleanup`) lacked method-level authorization. While some paths might be protected by global `SecurityConfig`, relying solely on path-based configuration without defense-in-depth is risky and prone to configuration errors or bypasses.
-**Learning:** Always implement defense-in-depth. Method-level `@PreAuthorize("hasRole('ADMIN')")` annotations on controllers provide a second layer of security, ensuring that even if global security rules are misconfigured or paths change, sensitive endpoints remain protected.
-**Prevention:** Apply `@PreAuthorize` annotations directly to sensitive controller methods, particularly those that modify state, perform administrative tasks, or trigger resource-intensive operations.
+## 2026-07-17 - Protect migration and RSS maintenance endpoints
+**Learning:** Data migrations, manual RSS fetches, and cleanup operations change or rebuild persistent data. They require explicit administrator authorization at the controller method, even when route-level security currently restricts the path.
+**Action:** Keep `@PreAuthorize("hasRole('ADMIN')")` on each migration, fetch, and cleanup endpoint, and retain the global rule as defense in depth.
