@@ -63,8 +63,6 @@ public class SecurityConfig {
                                 "/*.css",
                                 "/*.map",
                                 "/api/v1/auth/**", // Auth endpoints
-                                "/api/v1/common/upload", // Allow upload for now
-                                "/files/**", // File access
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
                                 "/actuator/prometheus", // Prometheus scrape endpoint - no auth needed
@@ -78,6 +76,7 @@ public class SecurityConfig {
                                 "/api/v1/sources/**", // Public sources list
                                 "/api/v1/rss-subscriptions/**", // Public RSS subscriptions list
                                 "/api/v1/rss/articles/**", // Public RSS news view
+                                "/files/**", // File access
                                 "/api/v1/rss/categories/**") // Public RSS category view
                         .permitAll()
                         // 仅管理员可访问的调试和同步接口

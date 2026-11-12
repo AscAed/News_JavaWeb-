@@ -3,6 +3,7 @@ package com.zhouyi.controller;
 import com.zhouyi.common.result.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -28,6 +29,7 @@ public class CommonController {
      * @return 文件访问路径
      */
     @PostMapping("/upload")
+    @PreAuthorize("isAuthenticated()")
     public Result<String> uploadFile(@RequestParam("file") MultipartFile file) {
         try {
             // 使用 MinioFileService 进行上传，指定分类为 images
